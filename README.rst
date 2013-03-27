@@ -1,5 +1,5 @@
-PyXero 1.0
-==========
+PyXero
+======
 
 PyXero is a Python API for accessing the REST API provided by the `Xero`_
 accounting tool.
@@ -77,11 +77,11 @@ when creating the credentials::
 When the user authorizes access to their Xero account, the `callback_url`
 will be called with three GET arguments:
 
-    * `oauth_token`: The oauth_token that this request belongs to
+ * `oauth_token`: The oauth_token that this request belongs to
 
-    * `verifier`: The verifier string
+ * `verifier`: The verifier string
 
-    * `org`: An identifier for the organization that is allowing access.
+ * `org`: An identifier for the organization that is allowing access.
 
 The verifier can then be used to verify the credentials, as with the manual
 process.
@@ -139,12 +139,12 @@ You can get this string by either reading the contents of your private key
 file into a variable, or storing the key value as a constant. If you choose to
 store the key value as a constant, remember two things:
 
-    * **DO NOT UNDER ANY CIRCUMSTANCES** check this file into a public
-      repository. It is your identity, and anyone with access to this file
-      could masquerade as you.
+ * **DO NOT UNDER ANY CIRCUMSTANCES** check this file into a public
+   repository. It is your identity, and anyone with access to this file
+   could masquerade as you.
 
-    * Make sure there is no leading space before
-      the ``-----BEGIN PRIVATE KEY-----`` portion of the string.
+ * Make sure there is no leading space before
+   the ``-----BEGIN PRIVATE KEY-----`` portion of the string.
 
 Using the Xero API
 ~~~~~~~~~~~~~~~~~~
@@ -205,15 +205,15 @@ For example, to deal with contacts::
 
 This same API pattern exists for the following API objects:
 
-    * Accounts
-    * Contacts
-    * CreditNotes
-    * Currencies
-    * Invoices
-    * Organisation
-    * Payments
-    * TaxRates
-    * TrackingCategories
+ * Accounts
+ * Contacts
+ * CreditNotes
+ * Currencies
+ * Invoices
+ * Organisation
+ * Payments
+ * TaxRates
+ * TrackingCategories
 
 
 .. _Xero: http://developer.xero.com
