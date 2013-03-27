@@ -125,6 +125,7 @@ class PublicCredentials(object):
         "Store and initialize the OAuth credentials"
         self.oauth_token = oauth_token
         self.oauth_token_secret = oauth_token_secret
+        self.verified = True
 
         self._oauth = OAuth1(
             self.consumer_key,
@@ -144,7 +145,7 @@ class PublicCredentials(object):
                 'consumer_key', 'consumer_secret', 'callback_uri',
                 'verified', 'oauth_token', 'oauth_token_secret'
             )
-            if getattr(self, attr)
+            if getattr(self, attr) is not None
         )
 
     def verify(self, verifier):
@@ -163,7 +164,6 @@ class PublicCredentials(object):
         r = requests.post(url=ACCESS_TOKEN_URL, auth=oauth)
 
         credentials = parse_qs(r.content)
-
         # Initialize the oauth credentials
         self._init_oauth(
             credentials.get('oauth_token')[0],
