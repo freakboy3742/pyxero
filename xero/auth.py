@@ -101,7 +101,7 @@ class PublicCredentials(object):
                 # and initialize OAuth around those
                 self._init_oauth(oauth_token, oauth_token_secret)
 
-            else oauth_token and oauth_token_secret
+            else:
                 # If provided, we are reconstructing an initalized
                 # (but non-verified) set of public credentials.
                 self.oauth_token = oauth_token
