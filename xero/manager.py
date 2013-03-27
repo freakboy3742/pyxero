@@ -71,9 +71,9 @@ class Manager(object):
                 elif len(data) > 1 and ((key in self.MULTI_LINES) or (key == self.singular)):
                     # our data is a collection and needs to be handled as such
                     if out:
-                        out += (self.convert_to_dict(data),)
+                        out.append(self.convert_to_dict(data))
                     else:
-                        out = (self.convert_to_dict(data),)
+                        out = [self.convert_to_dict(data)]
 
                 elif len(data) > 1:
                     out[key] = self.convert_to_dict(data)
@@ -86,29 +86,39 @@ class Manager(object):
             out = deep_list[0]
         return out
 
-    def dict_to_xml(self, root_elm, dict_data):
-        for key in dict_data.keys():
-            _data = dict_data[key]
-            _elm = SubElement(root_elm, key)
+    def dict_to_xml(self, root_elm, data):
+        for key in data.keys():
+            sub_data = data[key]
+            elm = SubElement(root_elm, key)
 
-            _list_data = (isinstance(_data, list) or isinstance(_data, tuple))
-            _is_plural = (key[len(key)-1] == "s")
-            _plural_name = key[:len(key)-1]
+            is_list = isinstance(sub_data, list) or isinstance(sub_data, tuple)
+            is_plural = key[len(key)-1] == "s"
+            plural_name = key[:len(key)-1]
 
-            if isinstance(_data, dict):
-                _elm = self.dict_to_xml(_elm, _data)
+            # Key references a dict. Unroll the dict
+            # as it's own XML node with subnodes
+            if isinstance(sub_data, dict):
+                self.dict_to_xml(elm, sub_data)
 
-            elif _list_data and not _is_plural:
-                for _d in _data:
-                    _elm = self.dict_to_xml(_elm, _d)
+            # Key references a list/tuple
+            elif is_list:
+                # key name is a plural. This means each item
+                # in the list needs to be wrapped in an XML
+                # node that is a singular version of the list name.
+                if is_plural:
+                    for d in sub_data:
+                        plural_name = self.PLURAL_EXCEPTIONS.get(plural_name, plural_name)
+                        self.dict_to_xml(SubElement(elm, plural_name), d)
 
-            elif _list_data:
-                for _d in _data:
-                    _plural_name = self.PLURAL_EXCEPTIONS.get(_plural_name, _plural_name)
-                    _elm = self.dict_to_xml(SubElement(_elm, _plural_name), _d)
+                # key name isn't a plural. Just insert the content
+                # as an XML node with subnodes
+                else:
+                    for d in sub_data:
+                        self.dict_to_xml(elm, d)
 
+            # Normal element - just inser the data.
             else:
-                _elm.text = str(_data)
+                elm.text = str(sub_data)
 
         return root_elm
 
@@ -170,12 +180,9 @@ class Manager(object):
         uri = '/'.join([XERO_API_URL, self.name, id])
         return uri, 'get', None, headers
 
-    def save_or_put(self, data, method='post'):
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-        }
+    def save_or_put(self, data, method='post', headers=None):
         uri = '/'.join([XERO_API_URL, self.name])
-        body = 'xml=' + urllib.quote(self._prepare_data_for_save(data))
+        body = {'xml': self._prepare_data_for_save(data)}
         return uri, method, body, headers
 
     def save(self, data):

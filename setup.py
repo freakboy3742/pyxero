@@ -34,4 +34,5 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Office/Business :: Financial :: Accounting',
     ],
+    test_suite="tests",
 )
