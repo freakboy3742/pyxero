@@ -33,7 +33,7 @@ class Manager(object):
 
         for method_name in self.DECORATED_METHODS:
             method = getattr(self, method_name)
-            setattr(self, method_name, self.__get_data(method))
+            setattr(self, method_name, self._get_data(method))
 
     def walk_dom(self, dom):
         tree_list = tuple()
@@ -100,19 +100,19 @@ class Manager(object):
 
             elif _list_data and not _is_plural:
                 for _d in _data:
-                    __elm = self.dict_to_xml(_elm, _d)
+                    _elm = self.dict_to_xml(_elm, _d)
 
             elif _list_data:
                 for _d in _data:
                     _plural_name = self.PLURAL_EXCEPTIONS.get(_plural_name, _plural_name)
-                    __elm = self.dict_to_xml(SubElement(_elm, _plural_name), _d)
+                    _elm = self.dict_to_xml(SubElement(_elm, _plural_name), _d)
 
             else:
                 _elm.text = str(_data)
 
         return root_elm
 
-    def __prepare_data__for_save(self, data):
+    def _prepare_data_for_save(self, data):
         if isinstance(data, list) or isinstance(data, tuple):
             root_elm = Element(self.name)
             for d in data:
@@ -123,7 +123,7 @@ class Manager(object):
 
         return tostring(root_elm)
 
-    def __get_results(self, data):
+    def _get_results(self, data):
         response = data[u'Response']
         result = response.get(self.name, {})
 
@@ -133,7 +133,7 @@ class Manager(object):
         if isinstance(result, dict) and self.singular in result:
             return result[self.singular]
 
-    def __get_data(self, func):
+    def _get_data(self, func):
         def wrapper(*args, **kwargs):
             uri, method, body, headers = func(*args, **kwargs)
             response = getattr(requests, method)(uri, data=body, headers=headers, auth=self.oauth)
@@ -143,7 +143,7 @@ class Manager(object):
                     return response.text
                 dom = parseString(response.text)
                 data = self.convert_to_dict(self.walk_dom(dom))
-                return self.__get_results(data)
+                return self._get_results(data)
 
             elif response.status_code == 404:
                 raise XeroException404(response.text)
@@ -175,7 +175,7 @@ class Manager(object):
             "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
         }
         uri = '/'.join([XERO_API_URL, self.name])
-        body = 'xml='+urllib.quote(self.__prepare_data__for_save(data))
+        body = 'xml=' + urllib.quote(self._prepare_data_for_save(data))
         return uri, method, body, headers
 
     def save(self, data):
