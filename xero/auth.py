@@ -5,7 +5,7 @@ from urlparse import parse_qs
 from urllib import urlencode
 
 from .constants import REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL
-from .exceptions import XeroNotVerified
+from .exceptions import XeroNotVerified, XeroBadRequest, XeroExceptionUnknown
 
 
 class PrivateCredentials(object):
@@ -115,11 +115,20 @@ class PublicCredentials(object):
                 callback_uri=self.callback_uri
             )
 
-            r = requests.post(url=REQUEST_TOKEN_URL, auth=oauth)
+            response = requests.post(url=REQUEST_TOKEN_URL, auth=oauth)
 
-            credentials = parse_qs(r.content)
-            self.oauth_token = credentials.get('oauth_token')[0]
-            self.oauth_token_secret = credentials.get('oauth_token_secret')[0]
+            if response.status_code == 200:
+                credentials = parse_qs(response.text)
+                self.oauth_token = credentials.get('oauth_token')[0]
+                self.oauth_token_secret = credentials.get('oauth_token_secret')[0]
+            elif response.status_code == 400 or response.status_code == 401:
+                payload = parse_qs(response.text)
+                raise XeroBadRequest(
+                    payload['oauth_problem'][0],
+                    payload['oauth_problem_advice'][0]
+                )
+            else:
+                raise XeroExceptionUnknown(response.text)
 
     def _init_oauth(self, oauth_token, oauth_token_secret):
         "Store and initialize the OAuth credentials"
@@ -161,14 +170,23 @@ class PublicCredentials(object):
         )
 
         # Make the verification request, gettiung back an access token
-        r = requests.post(url=ACCESS_TOKEN_URL, auth=oauth)
+        response = requests.post(url=ACCESS_TOKEN_URL, auth=oauth)
 
-        credentials = parse_qs(r.content)
-        # Initialize the oauth credentials
-        self._init_oauth(
-            credentials.get('oauth_token')[0],
-            credentials.get('oauth_token_secret')[0]
-        )
+        if response.status_code == 200:
+            credentials = parse_qs(response.text)
+            # Initialize the oauth credentials
+            self._init_oauth(
+                credentials.get('oauth_token')[0],
+                credentials.get('oauth_token_secret')[0]
+            )
+        elif response.status_code == 400 or response.status_code == 401:
+            payload = parse_qs(response.text)
+            raise XeroBadRequest(
+                payload['oauth_problem'][0],
+                payload['oauth_problem_advice'][0]
+            )
+        else:
+            raise XeroExceptionUnknown(response.text)
 
     @property
     def url(self):

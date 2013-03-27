@@ -16,7 +16,7 @@ setup(
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
     url='http://github.com/freakboy3742/pyxero',
-    packages=['xero',],
+    packages=['xero', ],
     install_requires=[
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
