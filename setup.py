@@ -1,8 +1,4 @@
 #/usr/bin/env python
-from distribute_setup import use_setuptools
-
-use_setuptools()
-
 from setuptools import setup
 from xero import VERSION
 
@@ -15,9 +11,17 @@ finally:
 setup(
     name='pyxero',
     version=VERSION,
+    description='Python API for accessing the REST API of the Xero accounting tool.',
+    long_description=long_description,
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
     url='http://github.com/freakboy3742/pyxero',
+    packages=['xero',],
+    install_requires=[
+        'requests>=1.1.0',
+        'requests-oauthlib>=0.3.0',
+        'python-dateutil>=2.1',
+    ],
     license='New BSD',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -29,15 +33,5 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Topic :: Office/Business :: Financial :: Accounting',
-    ]
-    platforms=["any"],
-    description='Python API for accessing the Xero accounting tool.',
-    zip_safe= False,
-    version='0.5',
-    packages=['xero',],
-    install_requires=[
-        'requests>=1.1.0',
-        'requests-oauthlib=>0.3.0',
-        'python-dateutil>=2.1',
     ],
 )
