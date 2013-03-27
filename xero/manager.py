@@ -18,7 +18,7 @@ class Manager(object):
     BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer')
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
-    PLURAL_EXCEPTIONS = {'Addresse':'Address'}
+    PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
 
     def __init__(self, name, oauth):
         self.oauth = oauth
@@ -40,7 +40,7 @@ class Manager(object):
         for node in dom.childNodes:
             tagName = getattr(node, 'tagName', None)
             if tagName:
-                tree_list += (tagName , self.walk_dom(node),)
+                tree_list += (tagName, self.walk_dom(node),)
             else:
                 data = node.data.strip()
                 if data:
@@ -51,7 +51,7 @@ class Manager(object):
         out = {}
         if len(deep_list) > 2:
             lists = [l for l in deep_list if isinstance(l, tuple)]
-            keys  = [l for l in deep_list if isinstance(l, unicode)]
+            keys = [l for l in deep_list if isinstance(l, unicode)]
             for key, data in zip(keys, lists):
 
                 if len(data) == 1:
@@ -86,10 +86,10 @@ class Manager(object):
             out = deep_list[0]
         return out
 
-    def dict_to_xml( self, root_elm, dict_data ):
+    def dict_to_xml(self, root_elm, dict_data):
         for key in dict_data.keys():
             _data = dict_data[key]
-            _elm  = SubElement(root_elm, key)
+            _elm = SubElement(root_elm, key)
 
             _list_data = (isinstance(_data, list) or isinstance(_data, tuple))
             _is_plural = (key[len(key)-1] == "s")
@@ -100,7 +100,7 @@ class Manager(object):
 
             elif _list_data and not _is_plural:
                 for _d in _data:
-                  __elm = self.dict_to_xml(_elm, _d)
+                    __elm = self.dict_to_xml(_elm, _d)
 
             elif _list_data:
                 for _d in _data:
@@ -130,7 +130,7 @@ class Manager(object):
         if isinstance(result, tuple):
             return result
 
-        if isinstance(result, dict) and result.has_key(self.singular):
+        if isinstance(result, dict) and self.singular in result:
             return result[self.singular]
 
     def __get_data(self, func):
@@ -141,7 +141,7 @@ class Manager(object):
             if response.status_code == 200:
                 if response.headers['content-type'] == 'application/pdf':
                     return response.text
-                dom  = parseString(response.text)
+                dom = parseString(response.text)
                 data = self.convert_to_dict(self.walk_dom(dom))
                 return self.__get_results(data)
 
@@ -167,13 +167,13 @@ class Manager(object):
         return wrapper
 
     def get(self, id, headers=None):
-        uri  = '/'.join([XERO_API_URL, self.name, id])
+        uri = '/'.join([XERO_API_URL, self.name, id])
         return uri, 'get', None, headers
 
     def save_or_put(self, data, method='post'):
         headers = {
-                "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-                }
+            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
+        }
         uri = '/'.join([XERO_API_URL, self.name])
         body = 'xml='+urllib.quote(self.__prepare_data__for_save(data))
         return uri, method, body, headers
@@ -193,10 +193,10 @@ class Manager(object):
 
     def filter(self, **kwargs):
         headers = None
-        uri  = '/'.join([XERO_API_URL, self.name])
+        uri = '/'.join([XERO_API_URL, self.name])
         if kwargs:
-            if kwargs.has_key('since'):
-                val     = kwargs['since']
+            if 'since' in kwargs:
+                val = kwargs['since']
                 headers = self.prepare_filtering_date(val)
                 del kwargs['since']
 
@@ -210,7 +210,7 @@ class Manager(object):
 
             def generate_param(key):
                 parts = key.split("__")
-                field = key.replace('_','.')
+                field = key.replace('_', '.')
                 fmt = '%s==%s'
                 if len(parts) == 2:
                     # support filters:
@@ -220,9 +220,9 @@ class Manager(object):
                         fmt = ''.join(['%s.', parts[1], '(%s)'])
 
                 return fmt % (
-                        field,
-                        get_filter_params()
-                        )
+                    field,
+                    get_filter_params()
+                )
 
             params = [generate_param(key) for key in kwargs.keys()]
 

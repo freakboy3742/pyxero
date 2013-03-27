@@ -36,7 +36,8 @@ class PrivateCredentials(object):
         # Private API uses consumer key as the OAuth token.
         self.oauth_token = consumer_key
 
-        self.oauth = OAuth1(self.consumer_key,
+        self.oauth = OAuth1(
+            self.consumer_key,
             resource_owner_key=self.oauth_token,
             rsa_key=self.rsa_key,
             signature_method=SIGNATURE_RSA,
@@ -79,8 +80,8 @@ class PublicCredentials(object):
         ...
     """
     def __init__(self, consumer_key, consumer_secret,
-            callback_uri=None, verified=False,
-            oauth_token=None, oauth_token_secret=None):
+                 callback_uri=None, verified=False,
+                 oauth_token=None, oauth_token_secret=None):
         """Construct the auth instance.
 
         Must provide the consumer key and secret.
@@ -108,7 +109,8 @@ class PublicCredentials(object):
                 self.oauth_token_secret = oauth_token_secret
 
         else:
-            oauth = OAuth1(consumer_key,
+            oauth = OAuth1(
+                consumer_key,
                 client_secret=self.consumer_secret,
                 callback_uri=self.callback_uri
             )
@@ -124,10 +126,11 @@ class PublicCredentials(object):
         self.oauth_token = oauth_token
         self.oauth_token_secret = oauth_token_secret
 
-        self._oauth = OAuth1(self.consumer_key,
-           client_secret=self.consumer_secret,
-           resource_owner_key=self.oauth_token,
-           resource_owner_secret=self.oauth_token_secret
+        self._oauth = OAuth1(
+            self.consumer_key,
+            client_secret=self.consumer_secret,
+            resource_owner_key=self.oauth_token,
+            resource_owner_secret=self.oauth_token_secret
         )
 
     @property
@@ -148,7 +151,8 @@ class PublicCredentials(object):
         "Verify an OAuth token"
 
         # Construct the credentials for the verification request
-        oauth = OAuth1(self.consumer_key,
+        oauth = OAuth1(
+            self.consumer_key,
             client_secret=self.consumer_secret,
             resource_owner_key=self.oauth_token,
             resource_owner_secret=self.oauth_token_secret,
