@@ -3,6 +3,7 @@ __pycache__
 *~
 .*.sw[op]
 *.egg-info
+local
 dist
 build
 _build
