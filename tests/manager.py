@@ -4,19 +4,22 @@ from datetime import date
 import unittest
 from xml.dom.minidom import parseString
 
+from mock import Mock
+
 from xero import Xero
-
-
-class MockCredentials(object):
-    def __init__(self):
-        self.oauth = None
 
 
 class InvoiceTest(unittest.TestCase):
     def test_invoice(self):
         "An invoice can be correctly serialized for a POST/PUT request"
-        self.maxDiff = None
-        credentials = MockCredentials()
+
+        # This checks:
+        # * Date data types
+        # * Normal string data types
+        # * Inline dictionary data types (Contact)
+        # * List of dict data types
+
+        credentials = Mock()
         xero = Xero(credentials)
 
         original = {
