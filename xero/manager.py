@@ -137,7 +137,7 @@ class Manager(object):
         response = data[u'Response']
         result = response.get(self.name, {})
 
-        if isinstance(result, tuple):
+        if isinstance(result, tuple) or isinstance(result, list):
             return result
 
         if isinstance(result, dict) and self.singular in result:
