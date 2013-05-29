@@ -151,7 +151,7 @@ class Manager(object):
             if response.status_code == 200:
                 if response.headers['content-type'] == 'application/pdf':
                     return response.text
-                dom = parseString(response.text)
+                dom = parseString(response.text.encode('utf-8'))
                 data = self.convert_to_dict(self.walk_dom(dom))
                 return self._get_results(data)
 
