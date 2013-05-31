@@ -17,7 +17,8 @@ class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
         # Extract the messages from the text.
-        dom = parseString(response.text)
+        # parseString takes byte content, not unicode.
+        dom = parseString(response.text.encode(response.encoding))
         messages = dom.getElementsByTagName('Message')
 
         msg = messages[0].childNodes[0].data
@@ -57,7 +58,8 @@ class XeroNotImplemented(XeroException):
     # HTTP 501
     def __init__(self, response):
         # Extract the useful error message from the text.
-        dom = parseString(response.text)
+        # parseString takes byte content, not unicode.
+        dom = parseString(response.text.encode(response.encoding))
         messages = dom.getElementsByTagName('Message')
 
         msg = messages[0].childNodes[0].data
