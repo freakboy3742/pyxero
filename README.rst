@@ -235,7 +235,8 @@ dependencies to your environment:
 
     mock >= 1.0
 
-These aren't included in the formal dependencies because they
+These aren't included in the formal dependencies because they aren't required
+for normal operation of PyXero. They're only required for testing purposes.
 
 Once you've installed these dependencies, you can run the test suite by
 running the following from the root directory of the project:
