@@ -226,3 +226,30 @@ This same API pattern exists for the following API objects:
 .. _XeroPy: https://github.com/fatbox/XeroPy
 .. _register your public application with Xero: http://developer.xero.com/api-overview/public-applications/
 .. _register your private application with Xero: http://developer.xero.com/api-overview/private-applications/
+
+Contributing
+------------
+
+If you're going to run the PyXero test suite, you need to add the following
+dependencies to your environment:
+
+    mock >= 1.0
+
+These aren't included in the formal dependencies because they
+
+Once you've installed these dependencies, you can run the test suite by
+running the following from the root directory of the project:
+
+    $ python setup.py test
+
+If you find any problems with pyxero, you can log them on `Github Issues`_.
+When reporting problems, it's extremely helpful if you can provide
+reproduction instructions -- the sequence of calls and/or test data that
+can be used to reproduce the issue.
+
+New features or bug fixes can be submitted via a pull request. If you want
+your pull request to be merged quickly, make sure you either include
+regression test(s) for the behavior you are adding/fixing, or provide a
+good explanation of why a regression test isn't possible.
+
+.. _Github Issues: https://github.com/freakboy3742/pyxero/issues
