@@ -55,3 +55,4 @@ class InvoiceTest(unittest.TestCase):
 
         # Original should match reproduced version, embedded inside a parent key
         self.assertEqual(original, reproduced)
+

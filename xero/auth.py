@@ -5,7 +5,7 @@ from urlparse import parse_qs
 from urllib import urlencode
 
 from .constants import REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL
-from .exceptions import XeroNotVerified, XeroBadRequest, XeroExceptionUnknown
+from .exceptions import *
 
 
 class PrivateCredentials(object):
@@ -121,14 +121,37 @@ class PublicCredentials(object):
                 credentials = parse_qs(response.text)
                 self.oauth_token = credentials.get('oauth_token')[0]
                 self.oauth_token_secret = credentials.get('oauth_token_secret')[0]
-            elif response.status_code == 400 or response.status_code == 401:
+
+            elif response.status_code == 400:
+                raise XeroBadRequest(response)
+
+            elif response.status_code == 401:
+                raise XeroUnauthorized(response)
+
+            elif response.status_code == 403:
+                raise XeroForbidden(response)
+
+            elif response.status_code == 404:
+                raise XeroNotFound(response)
+
+            elif response.status_code == 500:
+                raise XeroInternalError(response)
+
+            elif response.status_code == 501:
+                raise XeroNotImplemented(response)
+
+            elif response.status_code == 503:
+                # Two 503 responses are possible. Rate limit errors
+                # return encoded content; offline errors don't.
+                # If you parse the response text and there's nothing
+                # encoded, it must be a not-available error.
                 payload = parse_qs(response.text)
-                raise XeroBadRequest(
-                    payload['oauth_problem'][0],
-                    payload['oauth_problem_advice'][0]
-                )
+                if payload:
+                    raise XeroRateLimitExceeded(response, payload)
+                else:
+                    raise XeroNotAvailable(response)
             else:
-                raise XeroExceptionUnknown(response.text)
+                raise XeroExceptionUnknown(response)
 
     def _init_oauth(self, oauth_token, oauth_token_secret):
         "Store and initialize the OAuth credentials"
@@ -179,14 +202,36 @@ class PublicCredentials(object):
                 credentials.get('oauth_token')[0],
                 credentials.get('oauth_token_secret')[0]
             )
-        elif response.status_code == 400 or response.status_code == 401:
+        elif response.status_code == 400:
+            raise XeroBadRequest(response)
+
+        elif response.status_code == 401:
+            raise XeroUnauthorized(response)
+
+        elif response.status_code == 403:
+            raise XeroForbidden(response)
+
+        elif response.status_code == 404:
+            raise XeroNotFound(response)
+
+        elif response.status_code == 500:
+            raise XeroInternalError(response)
+
+        elif response.status_code == 501:
+            raise XeroNotImplemented(response)
+
+        elif response.status_code == 503:
+            # Two 503 responses are possible. Rate limit errors
+            # return encoded content; offline errors don't.
+            # If you parse the response text and there's nothing
+            # encoded, it must be a not-available error.
             payload = parse_qs(response.text)
-            raise XeroBadRequest(
-                payload['oauth_problem'][0],
-                payload['oauth_problem_advice'][0]
-            )
+            if payload:
+                raise XeroRateLimitExceeded(response, payload)
+            else:
+                raise XeroNotAvailable(response)
         else:
-            raise XeroExceptionUnknown(response.text)
+            raise XeroExceptionUnknown(response)
 
     @property
     def url(self):

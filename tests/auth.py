@@ -3,7 +3,7 @@ import unittest
 from mock import patch, Mock
 
 from xero.auth import PublicCredentials
-from xero.exceptions import XeroNotVerified, XeroBadRequest
+from xero.exceptions import *
 
 
 class PublicCredentialsTest(unittest.TestCase):
@@ -33,7 +33,7 @@ class PublicCredentialsTest(unittest.TestCase):
         "Initial construction with bad credentials raises an exception"
         r_post.return_value = Mock(status_code=401, text='oauth_problem=consumer_key_unknown&oauth_problem_advice=Consumer%20key%20was%20not%20recognised')
 
-        with self.assertRaises(XeroBadRequest):
+        with self.assertRaises(XeroUnauthorized):
             PublicCredentials(
                 consumer_key='unknown',
                 consumer_secret='unknown'
@@ -141,7 +141,7 @@ class PublicCredentialsTest(unittest.TestCase):
             oauth_token_secret='token_secret',
         )
 
-        with self.assertRaises(XeroBadRequest):
+        with self.assertRaises(XeroUnauthorized):
             credentials.verify('badverifier')
 
         with self.assertRaises(XeroNotVerified):

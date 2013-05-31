@@ -155,24 +155,36 @@ class Manager(object):
                 data = self.convert_to_dict(self.walk_dom(dom))
                 return self._get_results(data)
 
+            elif response.status_code == 400:
+                raise XeroBadRequest(response)
+
+            elif response.status_code == 401:
+                raise XeroUnauthorized(response)
+
+            elif response.status_code == 403:
+                raise XeroForbidden(response)
+
             elif response.status_code == 404:
-                raise XeroException404(response.text)
+                raise XeroNotFound(response)
 
             elif response.status_code == 500:
-                raise XeroException500(response.text)
-
-            elif response.status_code == 400 or response.status_code == 401:
-                payload = parse_qs(response.text)
-                raise XeroBadRequest(
-                    payload['oauth_problem'][0],
-                    payload['oauth_problem_advice'][0]
-                )
+                raise XeroInternalError(response)
 
             elif response.status_code == 501:
-                raise XeroNotImplemented(response.text)
+                raise XeroNotImplemented(response)
 
+            elif response.status_code == 503:
+                # Two 503 responses are possible. Rate limit errors
+                # return encoded content; offline errors don't.
+                # If you parse the response text and there's nothing
+                # encoded, it must be a not-available error.
+                payload = parse_qs(response.text)
+                if payload:
+                    raise XeroRateLimitExceeded(response, payload)
+                else:
+                    raise XeroNotAvailable(response)
             else:
-                raise XeroExceptionUnknown(response.text)
+                raise XeroExceptionUnknown(response)
 
         return wrapper
 
