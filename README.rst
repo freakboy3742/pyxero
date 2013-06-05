@@ -190,18 +190,18 @@ For example, to deal with contacts::
     [{...contact info...}, {...contact info...}, {...contact info...}]
 
     # Create a new object
-    >>> xero.put({...contact info...})
+    >>> xero.contacts.put({...contact info...})
 
     # Create a new object
-    >>> xero.put([{...contact info...}, {...contact info...}, {...contact info...}])
+    >>> xero.contacts.put([{...contact info...}, {...contact info...}, {...contact info...}])
 
     # Save an update to an existing object
     >>> c = xero.contacts.get(u'b2b5333a-2546-4975-891f-d71a8a640d23')
     >>> c['Name'] = 'John Smith'
-    >>> xero.save(c)
+    >>> xero.contacts.save(c)
 
     # Save multiple objects
-    >>> xero.save([c1, c2])
+    >>> xero.contacts.save([c1, c2])
 
 This same API pattern exists for the following API objects:
 
