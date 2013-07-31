@@ -1,2 +1,4 @@
 include README.rst
+include LICENSE
 recursive-include xero *.py
+recursive-include tests *.py
