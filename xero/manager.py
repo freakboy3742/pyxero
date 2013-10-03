@@ -19,6 +19,8 @@ class Manager(object):
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
+    
+    NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
     def __init__(self, name, oauth):
         self.oauth = oauth
@@ -88,6 +90,10 @@ class Manager(object):
 
     def dict_to_xml(self, root_elm, data):
         for key in data.keys():
+            # Xero will complain if we send back these fields.
+            if key in self.NO_SEND_FIELDS:
+                continue
+            
             sub_data = data[key]
             elm = SubElement(root_elm, key)
 
