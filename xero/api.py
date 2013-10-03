@@ -5,7 +5,7 @@ class Xero(object):
     """An ORM-like interface to the Xero API"""
 
     OBJECT_LIST = (u'Contacts', u'Accounts', u'CreditNotes',
-                   u'Currencies', u'Invoices', u'Organisation',
+                   u'Currencies', u'Invoices', u'Items', u'Organisation',
                    u'Payments', u'TaxRates', u'TrackingCategories')
 
     def __init__(self, credentials):
