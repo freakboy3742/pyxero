@@ -16,6 +16,7 @@ class Manager(object):
     DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate')
     DATE_FIELDS = (u'DueDate', u'Date')
     BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer')
+    GUID_FIELDS = (u'ContactID', u'InvoiceID')
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
@@ -227,6 +228,10 @@ class Manager(object):
                 del kwargs['since']
 
             def get_filter_params():
+                last_key = key.split('_')[-1]
+                if last_key in self.GUID_FIELDS:
+                    return '%s("Guid")' % str(last_key)
+                
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if kwargs[key] else 'false'
                 elif key in self.DATETIME_FIELDS:
