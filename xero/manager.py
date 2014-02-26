@@ -20,7 +20,7 @@ class Manager(object):
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
-    
+
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
     def __init__(self, name, oauth):
@@ -94,7 +94,7 @@ class Manager(object):
             # Xero will complain if we send back these fields.
             if key in self.NO_SEND_FIELDS:
                 continue
-            
+
             sub_data = data[key]
             elm = SubElement(root_elm, key)
 
@@ -218,7 +218,7 @@ class Manager(object):
             val = '"%s"' % val
         return {'If-Modified-Since': val}
 
-    def filter(self, **kwargs):
+    def filter(self, page=1, **kwargs):
         headers = None
         uri = '/'.join([XERO_API_URL, self.name])
         if kwargs:
@@ -255,10 +255,11 @@ class Manager(object):
                     get_filter_params()
                 )
 
+            uri += '?page=' + str(page)
             params = [generate_param(key) for key in kwargs.keys()]
 
             if params:
-                uri += '?where=' + urllib.quote('&&'.join(params))
+                uri += '&where=' + urllib.quote('&&'.join(params))
 
         return uri, 'get', None, headers
 
