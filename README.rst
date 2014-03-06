@@ -124,7 +124,7 @@ signed API requests::
     >>> from xero.auth import PrivateCredentials
     >>> with open(<path to rsa key file>) as keyfile:
     ...     rsa_key = keyfile.read()
-    >>> credentials = PrivateCredentials(<consumer_key>, <rsa_key>)
+    >>> credentials = PrivateCredentials(<consumer_key>, rsa_key)
     >>> xero = Xero(credentials)
 
 The RSA key is a multi-line string that will look something like::
