@@ -230,13 +230,13 @@ This same API pattern exists for the following API objects:
 Contributing
 ------------
 
-If you're going to run the PyXero test suite, you need to add the following
-dependencies to your environment:
+If you're going to run the PyXero test suite, in addition to the dependencies
+for PyXero, you need to add the following dependency to your environment:
 
     mock >= 1.0
 
-These aren't included in the formal dependencies because they aren't required
-for normal operation of PyXero. They're only required for testing purposes.
+Mock isn't included in the formal dependencies because they aren't required
+for normal operation of PyXero. It's only required for testing purposes.
 
 Once you've installed these dependencies, you can run the test suite by
 running the following from the root directory of the project:
