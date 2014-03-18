@@ -8,6 +8,7 @@ from mock import Mock, patch
 
 from xero import Xero
 from xero.exceptions import *
+from tests import mock_data
 
 
 class ExceptionsTest(unittest.TestCase):
@@ -17,52 +18,7 @@ class ExceptionsTest(unittest.TestCase):
         "Data with validation errors raises a bad request exception"
         # Verified response from the live API
         r_put.return_value = Mock(status_code=400, encoding='utf-8',
-            text="""<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <ErrorNumber>10</ErrorNumber>
-  <Type>ValidationException</Type>
-  <Message>A validation exception occurred</Message>
-  <Elements>
-    <DataContractBase xsi:type="Invoice">
-      <ValidationErrors>
-        <ValidationError>
-          <Message>One or more line items must be specified</Message>
-        </ValidationError>
-        <ValidationError>
-          <Message>Invoice not of valid status for creation</Message>
-        </ValidationError>
-        <ValidationError>
-          <Message>A Contact must be specified for this type of transaction</Message>
-        </ValidationError>
-      </ValidationErrors>
-      <Warnings />
-      <Date>2013-04-29T00:00:00</Date>
-      <DueDate>2013-04-29T00:00:00</DueDate>
-      <BrandingThemeID xsi:nil="true" />
-      <Status>PAID</Status>
-      <LineAmountTypes>Exclusive</LineAmountTypes>
-      <LineItems />
-      <SubTotal>18.00</SubTotal>
-      <TotalTax>1.05</TotalTax>
-      <Total>19.05</Total>
-      <UpdatedDateUTC xsi:nil="true" />
-      <CurrencyCode>AUD</CurrencyCode>
-      <FullyPaidOnDate xsi:nil="true" />
-      <Type>ACCREC</Type>
-      <InvoiceID>00000000-0000-0000-0000-000000000000</InvoiceID>
-      <Reference>Order # 123456</Reference>
-      <Payments />
-      <CreditNotes />
-      <AmountDue>0.00</AmountDue>
-      <AmountPaid>19.05</AmountPaid>
-      <AmountCredited xsi:nil="true" />
-      <SentToContact xsi:nil="true" />
-      <CurrencyRate xsi:nil="true" />
-      <TotalDiscount xsi:nil="true" />
-      <HasAttachments xsi:nil="true" />
-      <Attachments />
-    </DataContractBase>
-  </Elements>
-</ApiException>""")
+            text=mock_data.bad_request_text)
 
         credentials = Mock()
         xero = Xero(credentials)
@@ -220,11 +176,7 @@ class ExceptionsTest(unittest.TestCase):
         "In case of an SSL failure, a Forbidden exception is raised"
         # Verified response from the live API
         r_post.return_value = Mock(status_code=501, encoding='utf-8',
-            text="""<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <ErrorNumber>20</ErrorNumber>
-    <Type>ApiMethodNotImplementedException</Type>
-    <Message>The Api Method called is not implemented</Message>
-</ApiException>""")
+            text=mock_data.not_implemented_text)
 
         credentials = Mock()
         xero = Xero(credentials)
