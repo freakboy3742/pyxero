@@ -16,7 +16,8 @@ class ExceptionsTest(unittest.TestCase):
     def test_bad_request(self, r_put):
         "Data with validation errors raises a bad request exception"
         # Verified response from the live API
-        r_put.return_value = Mock(status_code=400, text="""<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        r_put.return_value = Mock(status_code=400, encoding='utf-8',
+            text="""<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <ErrorNumber>10</ErrorNumber>
   <Type>ValidationException</Type>
   <Message>A validation exception occurred</Message>
@@ -218,7 +219,8 @@ class ExceptionsTest(unittest.TestCase):
     def test_not_implemented(self, r_post):
         "In case of an SSL failure, a Forbidden exception is raised"
         # Verified response from the live API
-        r_post.return_value = Mock(status_code=501, text="""<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        r_post.return_value = Mock(status_code=501, encoding='utf-8',
+            text="""<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ErrorNumber>20</ErrorNumber>
     <Type>ApiMethodNotImplementedException</Type>
     <Message>The Api Method called is not implemented</Message>
