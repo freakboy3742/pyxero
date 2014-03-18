@@ -202,7 +202,7 @@ class Manager(object):
     def save_or_put(self, data, method='post', headers=None):
         uri = '/'.join([XERO_API_URL, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
-        return uri, {}, method, body, headers
+        return uri, {'summarizeErrors': 'false'}, method, body, headers
 
     def save(self, data):
         return self.save_or_put(data, method='post')
