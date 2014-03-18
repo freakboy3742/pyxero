@@ -2,7 +2,6 @@ from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
 from dateutil.parser import parse
-import urllib
 import requests
 from urlparse import parse_qs
 
@@ -152,8 +151,8 @@ class Manager(object):
 
     def _get_data(self, func):
         def wrapper(*args, **kwargs):
-            uri, method, body, headers = func(*args, **kwargs)
-            response = getattr(requests, method)(uri, data=body, headers=headers, auth=self.oauth)
+            uri, params, method, body, headers = func(*args, **kwargs)
+            response = getattr(requests, method)(uri, data=body, headers=headers, auth=self.oauth, params=params)
 
             if response.status_code == 200:
                 if response.headers['content-type'] == 'application/pdf':
@@ -198,12 +197,12 @@ class Manager(object):
 
     def get(self, id, headers=None):
         uri = '/'.join([XERO_API_URL, self.name, id])
-        return uri, 'get', None, headers
+        return uri, {}, 'get', None, headers
 
     def save_or_put(self, data, method='post', headers=None):
         uri = '/'.join([XERO_API_URL, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
-        return uri, method, body, headers
+        return uri, {}, method, body, headers
 
     def save(self, data):
         return self.save_or_put(data, method='post')
@@ -258,10 +257,10 @@ class Manager(object):
             params = [generate_param(key) for key in kwargs.keys()]
 
             if params:
-                uri += '?where=' + urllib.quote('&&'.join(params))
+                params = {'where': '&&'.join(params)}
 
-        return uri, 'get', None, headers
+        return uri, params, 'get', None, headers
 
     def all(self):
         uri = '/'.join([XERO_API_URL, self.name])
-        return uri, 'get', None, None
+        return uri, {}, 'get', None, None
