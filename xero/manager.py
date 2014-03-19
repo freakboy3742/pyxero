@@ -199,16 +199,20 @@ class Manager(object):
         uri = '/'.join([XERO_API_URL, self.name, id])
         return uri, {}, 'get', None, headers
 
-    def save_or_put(self, data, method='post', headers=None):
+    def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([XERO_API_URL, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
-        return uri, {'summarizeErrors': 'false'}, method, body, headers
+        if summarize_errors:
+            params = {}
+        else:
+            params = {'summarizeErrors': 'false'}
+        return uri, params, method, body, headers
 
     def save(self, data):
         return self.save_or_put(data, method='post')
 
-    def put(self, data):
-        return self.save_or_put(data, method='put')
+    def put(self, data, summarize_errors=True):
+        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
