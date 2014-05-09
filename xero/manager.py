@@ -7,8 +7,17 @@ import requests
 from urlparse import parse_qs
 
 from .constants import XERO_API_URL
-from .exceptions import *
-
+from .exceptions import (
+    XeroBadRequest,
+    XeroUnauthorized,
+    XeroForbidden,
+    XeroNotFound,
+    XeroInternalError,
+    XeroNotImplemented,
+    XeroRateLimitExceeded,
+    XeroNotAvailable,
+    XeroExceptionUnknown
+)
 
 class Manager(object):
     DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put')
@@ -98,6 +107,7 @@ class Manager(object):
             sub_data = data[key]
             elm = SubElement(root_elm, key)
 
+            is_bool = isinstance(sub_data, bool)
             is_list = isinstance(sub_data, list) or isinstance(sub_data, tuple)
             is_plural = key[len(key)-1] == "s"
             plural_name = key[:len(key)-1]
@@ -122,6 +132,9 @@ class Manager(object):
                 else:
                     for d in sub_data:
                         self.dict_to_xml(elm, d)
+
+            elif is_bool:
+                elm.text = str(sub_data).lower()
 
             # Normal element - just inser the data.
             else:
