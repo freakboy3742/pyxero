@@ -30,7 +30,7 @@ class ManagerTest(unittest.TestCase):
                 'Contact': {'ContactID': '3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f'},
                 'LineItems': [
                     {
-                        'Description': 'Line item 1',
+                        'Description': u'Line item with accents őűí',
                         'Quantity': '1.0',
                         'UnitAmount': '100.00',
                         'AccountCode': '200',

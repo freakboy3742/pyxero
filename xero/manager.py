@@ -124,7 +124,10 @@ class Manager(object):
 
             # Normal element - just inser the data.
             else:
-                elm.text = str(sub_data)
+                if isinstance(sub_data, unicode):
+                    elm.text = unicode(sub_data)
+                else:
+                    elm.text = str(sub_data)
 
         return root_elm
 
