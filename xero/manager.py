@@ -9,16 +9,36 @@ from .constants import XERO_API_URL
 from .exceptions import *
 
 
+def isplural(word):
+    return word[-1].lower() == 's'
+
+def singular(word):
+    if isplural(word):
+        return word[:-1]
+    return word
+
+
 class Manager(object):
     DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put')
-
-    DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate')
-    DATE_FIELDS = (u'DueDate', u'Date')
-    BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer')
-    GUID_FIELDS = (u'ContactID', u'InvoiceID')
-
-    MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
+    DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate',
+                       u'DateTimeUTC', u'CreatedDateUTC', )
+    DATE_FIELDS = (u'DueDate', u'Date',  u'PaymentDate',
+                   u'StartDate', u'EndDate',
+                   u'PeriodLockDate', u'DateOfBirth',
+                   u'OpeningBalanceDate',
+                   )
+    BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer', u'IsDemoCompany',
+                      u'PaysTax', u'IsAuthorisedToApproveTimesheets',
+                      u'IsAuthorisedToApproveLeave', u'HasHELPDebt',
+                      u'AustralianResidentForTaxPurposes',
+                      u'TaxFreeThresholdClaimed', u'HasSFSSDebt',
+                      u'EligibleToReceiveLeaveLoading',
+                      u'IsExemptFromTax', u'IsExemptFromSuper',
+                      )
+    DECIMAL_FIELDS = (u'Hours', u'NumberOfUnit')
+    INTEGER_FIELDS = (u'FinancialYearEndDay', u'FinancialYearEndMonth')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
+    GUID_FIELDS = (u'ContactID', u'InvoiceID')
 
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
@@ -51,39 +71,56 @@ class Manager(object):
 
     def convert_to_dict(self, deep_list):
         out = {}
+
         if len(deep_list) > 2:
             lists = [l for l in deep_list if isinstance(l, tuple)]
             keys = [l for l in deep_list if isinstance(l, unicode)]
+
+            if len(keys) > 1 and len(set(keys)) == 1:
+                # This is a collection... all of the keys are the same.
+                return [self.convert_to_dict(data) for data in lists]
+
             for key, data in zip(keys, lists):
+                if not data:
+                    # Skip things that are empty tags?
+                    continue
 
                 if len(data) == 1:
                     # we're setting a value
                     # check to see if we need to apply any special
                     # formatting to the value
                     val = data[0]
-                    if key in self.BOOLEAN_FIELDS:
+                    if key in self.DECIMAL_FIELDS:
+                        val = Decimal(val)
+                    elif key in self.BOOLEAN_FIELDS:
                         val = True if val.lower() == 'true' else False
-                    if key in self.DATETIME_FIELDS:
+                    elif key in self.DATETIME_FIELDS:
                         val = parse(val)
-                    if key in self.DATE_FIELDS:
+                    elif key in self.DATE_FIELDS:
                         val = parse(val).date()
+                    elif key in self.INTEGER_FIELDS:
+                        val = int(val)
+                    data = val
+                else:
+                    # We have a deeper data structure, that we need
+                    # to recursively process.
+                    data = self.convert_to_dict(data)
+                    # Which may itself be a collection. Quick, check!
+                    if isinstance(data, dict) and isplural(key) and [singular(key)] == data.keys():
+                        data = [data[singular(key)]]
 
-                    out[key] = val
-
-                elif len(data) > 1 and ((key in self.MULTI_LINES) or (key == self.singular)):
-                    # our data is a collection and needs to be handled as such
-                    if out:
-                        out.append(self.convert_to_dict(data))
-                    else:
-                        out = [self.convert_to_dict(data)]
-
-                elif len(data) > 1:
-                    out[key] = self.convert_to_dict(data)
+                out[key] = data
 
         elif len(deep_list) == 2:
             key = deep_list[0]
-            data = deep_list[1]
-            out[key] = self.convert_to_dict(data)
+            data = self.convert_to_dict(deep_list[1])
+
+            # If our key is repeated in our child object, but in singular
+            # form (and is the only key), then this object is a collection.
+            if isplural(key) and [singular(key)] == data.keys():
+                data = [data[singular(key)]]
+
+            out[key] = data
         else:
             out = deep_list[0]
         return out
