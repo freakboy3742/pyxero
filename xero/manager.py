@@ -225,7 +225,6 @@ class Manager(object):
     def filter(self, **kwargs):
         headers = None
         uri = '/'.join([XERO_API_URL, self.name])
-
         if kwargs:
             if 'since' in kwargs:
                 val = kwargs['since']
