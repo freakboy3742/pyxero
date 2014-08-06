@@ -64,11 +64,12 @@ class Manager(object):
                     if key in self.BOOLEAN_FIELDS:
                         val = True if val.lower() == 'true' else False
                     if key in self.DATETIME_FIELDS:
-                        if val:
-                            val = parse(val)
+                        val = parse(val)
                     if key in self.DATE_FIELDS:
-                        if val:
-                            val = parse(val).date()
+                        if val.isdigit():
+                          val = int(val)
+                        else:
+                          val = parse(val).date()
 
                     out[key] = val
 
