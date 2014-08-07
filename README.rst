@@ -215,6 +215,38 @@ This same API pattern exists for the following API objects:
  * TaxRates
  * TrackingCategories
 
+If you need access to the raw request and response data being sent to Xero, they
+are available too:
+
+    # Make some pyxero call
+    >>> xero.contacts.all()
+
+    # The data for the first request/response (The PyXero API currently makes exactly one request per function call)
+    >>> xero.contacts.last_request_data[0]
+
+    # Url that the request was sent to
+    >>> xero.contacts.last_request_data[0]['url']
+
+    # Params (GET arguments) that were included in the url
+    >>> xero.contacts.last_request_data[0]['params']
+
+    # Request method ('get', 'post', 'put', etc.) that was used
+    >>> xero.contacts.last_request_data[0]['method']
+
+    # Request headers
+    >>> xero.contacts.last_request_data[0]['headers']
+
+    # Response status code
+    >>> xero.contacts.last_request_data[0]['status_code']
+
+    # Response body
+    >>> xero.contacts.last_request_data[0]['response_body']
+
+    # Content type of the response body
+    >>> xero.contacts.last_request_data[0]['content_type']
+
+
+
 
 .. _Xero: http://developer.xero.com
 .. _requests: http://python-requests.org

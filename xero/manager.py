@@ -19,12 +19,14 @@ class Manager(object):
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
-    
+
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
     def __init__(self, name, oauth):
         self.oauth = oauth
         self.name = name
+
+        self.last_request_data = {}
 
         # setup our singular variants of the name
         # only if the name ends in 0
@@ -93,7 +95,7 @@ class Manager(object):
             # Xero will complain if we send back these fields.
             if key in self.NO_SEND_FIELDS:
                 continue
-            
+
             sub_data = data[key]
             elm = SubElement(root_elm, key)
 
@@ -151,9 +153,20 @@ class Manager(object):
 
     def _get_data(self, func):
         def wrapper(*args, **kwargs):
+            self.last_request_data = []
             uri, params, method, body, headers = func(*args, **kwargs)
             response = getattr(requests, method)(uri, data=body, headers=headers, auth=self.oauth, params=params)
 
+            self.last_request_data.append({
+                'url':           uri,
+                'params':        params,
+                'method':        method,
+                'data':          body,
+                'headers':       headers,
+                'status_code':   response.status_code,
+                'response_body': response.text,
+                'content_type':  response.headers.get('content-type', ''),
+            })
             if response.status_code == 200:
                 if response.headers['content-type'] == 'application/pdf':
                     # return a byte string without doing any Unicode conversions
@@ -235,7 +248,7 @@ class Manager(object):
                 last_key = key.split('_')[-1]
                 if last_key in self.GUID_FIELDS:
                     return '%s("Guid")' % str(last_key)
-                
+
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if kwargs[key] else 'false'
                 elif key in self.DATETIME_FIELDS:

@@ -76,3 +76,28 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(contact['FirstName'], 'John')
         self.assertEqual(contact['LastName'], 'Sürname')
+
+    @patch('requests.get')
+    def test_last_request_data(self, r_get):
+        "PyXero will save request and response data"
+        r_get.return_value = Mock(status_code=200,
+            headers={'content-type': 'text/xml; charset=utf-8'},
+            encoding='utf-8', text=mock_data.unicode_content_text)
+
+        credentials = Mock()
+        xero = Xero(credentials)
+
+        contact = xero.contacts.get(id='755f1475-d255-43a8-bedc-5ea7fd26c71f')
+
+        xero_data = xero.contacts.last_request_data
+        self.assertEqual(len(xero_data), 1)
+        xero_data = xero_data[0]
+        self.assertEqual(xero_data['url'], 'https://api.xero.com/api.xro/2.0/Contacts/755f1475-d255-43a8-bedc-5ea7fd26c71f')
+        self.assertEqual(xero_data['params'], {})
+        self.assertEqual(xero_data['method'], 'get')
+        self.assertEqual(xero_data['data'], None)
+        self.assertEqual(xero_data['headers'], None)
+        self.assertEqual(xero_data['status_code'], 200)
+        self.assertEqual(xero_data['response_body'], mock_data.unicode_content_text)
+        self.assertEqual(xero_data['content_type'], 'text/xml; charset=utf-8')
+
