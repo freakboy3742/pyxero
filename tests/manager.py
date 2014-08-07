@@ -30,7 +30,7 @@ class ManagerTest(unittest.TestCase):
                 'Contact': {'ContactID': '3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f'},
                 'LineItems': [
                     {
-                        'Description': 'Line item 1',
+                        'Description': u'Line item with accents őűí',
                         'Quantity': '1.0',
                         'UnitAmount': '100.00',
                         'AccountCode': '200',
@@ -76,3 +76,22 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(contact['FirstName'], 'John')
         self.assertEqual(contact['LastName'], 'Sürname')
+
+
+    @patch('requests.get')
+    def test_raw_filter(self, r_get):
+        "PyXero will correctly use raw filtering"
+        r_get.return_value = Mock(
+            status_code=200,
+            headers={'content-type': 'text/xml; charset=utf-8'},
+            encoding='utf-8',
+            text=mock_data.unicode_content_text
+        )
+
+        credentials = Mock()
+        xero = Xero(credentials)
+
+        contact = xero.contacts.filter(raw='Contact.ContactID=Guid("cd09aa49-134d-40fb-a52b-b63c6a91d712") AND ContactStatus=ACTIVE', name='John')
+
+        self.assertEqual(r_get.call_count, 1)
+        self.assertEqual(r_get.call_args.__getitem__(1)['params'], {'where': u'name=="John"&&Contact.ContactID=Guid("cd09aa49-134d-40fb-a52b-b63c6a91d712") AND ContactStatus=ACTIVE'})
