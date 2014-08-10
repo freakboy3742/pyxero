@@ -12,13 +12,13 @@ that code.
 
 This packages differs in three significant was from `XeroPy`_:
 
- * It uses the popular `requests`_ library (and the `requests-oauthlib`_
-   extension) instead of httplib2.
+* It uses the popular `requests`_ library (and the `requests-oauthlib`_
+  extension) instead of httplib2.
 
- * It uses the pure-python `PyCrypto`_ library instead of the hard-to-compile
-   native M2Crypto wrapper for RSA signing.
+* It uses the pure-python `PyCrypto`_ library instead of the hard-to-compile
+  native M2Crypto wrapper for RSA signing.
 
- * It has been tested on both Public and Private Xero Applications.
+* It has been tested on both Public and Private Xero Applications.
 
 
 Quickstart:
@@ -77,11 +77,11 @@ when creating the credentials::
 When the user authorizes access to their Xero account, the `callback_url`
 will be called with three GET arguments:
 
- * `oauth_token`: The oauth_token that this request belongs to
+* `oauth_token`: The oauth_token that this request belongs to
 
- * `verifier`: The verifier string
+* `verifier`: The verifier string
 
- * `org`: An identifier for the organization that is allowing access.
+* `org`: An identifier for the organization that is allowing access.
 
 The verifier can then be used to verify the credentials, as with the manual
 process.
@@ -139,12 +139,12 @@ You can get this string by either reading the contents of your private key
 file into a variable, or storing the key value as a constant. If you choose to
 store the key value as a constant, remember two things:
 
- * **DO NOT UNDER ANY CIRCUMSTANCES** check this file into a public
-   repository. It is your identity, and anyone with access to this file
-   could masquerade as you.
+* **DO NOT UNDER ANY CIRCUMSTANCES** check this file into a public
+  repository. It is your identity, and anyone with access to this file
+  could masquerade as you.
 
- * Make sure there is no leading space before
-   the ``-----BEGIN PRIVATE KEY-----`` portion of the string.
+* Make sure there is no leading space before
+  the ``-----BEGIN PRIVATE KEY-----`` portion of the string.
 
 Using the Xero API
 ~~~~~~~~~~~~~~~~~~
@@ -203,17 +203,33 @@ For example, to deal with contacts::
     # Save multiple objects
     >>> xero.contacts.save([c1, c2])
 
+Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact:
+
+    >>> xero.invoices.filter(Contact_ContactID='83ad77d8-48a7-4f77-9146-e6933b7fb63b')
+
+Be careful when dealing with large amounts of data, the Xero API will take an
+increasingly long time to respond, or an error will be returned. If a query might
+return more than 100 results, you should make use of the ``page`` parameter.
+
+    # Grab 100 invoices created after 01-01-2013
+    >>> xero.invoices.filter(since=datetime(2013, 1, 1), page=1)
+
+You can also order the results to be returned:
+
+    # Grab contacts ordered by EmailAddress
+    >>> xero.contacts.filter(order='EmailAddress DESC')
+
 This same API pattern exists for the following API objects:
 
- * Accounts
- * Contacts
- * CreditNotes
- * Currencies
- * Invoices
- * Organisation
- * Payments
- * TaxRates
- * TrackingCategories
+* Accounts
+* Contacts
+* CreditNotes
+* Currencies
+* Invoices
+* Organisation
+* Payments
+* TaxRates
+* TrackingCategories
 
 
 .. _Xero: http://developer.xero.com
