@@ -223,6 +223,7 @@ class Manager(object):
         return {'If-Modified-Since': val}
 
     def filter(self, **kwargs):
+        params = {}
         headers = None
         uri = '/'.join([XERO_API_URL, self.name])
         if kwargs:
@@ -259,10 +260,16 @@ class Manager(object):
                     get_filter_params()
                 )
 
-            params = [generate_param(key) for key in kwargs.keys()]
+            # Move any known parameter names to the query string
+            KNOWN_PARAMETERS = ['order', 'offset', 'page']
+            for param in KNOWN_PARAMETERS:
+                if param in kwargs:
+                    params[param] = kwargs.pop(param)
 
-            if params:
-                params = {'where': '&&'.join(params)}
+            # Treat any remaining arguments as filter predicates
+            filter_params = [generate_param(key) for key in kwargs.keys()]
+            if filter_params:
+                params['where'] = '&&'.join(filter_params)
 
         return uri, params, 'get', None, headers
 

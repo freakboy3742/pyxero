@@ -1,13 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from datetime import date
+from datetime import date, datetime
 import unittest
 from xml.dom.minidom import parseString
 
 from mock import Mock, patch
 
 from xero import Xero
+from xero.manager import Manager
 from tests import mock_data
 
 
@@ -76,3 +77,40 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(contact['FirstName'], 'John')
         self.assertEqual(contact['LastName'], 'Sürname')
+
+    def test_filter(self):
+        "The filter function should correctly handle various arguments"
+        
+        # filter() is wrapped by _get_data when the Manager
+        # is instantiated. We save a copy so we can call it directly.
+        Manager.filter_unwrapped = Manager.filter
+        
+        credentials = Mock()
+        manager = Manager('contacts', credentials)
+        
+        uri, params, method, body, headers = manager.filter_unwrapped(
+                order="LastName",
+                page=2,
+                offset=5,
+                since=datetime(2014, 8, 10, 15, 14, 46),
+                Name="John")
+
+        self.assertEqual(method, 'get')
+
+        expected_params = {
+                "order": "LastName",
+                "page": 2,
+                "offset": 5,
+                "where": 'Name=="John"'
+        }
+        self.assertEqual(params, expected_params)
+
+        expected_headers = {
+                "If-Modified-Since" : "Sun, 10 Aug 2014 15:14:46 GMT"
+        }
+        self.assertEqual(headers, expected_headers)
+        
+        # Also make sure an empty call runs ok
+        uri, params, method, body, headers = manager.filter_unwrapped()
+        self.assertEqual(params, {})
+        self.assertIsNone(headers)
