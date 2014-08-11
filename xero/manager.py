@@ -24,7 +24,6 @@ class Manager(object):
 
     def __init__(self, name, credentials):
         self.credentials = credentials
-        self.oauth = credentials.oauth
         self.name = name
 
         self.base_url = credentials.base_url + XERO_API_URL
@@ -157,7 +156,7 @@ class Manager(object):
             uri, params, method, body, headers = func(*args, **kwargs)
             cert = getattr(self.credentials, 'client_cert', None)
             response = getattr(requests, method)(
-                    uri, data=body, headers=headers, auth=self.oauth,
+                    uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert)
 
             if response.status_code == 200:

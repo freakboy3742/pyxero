@@ -143,7 +143,7 @@ class PublicCredentials(object):
             )
 
             url = self.base_url + REQUEST_TOKEN_URL
-            response = requests.post(url=url, auth=oauth)
+            response = requests.post(url=url, auth=oauth, cert=self.client_cert)
             self._process_oauth_response(response)
 
     def _init_oauth(self, oauth_token, oauth_token_secret):
@@ -264,7 +264,8 @@ class PublicCredentials(object):
     @property
     def url(self):
         "Returns the URL that can be visited to obtain a verifier code"
-        url = self.base_url + AUTHORIZE_URL + '?' + \
+        # The authorize url is always api.xero.com 
+        url = XERO_BASE_URL + AUTHORIZE_URL + '?' + \
               urlencode({'oauth_token': self.oauth_token})
         return url
 
