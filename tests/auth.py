@@ -1,8 +1,9 @@
 import unittest
+from datetime import datetime, timedelta
 
 from mock import patch, Mock
 
-from xero.auth import PublicCredentials
+from xero.auth import PublicCredentials, PartnerCredentials
 from xero.exceptions import *
 
 
@@ -20,7 +21,13 @@ class PublicCredentialsTest(unittest.TestCase):
         # A HTTP request was made
         self.assertTrue(r_post.called)
 
-        self.assertEqual(credentials.state, {
+        state = credentials.state
+
+        # Expiry times should be calculated
+        self.assertIsNotNone(state.pop("oauth_authorization_expires_at"))
+        self.assertIsNotNone(state.pop("oauth_expires_at"))
+
+        self.assertEqual(state, {
             'consumer_key': 'key',
             'consumer_secret': 'secret',
             'oauth_token': 'token',
@@ -116,7 +123,13 @@ class PublicCredentialsTest(unittest.TestCase):
         # A HTTP request was made
         self.assertTrue(r_post.called)
 
-        self.assertEqual(credentials.state, {
+        state = credentials.state
+
+        # Expiry times should be calculated
+        self.assertIsNotNone(state.pop("oauth_authorization_expires_at"))
+        self.assertIsNotNone(state.pop("oauth_expires_at"))
+
+        self.assertEqual(state, {
             'consumer_key': 'key',
             'consumer_secret': 'secret',
             'oauth_token': 'verified_token',
@@ -146,3 +159,88 @@ class PublicCredentialsTest(unittest.TestCase):
 
         with self.assertRaises(XeroNotVerified):
             credentials.oauth
+
+    def test_expired(self):
+        "Expired credentials are correctly detected"
+        now = datetime(2014, 1, 1, 12, 0, 0)
+        soon = now + timedelta(minutes=30)
+
+        credentials = PublicCredentials(
+            consumer_key='key',
+            consumer_secret='secret',
+            oauth_token='token',
+            oauth_token_secret='token_secret',
+        )
+
+        # At this point, oauth_expires_at isn't set
+        with self.assertRaises(XeroException):
+            credentials.expired(now)
+
+        # Not yet expired
+        credentials.oauth_expires_at = soon
+        self.assertFalse(credentials.expired(now=now))
+
+        # Expired
+        self.assertTrue(credentials.expired(now=soon))
+        
+class PartnerCredentialsTest(unittest.TestCase):
+    @patch('requests.post')
+    def test_initial_constructor(self, r_post):
+        "Initial construction causes a request to get a request token"
+        r_post.return_value = Mock(status_code=200, text='oauth_token=token&oauth_token_secret=token_secret')
+
+        credentials = PartnerCredentials(
+            consumer_key='key',
+            consumer_secret='secret',
+            rsa_key='abc',
+            client_cert=('/fake/path', '/fake/otherpath')
+        )
+
+        # A HTTP request was made
+        self.assertTrue(r_post.called)
+
+        state = credentials.state
+
+        # Expiry times should be calculated
+        self.assertIsNotNone(state.pop("oauth_authorization_expires_at"))
+        self.assertIsNotNone(state.pop("oauth_expires_at"))
+
+        self.assertEqual(state, {
+            'consumer_key': 'key',
+            'consumer_secret': 'secret',
+            'oauth_token': 'token',
+            'oauth_token_secret': 'token_secret',
+            'verified': False
+        })
+
+    @patch('requests.post')
+    def test_refresh(self, r_post):
+        "Refresh function gets a new token"
+        r_post.return_value = Mock(status_code=200, text='oauth_token=token2&oauth_token_secret=token_secret2&oauth_session_handle=session')
+
+        credentials = PartnerCredentials(
+            consumer_key='key',
+            consumer_secret='secret',
+            rsa_key="key",
+            client_cert=None,
+            oauth_token='token',
+            oauth_token_secret='token_secret',
+            verified=True
+        )
+
+        credentials.refresh()
+
+        # Expiry times should be calculated
+        state = credentials.state
+        self.assertIsNotNone(state.pop("oauth_authorization_expires_at"))
+        self.assertIsNotNone(state.pop("oauth_expires_at"))
+
+        self.assertEqual(state, {
+            'consumer_key': 'key',
+            'consumer_secret': 'secret',
+            'oauth_token': 'token2',
+            'oauth_token_secret': 'token_secret2',
+            'oauth_session_handle': 'session',
+            'verified': True
+        })
+        

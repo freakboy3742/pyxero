@@ -22,12 +22,15 @@ class Manager(object):
     
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
-    def __init__(self, name, oauth):
-        self.oauth = oauth
+    def __init__(self, name, credentials):
+        self.credentials = credentials
+        self.oauth = credentials.oauth
         self.name = name
 
+        self.base_url = credentials.base_url + XERO_API_URL
+
         # setup our singular variants of the name
-        # only if the name ends in 0
+        # only if the name ends in 's'
         if name[-1] == "s":
             self.singular = name[:len(name)-1]
         else:
@@ -152,7 +155,10 @@ class Manager(object):
     def _get_data(self, func):
         def wrapper(*args, **kwargs):
             uri, params, method, body, headers = func(*args, **kwargs)
-            response = getattr(requests, method)(uri, data=body, headers=headers, auth=self.oauth, params=params)
+            cert = getattr(self.credentials, 'client_cert', None)
+            response = getattr(requests, method)(
+                    uri, data=body, headers=headers, auth=self.oauth,
+                    params=params, cert=cert)
 
             if response.status_code == 200:
                 if response.headers['content-type'] == 'application/pdf':
@@ -197,11 +203,11 @@ class Manager(object):
         return wrapper
 
     def get(self, id, headers=None):
-        uri = '/'.join([XERO_API_URL, self.name, id])
+        uri = '/'.join([self.base_url, self.name, id])
         return uri, {}, 'get', None, headers
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
-        uri = '/'.join([XERO_API_URL, self.name])
+        uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
         if summarize_errors:
             params = {}
@@ -225,7 +231,7 @@ class Manager(object):
     def filter(self, **kwargs):
         params = {}
         headers = None
-        uri = '/'.join([XERO_API_URL, self.name])
+        uri = '/'.join([self.base_url, self.name])
         if kwargs:
             if 'since' in kwargs:
                 val = kwargs['since']
@@ -274,5 +280,5 @@ class Manager(object):
         return uri, params, 'get', None, headers
 
     def all(self):
-        uri = '/'.join([XERO_API_URL, self.name])
+        uri = '/'.join([self.base_url, self.name])
         return uri, {}, 'get', None, None
