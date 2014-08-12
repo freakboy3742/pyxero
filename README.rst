@@ -146,6 +146,38 @@ store the key value as a constant, remember two things:
 * Make sure there is no leading space before
   the ``-----BEGIN PRIVATE KEY-----`` portion of the string.
 
+Partner Applications
+~~~~~~~~~~~~~~~~~~~~
+
+Partner Application authentication works similarly to the 3-step OAuth used by
+Public Applications, but with RSA signed requests and a client-side SSL
+certificate which is issued by Xero. Partner OAuth tokens still have a 30 minute
+expiry, but can be swapped for a new token at any time.
+
+When you `register your partner application with Xero`_, you'll have a
+**Consumer Key**, **Consumer Secret**, **RSA Key**, and **Client Certificate**.
+All four elements are required.
+
+The client certificate is represented by a tuple of file paths to the certificate
+and key.
+
+    >>> from xero import Xero
+    >>> from xero.auth import PartnerCredentials
+    >>> client_cert = ('/path/to/entrust-cert.pem',
+    ...                '/path/to/entrust-private-nopass.pem')
+    >>> credentials = PartnerCredentials(<consumer_key>, <consumer_secret>, 
+    ...                                  <rsa_key>, client_cert)
+    >>> xero = Xero(credentials)
+
+When using the API over an extended period, you will need to exchange tokens
+when they expire.
+
+    >>> if credentials.expired():
+    ...     credentials.refresh()
+    
+**Important**: ``credentials.state`` changes after a token swap. Be sure to persist
+the new state.
+
 Using the Xero API
 ~~~~~~~~~~~~~~~~~~
 
@@ -242,6 +274,7 @@ This same API pattern exists for the following API objects:
 .. _XeroPy: https://github.com/fatbox/XeroPy
 .. _register your public application with Xero: http://developer.xero.com/api-overview/public-applications/
 .. _register your private application with Xero: http://developer.xero.com/api-overview/private-applications/
+.. _register your partner application with Xero: http://developer.xero.com/api-overview/partner-applications/
 
 Contributing
 ------------
