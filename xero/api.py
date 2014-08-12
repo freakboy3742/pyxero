@@ -4,9 +4,32 @@ from .manager import Manager
 class Xero(object):
     """An ORM-like interface to the Xero API"""
 
-    OBJECT_LIST = (u'Contacts', u'Accounts', u'CreditNotes',
-                   u'Currencies', u'Invoices', u'RepeatingInvoices', u'Items', u'Organisation',
-                   u'Payments', u'TaxRates', u'TrackingCategories')
+    OBJECT_LIST = (
+      u"Attachments",
+      u"Accounts",
+      u"BankStatements",
+      u"BankTransactions",
+      u"BankTransfers",
+      u"Branding Themes",
+      u"Contacts",
+      u"CreditNotes",
+      u"Currencies",
+      u"Employees",
+      u"Expense Claims",
+      u"Invoices",
+      u"Items",
+      u"Journals",
+      u"ManualJournals",
+      u"Organisation",
+      u"Payments",
+      u"Receipts",
+      u"RepeatingInvoices",
+      u"Reports",
+      u"TaxRates",
+      u"TrackingCategories",
+      u"Types",
+      u"Users",
+    )
 
     def __init__(self, credentials):
         # Iterate through the list of objects we support, for
