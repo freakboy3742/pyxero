@@ -162,10 +162,10 @@ The client certificate is represented by a tuple of file paths to the certificat
 and key.
 
     >>> from xero import Xero
-    >>> from xero.auth import PrivateCredentials
+    >>> from xero.auth import PartnerCredentials
     >>> client_cert = ('/path/to/entrust-cert.pem',
     ...                '/path/to/entrust-private-nopass.pem')
-    >>> credentials = PrivateCredentials(<consumer_key>, <consumer_secret>, 
+    >>> credentials = PartnerCredentials(<consumer_key>, <consumer_secret>, 
     ...                                  <rsa_key>, client_cert)
     >>> xero = Xero(credentials)
 
