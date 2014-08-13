@@ -187,8 +187,12 @@ class Manager(object):
             return result[self.singular]
 
     def _get_data(self, func):
+        """ This is the decorator for our DECORATED_METHODS.
+        Each of the decorated methods must return:
+            uri, params, method, body, headers, singleobject
+        """
         def wrapper(*args, **kwargs):
-            uri, params, method, body, headers = func(*args, **kwargs)
+            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
             response = getattr(requests, method)(uri, data=body, headers=headers, auth=self.oauth, params=params)
 
             if response.status_code == 200:
@@ -198,7 +202,11 @@ class Manager(object):
                 # parseString takes byte content, not unicode.
                 dom = parseString(response.text.encode(response.encoding))
                 data = self.convert_to_dict(self.walk_dom(dom))
-                return self._get_results(data)
+                results = self._get_results(data)
+                # If we're dealing with Manager.get, return a single object.
+                if singleobject:
+                    return results[0]
+                return results
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
@@ -235,7 +243,7 @@ class Manager(object):
 
     def _get(self, id, headers=None):
         uri = '/'.join([XERO_API_URL, self.name, id])
-        return uri, {}, 'get', None, headers
+        return uri, {}, 'get', None, headers, True
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([XERO_API_URL, self.name])
@@ -244,7 +252,7 @@ class Manager(object):
             params = {}
         else:
             params = {'summarizeErrors': 'false'}
-        return uri, params, method, body, headers
+        return uri, params, method, body, headers, False
 
     def _save(self, data):
         return self.save_or_put(data, method='post')
@@ -315,8 +323,8 @@ class Manager(object):
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
-        return uri, params, 'get', None, headers
+        return uri, params, 'get', None, headers, False
 
     def _all(self):
         uri = '/'.join([XERO_API_URL, self.name])
-        return uri, {}, 'get', None, None
+        return uri, {}, 'get', None, None, False

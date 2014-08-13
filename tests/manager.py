@@ -83,7 +83,7 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock()
         manager = Manager('contacts', credentials)
 
-        uri, params, method, body, headers = manager._filter(
+        uri, params, method, body, headers, singleobject = manager._filter(
                 order="LastName",
                 page=2,
                 offset=5,
@@ -91,6 +91,7 @@ class ManagerTest(unittest.TestCase):
                 Name="John")
 
         self.assertEqual(method, 'get')
+        self.assertFalse(singleobject)
 
         expected_params = {
                 "order": "LastName",
@@ -106,6 +107,6 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(headers, expected_headers)
 
         # Also make sure an empty call runs ok
-        uri, params, method, body, headers = manager._filter()
+        uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {})
         self.assertIsNone(headers)
