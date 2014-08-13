@@ -19,7 +19,7 @@ class Manager(object):
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
-    
+
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
     def __init__(self, name, oauth):
@@ -93,7 +93,7 @@ class Manager(object):
             # Xero will complain if we send back these fields.
             if key in self.NO_SEND_FIELDS:
                 continue
-            
+
             sub_data = data[key]
             elm = SubElement(root_elm, key)
 
@@ -236,7 +236,7 @@ class Manager(object):
                 last_key = key.split('_')[-1]
                 if last_key in self.GUID_FIELDS:
                     return '%s("Guid")' % unicode(last_key)
-                
+
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if kwargs[key] else 'false'
                 elif key in self.DATETIME_FIELDS:

@@ -80,14 +80,14 @@ class ManagerTest(unittest.TestCase):
 
     def test_filter(self):
         "The filter function should correctly handle various arguments"
-        
+
         # filter() is wrapped by _get_data when the Manager
         # is instantiated. We save a copy so we can call it directly.
         Manager.filter_unwrapped = Manager.filter
-        
+
         credentials = Mock()
         manager = Manager('contacts', credentials)
-        
+
         uri, params, method, body, headers = manager.filter_unwrapped(
                 order="LastName",
                 page=2,
@@ -109,7 +109,7 @@ class ManagerTest(unittest.TestCase):
                 "If-Modified-Since" : "Sun, 10 Aug 2014 15:14:46 GMT"
         }
         self.assertEqual(headers, expected_headers)
-        
+
         # Also make sure an empty call runs ok
         uri, params, method, body, headers = manager.filter_unwrapped()
         self.assertEqual(params, {})
