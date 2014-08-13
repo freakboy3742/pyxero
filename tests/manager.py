@@ -37,7 +37,7 @@ class ManagerTest(unittest.TestCase):
                         'AccountCode': '200',
                     },
                     {
-                        'Description': 'Line item 2',
+                        'Description': 'Line item 2 with unicôde',
                         'Quantity': '2.0',
                         'UnitAmount': '750.00',
                         'AccountCode': '200',

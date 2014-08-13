@@ -122,9 +122,9 @@ class Manager(object):
                     for d in sub_data:
                         self.dict_to_xml(elm, d)
 
-            # Normal element - just inser the data.
+            # Normal element - just insert the data.
             else:
-                elm.text = str(sub_data)
+                elm.text = unicode(sub_data)
 
         return root_elm
 
@@ -235,14 +235,14 @@ class Manager(object):
             def get_filter_params():
                 last_key = key.split('_')[-1]
                 if last_key in self.GUID_FIELDS:
-                    return '%s("Guid")' % str(last_key)
+                    return '%s("Guid")' % unicode(last_key)
                 
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if kwargs[key] else 'false'
                 elif key in self.DATETIME_FIELDS:
                     return kwargs[key].isoformat()
                 else:
-                    return '"%s"' % str(kwargs[key])
+                    return '"%s"' % unicode(kwargs[key])
 
             def generate_param(key):
                 parts = key.split("__")
