@@ -22,7 +22,7 @@ class ManagerTest(unittest.TestCase):
         # * Inline dictionary data types (Contact)
         # * List of dict data types
 
-        credentials = Mock()
+        credentials = Mock(base_url="")
         xero = Xero(credentials)
 
         original = {
@@ -70,7 +70,7 @@ class ManagerTest(unittest.TestCase):
             headers={'content-type': 'text/xml; charset=utf-8'},
             encoding='utf-8', text=mock_data.unicode_content_text)
 
-        credentials = Mock()
+        credentials = Mock(base_url="")
         xero = Xero(credentials)
 
         contact = xero.contacts.get(id='755f1475-d255-43a8-bedc-5ea7fd26c71f')
@@ -80,7 +80,7 @@ class ManagerTest(unittest.TestCase):
 
     def test_filter(self):
         "The filter function should correctly handle various arguments"
-        credentials = Mock()
+        credentials = Mock(base_url="")
         manager = Manager('contacts', credentials)
 
         uri, params, method, body, headers, singleobject = manager._filter(
