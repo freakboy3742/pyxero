@@ -54,7 +54,7 @@ class Manager(object):
             self.singular = name
 
         for method_name in self.DECORATED_METHODS:
-            method = getattr(self, method_name)
+            method = getattr(self, '_%s' % method_name)
             setattr(self, method_name, self._get_data(method))
 
     def walk_dom(self, dom):
@@ -233,7 +233,7 @@ class Manager(object):
 
         return wrapper
 
-    def get(self, id, headers=None):
+    def _get(self, id, headers=None):
         uri = '/'.join([XERO_API_URL, self.name, id])
         return uri, {}, 'get', None, headers
 
@@ -246,10 +246,10 @@ class Manager(object):
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers
 
-    def save(self, data):
+    def _save(self, data):
         return self.save_or_put(data, method='post')
 
-    def put(self, data, summarize_errors=True):
+    def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
 
     def prepare_filtering_date(self, val):
@@ -259,7 +259,7 @@ class Manager(object):
             val = '"%s"' % val
         return {'If-Modified-Since': val}
 
-    def filter(self, **kwargs):
+    def _filter(self, **kwargs):
         params = {}
         headers = None
         uri = '/'.join([XERO_API_URL, self.name])
@@ -317,6 +317,6 @@ class Manager(object):
 
         return uri, params, 'get', None, headers
 
-    def all(self):
+    def _all(self):
         uri = '/'.join([XERO_API_URL, self.name])
         return uri, {}, 'get', None, None
