@@ -38,7 +38,7 @@ class PrivateCredentials(object):
         self.consumer_key = consumer_key
         self.rsa_key = rsa_key
 
-        self.base_url = XERO_API_URL
+        self.base_url = XERO_BASE_URL
 
         # Private API uses consumer key as the OAuth token.
         self.oauth_token = consumer_key
