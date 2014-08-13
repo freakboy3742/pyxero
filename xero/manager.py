@@ -232,19 +232,19 @@ class Manager(object):
                 headers = self.prepare_filtering_date(val)
                 del kwargs['since']
 
-            def get_filter_params():
+            def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
                 if last_key in self.GUID_FIELDS:
-                    return '%s("Guid")' % unicode(last_key)
+                    return '%s("Guid")' % unicode(value)
 
                 if key in self.BOOLEAN_FIELDS:
-                    return 'true' if kwargs[key] else 'false'
+                    return 'true' if value else 'false'
                 elif key in self.DATETIME_FIELDS:
-                    return kwargs[key].isoformat()
+                    return value.isoformat()
                 else:
-                    return '"%s"' % unicode(kwargs[key])
+                    return '"%s"' % unicode(value)
 
-            def generate_param(key):
+            def generate_param(key, value):
                 parts = key.split("__")
                 field = key.replace('_', '.')
                 fmt = '%s==%s'
@@ -254,10 +254,13 @@ class Manager(object):
                     if parts[1] in ["contains", "startswith", "endswith"]:
                         field = parts[0]
                         fmt = ''.join(['%s.', parts[1], '(%s)'])
+                    elif parts[1] in ["isnull"]:
+                        sign = '=' if value else '!'
+                        return '%s%s=null' % (parts[0], sign)
 
                 return fmt % (
                     field,
-                    get_filter_params()
+                    get_filter_params(key, value)
                 )
 
             # Move any known parameter names to the query string
@@ -267,7 +270,11 @@ class Manager(object):
                     params[param] = kwargs.pop(param)
 
             # Treat any remaining arguments as filter predicates
-            filter_params = [generate_param(key) for key in kwargs.keys()]
+            # Xero will break if you search without a check for null in the first position:
+            # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
+            sortedkwargs = kwargs.items()
+            sortedkwargs.sort(key=lambda item: -1 if 'isnull' in item[0] else 0)
+            filter_params = [generate_param(key, value) for key, value in sortedkwargs]
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
