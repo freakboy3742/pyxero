@@ -15,7 +15,7 @@ class Xero(object):
       u"CreditNotes",
       u"Currencies",
       u"Employees",
-      u"Expense Claims",
+      u"ExpenseClaims",
       u"Invoices",
       u"Items",
       u"Journals",
