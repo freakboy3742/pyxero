@@ -10,7 +10,7 @@ class Xero(object):
       u"BankStatements",
       u"BankTransactions",
       u"BankTransfers",
-      u"Branding Themes",
+      u"BrandingThemes",
       u"Contacts",
       u"CreditNotes",
       u"Currencies",
