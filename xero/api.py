@@ -7,7 +7,6 @@ class Xero(object):
     OBJECT_LIST = (
       u"Attachments",
       u"Accounts",
-      u"BankStatements",
       u"BankTransactions",
       u"BankTransfers",
       u"BrandingThemes",
@@ -27,7 +26,6 @@ class Xero(object):
       u"Reports",
       u"TaxRates",
       u"TrackingCategories",
-      u"Types",
       u"Users",
     )
 
