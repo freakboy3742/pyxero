@@ -271,6 +271,9 @@ This same API pattern exists for the following API objects:
 * Payments
 * TaxRates
 * TrackingCategories
+* ManualJournals
+* BankTransactions
+* BankTransfers
 
 
 .. _Xero: http://developer.xero.com
