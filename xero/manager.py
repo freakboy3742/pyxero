@@ -38,7 +38,6 @@ class Manager(object):
     DECIMAL_FIELDS = (u'Hours', u'NumberOfUnit')
     INTEGER_FIELDS = (u'FinancialYearEndDay', u'FinancialYearEndMonth')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
-    GUID_FIELDS = (u'ContactID', u'InvoiceID')
 
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
 
@@ -292,7 +291,7 @@ class Manager(object):
 
             def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
-                if last_key in self.GUID_FIELDS:
+                if last_key.lower() == self.singular + 'id':
                     return '%s("Guid")' % unicode(value)
 
                 if key in self.BOOLEAN_FIELDS:
