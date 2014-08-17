@@ -237,23 +237,23 @@ For example, to deal with contacts::
     # Save multiple objects
     >>> xero.contacts.save([c1, c2])
 
-Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact:
+Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact::
 
     >>> xero.invoices.filter(Contact_ContactID='83ad77d8-48a7-4f77-9146-e6933b7fb63b')
 
 Be careful when dealing with large amounts of data, the Xero API will take an
 increasingly long time to respond, or an error will be returned. If a query might
-return more than 100 results, you should make use of the ``page`` parameter.
+return more than 100 results, you should make use of the ``page`` parameter::
 
     # Grab 100 invoices created after 01-01-2013
     >>> xero.invoices.filter(since=datetime(2013, 1, 1), page=1)
 
-You can also order the results to be returned:
+You can also order the results to be returned::
 
     # Grab contacts ordered by EmailAddress
     >>> xero.contacts.filter(order='EmailAddress DESC')
 
-Uploading attachments is supported using the Xero GUID of the relevant object:
+Uploading attachments is supported using the Xero GUID of the relevant object::
 
     # Attach a PDF to an invoice
     >>> f = file.open('invoice.pdf', 'rb')
