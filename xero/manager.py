@@ -19,7 +19,7 @@ def singular(word):
 
 
 class Manager(object):
-    DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put')
+    DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put', 'put_attachment')
     DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate',
                        u'DateTimeUTC', u'CreatedDateUTC', )
     DATE_FIELDS = (u'DueDate', u'Date',  u'PaymentDate',
@@ -264,6 +264,14 @@ class Manager(object):
 
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+
+    def _put_attachment(self, id, file, content_type, filename, include_online=False):
+        """Upload an attachment to the Xero object."""
+        uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
+        params = {'IncludeOnline': 'true'} if include_online else {}
+        data = file.read()
+        headers = {'Content-Type': content_type, 'Content-Length': len(data)}
+        return uri, params, 'put', data, headers, False
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):

@@ -253,6 +253,13 @@ You can also order the results to be returned:
     # Grab contacts ordered by EmailAddress
     >>> xero.contacts.filter(order='EmailAddress DESC')
 
+Uploading attachments is supported using the Xero GUID of the relevant object:
+
+    # Attach a PDF to an invoice
+    >>> f = file.open('invoice.pdf', 'rb')
+    >>> xero.contacts.put_attachment(c['ContactId'], f, 'application/pdf', 'invoice.pdf')
+    >>> f.close()
+
 This same API pattern exists for the following API objects:
 
 * Accounts
