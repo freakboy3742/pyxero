@@ -256,7 +256,7 @@ You can also order the results to be returned::
 Uploading attachments is supported using the Xero GUID of the relevant object::
 
     # Attach a PDF to a contact
-    >>> f = file.open('form.pdf', 'rb')
+    >>> f = open('form.pdf', 'rb')
     >>> xero.contacts.put_attachment(c['ContactId'], f, 'application/pdf', 'form.pdf')
     >>> f.close()
 
