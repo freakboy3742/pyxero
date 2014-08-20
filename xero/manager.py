@@ -291,8 +291,8 @@ class Manager(object):
 
             def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
-                if last_key.lower() == self.singular + 'id':
-                    return '%s("Guid")' % unicode(value)
+                if last_key.upper().endswith('ID'):
+                    return 'Guid("%s")' % unicode(value)
 
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if value else 'false'
