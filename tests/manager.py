@@ -115,5 +115,5 @@ class ManagerTest(unittest.TestCase):
         uri, params, method, body, headers, singleobject = manager._filter(
                 **{'Contact.ContactID': '3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f'})
 
-        self.assertTrue(uri,
+        self.assertEqual(params,
             {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'})
