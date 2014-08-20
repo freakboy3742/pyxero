@@ -19,7 +19,8 @@ def singular(word):
 
 
 class Manager(object):
-    DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put', 'put_attachment')
+    DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put',
+                         'get_attachments', 'get_attachment_data', 'put_attachment_data')
     DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate',
                        u'DateTimeUTC', u'CreatedDateUTC', )
     DATE_FIELDS = (u'DueDate', u'Date',  u'PaymentDate',
@@ -178,7 +179,12 @@ class Manager(object):
 
     def _get_results(self, data):
         response = data[u'Response']
-        result = response.get(self.name, {})
+        if self.name in response:
+            result = response[self.name]
+        elif 'Attachments' in response:
+            result = response['Attachments']
+        else:
+            return None
 
         if isinstance(result, tuple) or isinstance(result, list):
             return result
@@ -200,7 +206,7 @@ class Manager(object):
                     params=params, cert=cert)
 
             if response.status_code == 200:
-                if response.headers['content-type'] == 'application/pdf':
+                if not response.headers['content-type'].startswith('text/xml'):
                     # return a byte string without doing any Unicode conversions
                     return response.content
                 # parseString takes byte content, not unicode.
@@ -249,6 +255,28 @@ class Manager(object):
         uri = '/'.join([self.base_url, self.name, id])
         return uri, {}, 'get', None, headers, True
 
+    def _get_attachments(self, id):
+        """Retrieve a list of attachments associated with this Xero object."""
+        uri = '/'.join([self.base_url, self.name, id, 'Attachments']) + '/'
+        return uri, {}, 'get', None, None, False
+
+    def _get_attachment_data(self, id, filename):
+        """
+        Retrieve the contents of a specific attachment (identified by filename).
+        """
+        uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
+        return uri, {}, 'get', None, None, False
+
+    def get_attachment(self, id, filename, file):
+        """
+        Retrieve the contents of a specific attachment (identified by filename).
+
+        Writes data to file object, returns length of data written.
+        """
+        data = self.get_attachment_data(id, filename)
+        file.write(data)
+        return len(data)
+
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
@@ -264,13 +292,17 @@ class Manager(object):
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
 
-    def _put_attachment(self, id, file, content_type, filename, include_online=False):
+    def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
         params = {'IncludeOnline': 'true'} if include_online else {}
-        data = file.read()
         headers = {'Content-Type': content_type, 'Content-Length': len(data)}
         return uri, params, 'put', data, headers, False
+
+    def put_attachment(self, id, filename, file, content_type, include_online=False):
+        """Upload an attachment to the Xero object (from file object)."""
+        self.put_attachment_data(id, file.read(), content_type, filename,
+                                 include_online=include_online)
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):

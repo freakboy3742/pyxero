@@ -253,12 +253,25 @@ You can also order the results to be returned::
     # Grab contacts ordered by EmailAddress
     >>> xero.contacts.filter(order='EmailAddress DESC')
 
-Uploading attachments is supported using the Xero GUID of the relevant object::
+Download and uploading attachments is supported using the Xero GUID of the relevant object::
+
+    # List attachments on a contact
+    >>> xero.contacts.get_attachments(c['ContactID'])
+    [{...attachment info...}, {...attachment info...}]
 
     # Attach a PDF to a contact
     >>> f = open('form.pdf', 'rb')
-    >>> xero.contacts.put_attachment(c['ContactId'], f, 'application/pdf', 'form.pdf')
+    >>> xero.contacts.put_attachment(c['ContactID'], 'form.pdf', f, 'application/pdf')
     >>> f.close()
+
+    >>> xero.contacts.put_attachment_data(c['ContactID'], 'form.pdf', data, 'application/pdf')
+
+    # Download an attachment
+    >>> f = open('form.pdf', 'wb')
+    >>> xero.contacts.get_attachment(c['ContactID'], 'form.pdf', f)
+    >>> f.close()
+
+    >>> data = xero.contacts.get_attachment_data(c['ContactID'], 'form.pdf')
 
 This same API pattern exists for the following API objects:
 
