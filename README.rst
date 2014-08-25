@@ -237,21 +237,41 @@ For example, to deal with contacts::
     # Save multiple objects
     >>> xero.contacts.save([c1, c2])
 
-Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact:
+Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact::
 
     >>> xero.invoices.filter(Contact_ContactID='83ad77d8-48a7-4f77-9146-e6933b7fb63b')
 
 Be careful when dealing with large amounts of data, the Xero API will take an
 increasingly long time to respond, or an error will be returned. If a query might
-return more than 100 results, you should make use of the ``page`` parameter.
+return more than 100 results, you should make use of the ``page`` parameter::
 
     # Grab 100 invoices created after 01-01-2013
     >>> xero.invoices.filter(since=datetime(2013, 1, 1), page=1)
 
-You can also order the results to be returned:
+You can also order the results to be returned::
 
     # Grab contacts ordered by EmailAddress
     >>> xero.contacts.filter(order='EmailAddress DESC')
+
+Download and uploading attachments is supported using the Xero GUID of the relevant object::
+
+    # List attachments on a contact
+    >>> xero.contacts.get_attachments(c['ContactID'])
+    [{...attachment info...}, {...attachment info...}]
+
+    # Attach a PDF to a contact
+    >>> f = open('form.pdf', 'rb')
+    >>> xero.contacts.put_attachment(c['ContactID'], 'form.pdf', f, 'application/pdf')
+    >>> f.close()
+
+    >>> xero.contacts.put_attachment_data(c['ContactID'], 'form.pdf', data, 'application/pdf')
+
+    # Download an attachment
+    >>> f = open('form.pdf', 'wb')
+    >>> xero.contacts.get_attachment(c['ContactID'], 'form.pdf', f)
+    >>> f.close()
+
+    >>> data = xero.contacts.get_attachment_data(c['ContactID'], 'form.pdf')
 
 This same API pattern exists for the following API objects:
 
@@ -264,6 +284,9 @@ This same API pattern exists for the following API objects:
 * Payments
 * TaxRates
 * TrackingCategories
+* ManualJournals
+* BankTransactions
+* BankTransfers
 
 
 .. _Xero: http://developer.xero.com

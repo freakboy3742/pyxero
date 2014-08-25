@@ -79,7 +79,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(contact['LastName'], 'Sürname')
 
     def test_filter(self):
-        "The filter function should correctly handle various arguments"
+        """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
         manager = Manager('contacts', credentials)
 
@@ -110,3 +110,10 @@ class ManagerTest(unittest.TestCase):
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {})
         self.assertIsNone(headers)
+
+        manager = Manager('invoices', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+                **{'Contact.ContactID': '3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f'})
+
+        self.assertEqual(params,
+            {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'})
