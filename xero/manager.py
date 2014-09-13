@@ -374,7 +374,7 @@ class Manager(object):
                     filter_subsets = []
                     for predicate in value:
                       filter_subsets.append(generate_param(key, predicate))
-                    filter_param = (' Or ').join(filter_subsets)
+                    filter_param = '(%s)' % (' Or ').join(filter_subsets)
                 else:
                     filter_param = generate_param(key, value)
 
