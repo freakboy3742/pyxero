@@ -12,6 +12,7 @@ from .exceptions import *
 def isplural(word):
     return word[-1].lower() == 's'
 
+
 def singular(word):
     if isplural(word):
         return word[:-1]
@@ -20,7 +21,8 @@ def singular(word):
 
 class Manager(object):
     DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put',
-                         'get_attachments', 'get_attachment_data', 'put_attachment_data')
+                         'get_attachments', 'get_attachment_data',
+                         'put_attachment_data')
     DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate',
                        u'DateTimeUTC', u'CreatedDateUTC', )
     DATE_FIELDS = (u'DueDate', u'Date',  u'PaymentDate',
@@ -151,7 +153,8 @@ class Manager(object):
                 # node that is a singular version of the list name.
                 if is_plural:
                     for d in sub_data:
-                        plural_name = self.PLURAL_EXCEPTIONS.get(plural_name, plural_name)
+                        plural_name = self.PLURAL_EXCEPTIONS.get(plural_name,
+                                                                 plural_name)
                         self.dict_to_xml(SubElement(elm, plural_name), d)
 
                 # key name isn't a plural. Just insert the content
@@ -363,7 +366,20 @@ class Manager(object):
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
             sortedkwargs = kwargs.items()
             sortedkwargs.sort(key=lambda item: -1 if 'isnull' in item[0] else 0)
-            filter_params = [generate_param(key, value) for key, value in sortedkwargs]
+
+            filter_params = []
+            for key, value in sortedkwargs:
+                filter_param = None
+                if isinstance(value, list):
+                    filter_subsets = []
+                    for predicate in value:
+                      filter_subsets.append(generate_param(key, predicate))
+                    filter_param = (' Or ').join(filter_subsets)
+                else:
+                    filter_param = generate_param(key, value)
+
+                filter_params.append(filter_param)
+
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
