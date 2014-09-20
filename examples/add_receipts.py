@@ -12,7 +12,11 @@ import sys
 
 import webbrowser
 
-from config import xero_config
+#from config import xero_config
+xero_config = {
+    "consumer_key": "XXX",
+    "consumer_secret": "XXX",
+}
 
 from xero import Xero
 from xero.auth import PublicCredentials
