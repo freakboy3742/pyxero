@@ -252,6 +252,17 @@ You can also order the results to be returned::
 
     # Grab contacts ordered by EmailAddress
     >>> xero.contacts.filter(order='EmailAddress DESC')
+    
+For invoices (and other objects that can be retrieved as PDFs), accessing the PDF is done
+via setting the Accept header:
+
+    # Fetch a PDF
+    invoice = xero.invoices.get('af722e93-b64f-482d-9955-1b027bfec896', \
+        headers={'Accept': 'application/pdf'})
+    # Stream the PDF to the user (Django specific example)
+    response = HttpResponse(invoice, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
+    return response
 
 Download and uploading attachments is supported using the Xero GUID of the relevant object::
 
