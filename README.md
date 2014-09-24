@@ -1,21 +1,21 @@
 PyXero
 ======
 
-PyXero is a Python API for accessing the REST API provided by the `Xero`_
+PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
 accounting tool.
 
 It allows access to both Public and Private applications.
 
-This code is based off the `sample code provided by Xero`_, which was
-contributed by `IRESS Wealth Management`_, and the `XeroPy`_ packaged version of
+This code is based off the [sample code provided by Xero](http://developer.xero.com/getting-started/code/python/), which was
+contributed by [IRESS Wealth Management](http://www.iress.com.au), and the [XeroPy](https://github.com/fatbox/XeroPy) packaged version of
 that code.
 
-This packages differs in three significant was from `XeroPy`_:
+This packages differs in three significant was from `XeroPy`:
 
-* It uses the popular `requests`_ library (and the `requests-oauthlib`_
+* It uses the popular [requests](http://python-requests.org) library (and the [requests-oauthlib](https://github.com/requests/requests-oauthlib)
   extension) instead of httplib2.
 
-* It uses the pure-python `PyCrypto`_ library instead of the hard-to-compile
+* It uses the pure-python [PyCrypto](https://www.dlitz.net/software/pycrypto/) library instead of the hard-to-compile
   native M2Crypto wrapper for RSA signing.
 
 * It has been tested on both Public and Private Xero Applications.
@@ -32,15 +32,16 @@ Public Applications
 
 Public applications use a 3-step OAuth process.
 
-When you `register your public application with Xero`_, you'll be given a
+When you [register your public application with Xero](http://developer.xero.com/api-overview/public-applications/), you'll be given a
 **Consumer Key** and a **Consumer secret**. These are both strings.
 
-To access the Xero API you must first create some credentials::
+To access the Xero API you must first create some credentials:
 
     >>> from xero.auth import PublicCredentials
     >>> credentials = PublicCredentials(<consumer_key>, <consumer_secret>)
     >>> print credentials.url
     'http://my.xero.com/.....'
+    ```
 
 You now direct the user to visit the URL described by `credentials.url`. They
 will be asked to log into their Xero account, and then shown a request to
@@ -109,10 +110,10 @@ Private Applications
 If using a Private application, you will need to install `PyCrypto`_, a pure
 Python cryptographic module. You'll also need to generate an signed RSA
 certificate, and submit that certificate as part of registering your
-application with Xero. See the `Xero Developer documentation`_ for more
+application with Xero. See the [Xero Developer documentation](http://developer.xero.com/api-overview/) for more
 details.
 
-When you `register your private application with Xero`_, you'll be given a
+When you [register your private application with Xero](http://developer.xero.com/api-overview/private-applications/), you'll be given a
 **Consumer Key**. You'll also be given a **Consumer secret** - this can be
 ignored.
 
@@ -155,7 +156,7 @@ Public Applications, but with RSA signed requests and a client-side SSL
 certificate which is issued by Xero. Partner OAuth tokens still have a 30 minute
 expiry, but can be swapped for a new token at any time.
 
-When you `register your partner application with Xero`_, you'll have a
+When you [register your partner application with Xero](http://developer.xero.com/api-overview/partner-applications/), you'll have a
 **Consumer Key**, **Consumer Secret**, **RSA Key**, and **Client Certificate**.
 All four elements are required.
 
@@ -300,18 +301,6 @@ This same API pattern exists for the following API objects:
 * BankTransfers
 
 
-.. _Xero: http://developer.xero.com
-.. _requests: http://python-requests.org
-.. _requests-oauthlib: https://github.com/requests/requests-oauthlib
-.. _pycrypto: https://www.dlitz.net/software/pycrypto/
-.. _Xero Developer documentation: http://developer.xero.com/api-overview/
-.. _sample code provided by Xero: http://developer.xero.com/getting-started/code/python/
-.. _IRESS Wealth Management: http://www.iress.com.au
-.. _XeroPy: https://github.com/fatbox/XeroPy
-.. _register your public application with Xero: http://developer.xero.com/api-overview/public-applications/
-.. _register your private application with Xero: http://developer.xero.com/api-overview/private-applications/
-.. _register your partner application with Xero: http://developer.xero.com/api-overview/partner-applications/
-
 Contributing
 ------------
 
@@ -328,7 +317,7 @@ running the following from the root directory of the project:
 
     $ python setup.py test
 
-If you find any problems with pyxero, you can log them on `Github Issues`_.
+If you find any problems with pyxero, you can log them on [Github Issues](https://github.com/freakboy3742/pyxero/issues).
 When reporting problems, it's extremely helpful if you can provide
 reproduction instructions -- the sequence of calls and/or test data that
 can be used to reproduce the issue.
@@ -337,5 +326,3 @@ New features or bug fixes can be submitted via a pull request. If you want
 your pull request to be merged quickly, make sure you either include
 regression test(s) for the behavior you are adding/fixing, or provide a
 good explanation of why a regression test isn't possible.
-
-.. _Github Issues: https://github.com/freakboy3742/pyxero/issues
