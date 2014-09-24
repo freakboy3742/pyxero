@@ -298,6 +298,9 @@ This same API pattern exists for the following API objects:
 * ManualJournals
 * BankTransactions
 * BankTransfers
+* ExpenseClaims
+* Receipts
+* Users
 
 
 .. _Xero: http://developer.xero.com

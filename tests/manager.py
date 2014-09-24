@@ -11,7 +11,6 @@ from xero import Xero
 from xero.manager import Manager
 from tests import mock_data
 
-
 class ManagerTest(unittest.TestCase):
     def test_serialization(self):
         "An invoice can be correctly serialized for a POST/PUT request"

@@ -8,7 +8,6 @@ from urlparse import parse_qs
 from .constants import XERO_API_URL
 from .exceptions import *
 
-
 def isplural(word):
     return word[-1].lower() == 's'
 
@@ -27,6 +26,7 @@ class Manager(object):
                    u'StartDate', u'EndDate',
                    u'PeriodLockDate', u'DateOfBirth',
                    u'OpeningBalanceDate',
+                   u'PaymentDueDate', u'ReportingDate',
                    )
     BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer', u'IsDemoCompany',
                       u'PaysTax', u'IsAuthorisedToApproveTimesheets',
@@ -35,6 +35,7 @@ class Manager(object):
                       u'TaxFreeThresholdClaimed', u'HasSFSSDebt',
                       u'EligibleToReceiveLeaveLoading',
                       u'IsExemptFromTax', u'IsExemptFromSuper',
+                      u'IsSubscriber', u'HasAttachments',
                       )
     DECIMAL_FIELDS = (u'Hours', u'NumberOfUnit')
     INTEGER_FIELDS = (u'FinancialYearEndDay', u'FinancialYearEndMonth')
