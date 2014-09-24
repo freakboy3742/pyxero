@@ -117,3 +117,15 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(params,
             {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'})
+
+        # Test filtering with 'Or' predicates
+        uri, params, method, body, headers, singleobject = manager._filter(
+            Reference="1281465137",
+            Status=['AUTHORISED', 'PAID'])
+
+        expected_params = {
+            "where":
+            '(Status=="AUTHORISED" Or Status=="PAID")&&Reference=="1281465137"'
+        }
+
+        self.assertEqual(params, expected_params)
