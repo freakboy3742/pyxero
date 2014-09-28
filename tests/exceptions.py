@@ -41,10 +41,6 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroBadRequest as e:
             # Error messages have been extracted
-            print(e.__dict__)
-            print(dir(e))
-            print(e.__class__)
-            print(str(e))
             self.assertEqual(str(e), 'A validation exception occurred')
             self.assertEqual(e.errors, [
                 'One or more line items must be specified',
