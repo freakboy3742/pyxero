@@ -15,6 +15,7 @@ setup(
     url='http://github.com/freakboy3742/pyxero',
     packages=['xero', ],
     install_requires=[
+        'six>=1.8.0',
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
         'python-dateutil>=2.1',

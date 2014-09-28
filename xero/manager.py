@@ -1,10 +1,11 @@
+from __future__ import unicode_literals
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
 from dateutil.parser import parse
 import requests
-from urlparse import parse_qs
-
+from six.moves.urllib.parse import parse_qs
+import six
 from .constants import XERO_API_URL
 from .exceptions import *
 
@@ -21,26 +22,26 @@ def singular(word):
 class Manager(object):
     DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put',
                          'get_attachments', 'get_attachment_data', 'put_attachment_data')
-    DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate',
-                       u'DateTimeUTC', u'CreatedDateUTC', )
-    DATE_FIELDS = (u'DueDate', u'Date',  u'PaymentDate',
-                   u'StartDate', u'EndDate',
-                   u'PeriodLockDate', u'DateOfBirth',
-                   u'OpeningBalanceDate',
+    DATETIME_FIELDS = ('UpdatedDateUTC', 'Updated', 'FullyPaidOnDate',
+                       'DateTimeUTC', 'CreatedDateUTC', )
+    DATE_FIELDS = ('DueDate', 'Date',  'PaymentDate',
+                   'StartDate', 'EndDate',
+                   'PeriodLockDate', 'DateOfBirth',
+                   'OpeningBalanceDate',
                    )
-    BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer', u'IsDemoCompany',
-                      u'PaysTax', u'IsAuthorisedToApproveTimesheets',
-                      u'IsAuthorisedToApproveLeave', u'HasHELPDebt',
-                      u'AustralianResidentForTaxPurposes',
-                      u'TaxFreeThresholdClaimed', u'HasSFSSDebt',
-                      u'EligibleToReceiveLeaveLoading',
-                      u'IsExemptFromTax', u'IsExemptFromSuper',
+    BOOLEAN_FIELDS = ('IsSupplier', 'IsCustomer', 'IsDemoCompany',
+                      'PaysTax', 'IsAuthorisedToApproveTimesheets',
+                      'IsAuthorisedToApproveLeave', 'HasHELPDebt',
+                      'AustralianResidentForTaxPurposes',
+                      'TaxFreeThresholdClaimed', 'HasSFSSDebt',
+                      'EligibleToReceiveLeaveLoading',
+                      'IsExemptFromTax', 'IsExemptFromSuper',
                       )
-    DECIMAL_FIELDS = (u'Hours', u'NumberOfUnit')
-    INTEGER_FIELDS = (u'FinancialYearEndDay', u'FinancialYearEndMonth')
+    DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
+    INTEGER_FIELDS = ('FinancialYearEndDay', 'FinancialYearEndMonth')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
 
-    NO_SEND_FIELDS = (u'UpdatedDateUTC',)
+    NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
     def __init__(self, name, credentials):
         self.credentials = credentials
@@ -75,7 +76,7 @@ class Manager(object):
 
         if len(deep_list) > 2:
             lists = [l for l in deep_list if isinstance(l, tuple)]
-            keys = [l for l in deep_list if isinstance(l, unicode)]
+            keys = [l for l in deep_list if isinstance(l, six.string_types)]
 
             if len(keys) > 1 and len(set(keys)) == 1:
                 # This is a collection... all of the keys are the same.
@@ -162,7 +163,7 @@ class Manager(object):
 
             # Normal element - just insert the data.
             else:
-                elm.text = unicode(sub_data)
+                elm.text = six.text_type(sub_data)
 
         return root_elm
 
@@ -178,7 +179,7 @@ class Manager(object):
         return tostring(root_elm)
 
     def _get_results(self, data):
-        response = data[u'Response']
+        response = data['Response']
         if self.name in response:
             result = response[self.name]
         elif 'Attachments' in response:
@@ -214,7 +215,7 @@ class Manager(object):
                 data = self.convert_to_dict(self.walk_dom(dom))
                 results = self._get_results(data)
                 # If we're dealing with Manager.get, return a single object.
-                if singleobject:
+                if singleobject and isinstance(results, list):
                     return results[0]
                 return results
 
@@ -324,14 +325,14 @@ class Manager(object):
             def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
                 if last_key.upper().endswith('ID'):
-                    return 'Guid("%s")' % unicode(value)
+                    return 'Guid("%s")' % six.text_type(value)
 
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if value else 'false'
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
-                    return '"%s"' % unicode(value)
+                    return '"%s"' % six.text_type(value)
 
             def generate_param(key, value):
                 parts = key.split("__")
@@ -361,8 +362,8 @@ class Manager(object):
             # Treat any remaining arguments as filter predicates
             # Xero will break if you search without a check for null in the first position:
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
-            sortedkwargs = kwargs.items()
-            sortedkwargs.sort(key=lambda item: -1 if 'isnull' in item[0] else 0)
+            sortedkwargs = sorted(six.iteritems(kwargs),
+                    key=lambda item: -1 if 'isnull' in item[0] else 0)
             filter_params = [generate_param(key, value) for key, value in sortedkwargs]
             if filter_params:
                 params['where'] = '&&'.join(filter_params)

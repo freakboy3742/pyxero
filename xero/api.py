@@ -1,13 +1,14 @@
+from __future__ import unicode_literals
 from .manager import Manager
 
 
 class Xero(object):
     """An ORM-like interface to the Xero API"""
 
-    OBJECT_LIST = (u'Contacts', u'Accounts', u'CreditNotes',
-                   u'Currencies', u'Invoices', u'Items', u'Organisation',
-                   u'Payments', u'TaxRates', u'TrackingCategories', u'ManualJournals',
-                   u'BankTransactions', u'BankTransfers', 'BrandingThemes')
+    OBJECT_LIST = ('Contacts', 'Accounts', 'CreditNotes',
+                   'Currencies', 'Invoices', 'Items', 'Organisation',
+                   'Payments', 'TaxRates', 'TrackingCategories',
+                   'ManualJournals', 'BankTransactions', 'BankTransfers')
 
     def __init__(self, credentials):
         # Iterate through the list of objects we support, for
