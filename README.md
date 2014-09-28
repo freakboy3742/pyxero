@@ -1,6 +1,8 @@
 PyXero
 ======
 
+[![Build Status](https://travis-ci.org/freakboy3742/pyxero.svg?branch=master)](https://travis-ci.org/freakboy3742/pyxero)
+
 PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
 
