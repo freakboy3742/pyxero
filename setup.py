@@ -3,7 +3,7 @@ from setuptools import setup
 from xero import VERSION
 
 try:
-    readme = open("README.rst")
+    readme = open("README.md")
     long_description = str(readme.read())
 finally:
     readme.close()
