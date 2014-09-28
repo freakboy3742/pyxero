@@ -39,9 +39,9 @@ class ExceptionsTest(unittest.TestCase):
             })
             self.fail("Should raise a XeroBadRequest.")
 
-        except XeroBadRequest, e:
+        except XeroBadRequest as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, 'A validation exception occurred')
+            self.assertEqual(str(e), 'A validation exception occurred')
             self.assertEqual(e.errors, [
                 'One or more line items must be specified',
                 'Invoice not of valid status for creation',
@@ -51,7 +51,7 @@ class ExceptionsTest(unittest.TestCase):
             # The response has also been stored
             self.assertEqual(e.response.status_code, 400)
             self.assertTrue(e.response.text.startswith('<ApiException'))
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroBadRequest, not %s" % e)
 
     @patch('requests.get')
@@ -67,15 +67,15 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.all()
             self.fail("Should raise a XeroUnauthorized.")
 
-        except XeroUnauthorized, e:
+        except XeroUnauthorized as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, 'Failed to validate signature')
+            self.assertEqual(str(e), 'Failed to validate signature')
             self.assertEqual(e.problem, 'signature_invalid')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 401)
             self.assertEqual(e.response.text, 'oauth_problem=signature_invalid&oauth_problem_advice=Failed%20to%20validate%20signature')
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroUnauthorized, not %s" % e)
 
     @patch('requests.get')
@@ -91,15 +91,15 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.all()
             self.fail("Should raise a XeroUnauthorized.")
 
-        except XeroUnauthorized, e:
+        except XeroUnauthorized as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, 'The access token has expired')
+            self.assertEqual(str(e), 'The access token has expired')
             self.assertEqual(e.problem, 'token_expired')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 401)
             self.assertEqual(e.response.text, 'oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired')
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroUnauthorized, not %s" % e)
 
     @patch('requests.get')
@@ -115,14 +115,14 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.all()
             self.fail("Should raise a XeroForbidden.")
 
-        except XeroForbidden, e:
+        except XeroForbidden as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, "The client SSL certificate was not valid.")
+            self.assertEqual(str(e), "The client SSL certificate was not valid.")
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 403)
             self.assertEqual(e.response.text, "The client SSL certificate was not valid.")
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroForbidden, not %s" % e)
 
     @patch('requests.get')
@@ -138,14 +138,14 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.get(id='deadbeef')
             self.fail("Should raise a XeroNotFound.")
 
-        except XeroNotFound, e:
+        except XeroNotFound as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, "The resource you're looking for cannot be found")
+            self.assertEqual(str(e), "The resource you're looking for cannot be found")
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 404)
             self.assertEqual(e.response.text, "The resource you're looking for cannot be found")
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroNotFound, not %s" % e)
 
     @patch('requests.get')
@@ -161,14 +161,14 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.all()
             self.fail("Should raise a XeroInternalError.")
 
-        except XeroInternalError, e:
+        except XeroInternalError as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, 'An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.')
+            self.assertEqual(str(e), 'An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 500)
             self.assertEqual(e.response.text, 'An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.')
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroInternalError, not %s" % e)
 
     @patch('requests.post')
@@ -185,14 +185,14 @@ class ExceptionsTest(unittest.TestCase):
             xero.organisation.save({})
             self.fail("Should raise a XeroNotImplemented.")
 
-        except XeroNotImplemented, e:
+        except XeroNotImplemented as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, 'The Api Method called is not implemented')
+            self.assertEqual(str(e), 'The Api Method called is not implemented')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 501)
             self.assertTrue(e.response.text.startswith, '<ApiException')
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroNotImplemented, not %s" % e)
 
     @patch('requests.get')
@@ -208,15 +208,15 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.all()
             self.fail("Should raise a XeroRateLimitExceeded.")
 
-        except XeroRateLimitExceeded, e:
+        except XeroRateLimitExceeded as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, 'please wait before retrying the xero api')
+            self.assertEqual(str(e), 'please wait before retrying the xero api')
             self.assertEqual(e.problem, 'rate limit exceeded')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 503)
             self.assertEqual(e.response.text, "oauth_problem=rate%20limit%20exceeded&oauth_problem_advice=please%20wait%20before%20retrying%20the%20xero%20api")
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroRateLimitExceeded, not %s" % e)
 
     @patch('requests.get')
@@ -232,12 +232,12 @@ class ExceptionsTest(unittest.TestCase):
             xero.contacts.all()
             self.fail("Should raise a XeroNotAvailable.")
 
-        except XeroNotAvailable, e:
+        except XeroNotAvailable as e:
             # Error messages have been extracted
-            self.assertEqual(e.message, "The Xero API is currently offline for maintenance")
+            self.assertEqual(str(e), "The Xero API is currently offline for maintenance")
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 503)
             self.assertEqual(e.response.text, "The Xero API is currently offline for maintenance")
-        except Exception, e:
+        except Exception as e:
             self.fail("Should raise a XeroNotAvailable, not %s" % e)
