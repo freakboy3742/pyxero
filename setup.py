@@ -2,11 +2,8 @@
 from setuptools import setup
 from xero import VERSION
 
-try:
-    readme = open("README.md")
+with open('README.md') as readme:
     long_description = str(readme.read())
-finally:
-    readme.close()
 
 setup(
     name='pyxero',
