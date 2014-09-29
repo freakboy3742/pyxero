@@ -36,6 +36,7 @@ class Manager(object):
                       'TaxFreeThresholdClaimed', 'HasSFSSDebt',
                       'EligibleToReceiveLeaveLoading',
                       'IsExemptFromTax', 'IsExemptFromSuper',
+                      'SentToContact',
                       )
     DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
     INTEGER_FIELDS = ('FinancialYearEndDay', 'FinancialYearEndMonth')
@@ -163,7 +164,11 @@ class Manager(object):
 
             # Normal element - just insert the data.
             else:
-                elm.text = six.text_type(sub_data)
+                if key in self.BOOLEAN_FIELDS:
+                    val = 'true' if sub_data else 'false'
+                else:
+                    val = six.text_type(sub_data)
+                elm.text = val
 
         return root_elm
 
