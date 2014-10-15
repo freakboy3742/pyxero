@@ -319,13 +319,18 @@ class Manager(object):
 
     def _filter(self, **kwargs):
         params = {}
-        headers = None
         uri = '/'.join([self.base_url, self.name])
         if kwargs:
+            headers = kwargs.get('headers', {})
+            if 'headers' in kwargs:
+                del kwargs['headers'] 
             if 'since' in kwargs:
                 val = kwargs['since']
-                headers = self.prepare_filtering_date(val)
+                headers.update(self.prepare_filtering_date(val))
                 del kwargs['since']
+            where = kwargs.get('where', '').strip()
+            if 'where' in kwargs:
+                del kwargs['where']
 
             def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
@@ -370,6 +375,8 @@ class Manager(object):
             sortedkwargs = sorted(six.iteritems(kwargs),
                     key=lambda item: -1 if 'isnull' in item[0] else 0)
             filter_params = [generate_param(key, value) for key, value in sortedkwargs]
+            if where:
+                filter_params.append(where)
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
