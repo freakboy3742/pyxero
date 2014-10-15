@@ -319,6 +319,7 @@ class Manager(object):
 
     def _filter(self, **kwargs):
         params = {}
+        headers = None
         uri = '/'.join([self.base_url, self.name])
         if kwargs:
             headers = kwargs.get('headers', {})
