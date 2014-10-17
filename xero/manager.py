@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
+from decimal import Decimal
 from dateutil.parser import parse
 import requests
 from six.moves.urllib.parse import parse_qs
@@ -292,11 +293,11 @@ class Manager(object):
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers, False
 
-    def _save(self, data):
-        return self.save_or_put(data, method='post')
+    def _save(self, data, headers=None):
+        return self.save_or_put(data, method='post', headers=headers)
 
-    def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+    def _put(self, data, summarize_errors=True, headers=None):
+        return self.save_or_put(data, method='put', summarize_errors=summarize_errors, headers=headers)
 
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
