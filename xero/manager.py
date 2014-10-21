@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
+from decimal import Decimal
 from dateutil.parser import parse
 import requests
 from six.moves.urllib.parse import parse_qs
@@ -44,8 +45,9 @@ class Manager(object):
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
-    def __init__(self, name, credentials):
+    def __init__(self, name, credentials, on_data_fetched=None):
         self.credentials = credentials
+        self.on_data_fetched = on_data_fetched
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
 
@@ -210,6 +212,11 @@ class Manager(object):
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert)
+            if type(self.on_data_fetched) == type(lambda x: x):
+                try:
+                    self.on_data_fetched(uri=uri, method=method, body=body, response=response)
+                except:
+                    pass
 
             if response.status_code == 200:
                 if not response.headers['content-type'].startswith('text/xml'):
@@ -292,11 +299,11 @@ class Manager(object):
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers, False
 
-    def _save(self, data):
-        return self.save_or_put(data, method='post')
+    def _save(self, data, headers=None):
+        return self.save_or_put(data, method='post', headers=headers)
 
-    def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+    def _put(self, data, summarize_errors=True, headers=None):
+        return self.save_or_put(data, method='put', summarize_errors=summarize_errors, headers=headers)
 
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
@@ -322,10 +329,16 @@ class Manager(object):
         headers = None
         uri = '/'.join([self.base_url, self.name])
         if kwargs:
+            headers = kwargs.get('headers', {})
+            if 'headers' in kwargs:
+                del kwargs['headers'] 
             if 'since' in kwargs:
                 val = kwargs['since']
-                headers = self.prepare_filtering_date(val)
+                headers.update(self.prepare_filtering_date(val))
                 del kwargs['since']
+            where = kwargs.get('where', '').strip()
+            if 'where' in kwargs:
+                del kwargs['where']
 
             def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
@@ -370,6 +383,8 @@ class Manager(object):
             sortedkwargs = sorted(six.iteritems(kwargs),
                     key=lambda item: -1 if 'isnull' in item[0] else 0)
             filter_params = [generate_param(key, value) for key, value in sortedkwargs]
+            if where:
+                filter_params.append(where)
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
