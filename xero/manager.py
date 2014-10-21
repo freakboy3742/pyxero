@@ -45,8 +45,9 @@ class Manager(object):
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
-    def __init__(self, name, credentials):
+    def __init__(self, name, credentials, on_data_fetched=None):
         self.credentials = credentials
+        self.on_data_fetched = on_data_fetched
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
 
@@ -211,6 +212,11 @@ class Manager(object):
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert)
+            if type(self.on_data_fetched) == type(lambda x: x):
+                try:
+                    self.on_data_fetched(uri=uri, method=method, body=body, response=response)
+                except:
+                    pass
 
             if response.status_code == 200:
                 if not response.headers['content-type'].startswith('text/xml'):
