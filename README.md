@@ -6,7 +6,7 @@ PyXero
 PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
 
-This code is based off the [sample code provided by Xero](http://developer.xero.com/getting-started/code/python/), which was
+This code is based of the [sample code provided by Xero](http://developer.xero.com/getting-started/code/python/), which was
 contributed by [IRESS Wealth Management](http://www.iress.com.au), and the [XeroPy](https://github.com/fatbox/XeroPy) packaged version of
 that code.
 
