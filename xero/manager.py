@@ -3,12 +3,12 @@ from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
 from dateutil.parser import parse
+from decimal import Decimal
 import requests
 from six.moves.urllib.parse import parse_qs
 import six
 from .constants import XERO_API_URL
 from .exceptions import *
-
 
 def isplural(word):
     return word[-1].lower() == 's'
@@ -100,7 +100,10 @@ class Manager(object):
                     elif key in self.DATETIME_FIELDS:
                         val = parse(val)
                     elif key in self.DATE_FIELDS:
-                        val = parse(val).date()
+                        if val.isdigit():
+                          val = int(val)
+                        else:
+                          val = parse(val).date()
                     elif key in self.INTEGER_FIELDS:
                         val = int(val)
                     data = val
