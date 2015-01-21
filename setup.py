@@ -2,11 +2,8 @@
 from setuptools import setup
 from xero import VERSION
 
-try:
-    readme = open("README.rst")
+with open('README.md') as readme:
     long_description = str(readme.read())
-finally:
-    readme.close()
 
 setup(
     name='pyxero',
@@ -18,6 +15,7 @@ setup(
     url='http://github.com/freakboy3742/pyxero',
     packages=['xero', ],
     install_requires=[
+        'six>=1.8.0',
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
         'python-dateutil>=2.1',
@@ -32,6 +30,8 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Office/Business :: Financial :: Accounting',
     ],
     test_suite="tests",

@@ -1,13 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from datetime import date
+from datetime import date, datetime
 import unittest
 from xml.dom.minidom import parseString
 
 from mock import Mock, patch
 
 from xero import Xero
+from xero.manager import Manager
 from tests import mock_data
 
 
@@ -21,7 +22,7 @@ class ManagerTest(unittest.TestCase):
         # * Inline dictionary data types (Contact)
         # * List of dict data types
 
-        credentials = Mock()
+        credentials = Mock(base_url="")
         xero = Xero(credentials)
 
         original = {
@@ -36,7 +37,7 @@ class ManagerTest(unittest.TestCase):
                         'AccountCode': '200',
                     },
                     {
-                        'Description': 'Line item 2',
+                        'Description': 'Line item 2 with unicôde',
                         'Quantity': '2.0',
                         'UnitAmount': '750.00',
                         'AccountCode': '200',
@@ -69,10 +70,50 @@ class ManagerTest(unittest.TestCase):
             headers={'content-type': 'text/xml; charset=utf-8'},
             encoding='utf-8', text=mock_data.unicode_content_text)
 
-        credentials = Mock()
+        credentials = Mock(base_url="")
         xero = Xero(credentials)
 
         contact = xero.contacts.get(id='755f1475-d255-43a8-bedc-5ea7fd26c71f')
 
         self.assertEqual(contact['FirstName'], 'John')
         self.assertEqual(contact['LastName'], 'Sürname')
+
+    def test_filter(self):
+        """The filter function should correctly handle various arguments"""
+        credentials = Mock(base_url="")
+        manager = Manager('contacts', credentials)
+
+        uri, params, method, body, headers, singleobject = manager._filter(
+                order="LastName",
+                page=2,
+                offset=5,
+                since=datetime(2014, 8, 10, 15, 14, 46),
+                Name="John")
+
+        self.assertEqual(method, 'get')
+        self.assertFalse(singleobject)
+
+        expected_params = {
+                "order": "LastName",
+                "page": 2,
+                "offset": 5,
+                "where": 'Name=="John"'
+        }
+        self.assertEqual(params, expected_params)
+
+        expected_headers = {
+                "If-Modified-Since" : "Sun, 10 Aug 2014 15:14:46 GMT"
+        }
+        self.assertEqual(headers, expected_headers)
+
+        # Also make sure an empty call runs ok
+        uri, params, method, body, headers, singleobject = manager._filter()
+        self.assertEqual(params, {})
+        self.assertIsNone(headers)
+
+        manager = Manager('invoices', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+                **{'Contact.ContactID': '3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f'})
+
+        self.assertEqual(params,
+            {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'})
