@@ -69,10 +69,10 @@ class Manager(object):
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
-    def __init__(self, name, credentials):
+    def __init__(self, name, credentials, url = XERO_API_URL):
         self.credentials = credentials
         self.name = name
-        self.base_url = credentials.base_url + XERO_API_URL
+        self.base_url = credentials.base_url + url
 
         # setup our singular variants of the name
         # only if the name ends in 's'

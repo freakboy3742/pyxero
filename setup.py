@@ -19,6 +19,7 @@ setup(
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
         'python-dateutil>=2.1',
+        'mock >= 1.0'
     ],
     license='New BSD',
     classifiers=[
