@@ -8,28 +8,15 @@ import requests
 import json
 from six.moves.urllib.parse import parse_qs
 import six
-from .constants import XERO_API_URL
+from .constants import XERO_API_URL, XERO_FILES_URL
 from .exceptions import *
 
-def isplural(word):
-    return word[-1].lower() == 's'
-
-def singular(word):
-    if isplural(word):
-        return word[:-1]
-    return word
-
-
-class Manager(object):
+class FilesManager(object):
     DECORATED_METHODS = (
         'get',
-        'save',
+        'post',
         'filter',
-        'all',
         'put',
-        'get_attachments',
-        'get_attachment_data',
-        'put_attachment_data',
         )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
@@ -70,147 +57,14 @@ class Manager(object):
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
-    def __init__(self, name, credentials, url = XERO_API_URL):
+    def __init__(self, name, credentials):
         self.credentials = credentials
         self.name = name
-        self.base_url = credentials.base_url + url
-
-        # setup our singular variants of the name
-        # only if the name ends in 's'
-        if name[-1] == "s":
-            self.singular = name[:len(name)-1]
-        else:
-            self.singular = name
+        self.base_url = credentials.base_url + XERO_FILES_URL
 
         for method_name in self.DECORATED_METHODS:
             method = getattr(self, '_%s' % method_name)
             setattr(self, method_name, self._get_data(method))
-
-    def walk_dom(self, dom):
-        tree_list = tuple()
-        for node in dom.childNodes:
-            tagName = getattr(node, 'tagName', None)
-            if tagName:
-                tree_list += (tagName, self.walk_dom(node),)
-            else:
-                data = node.data.strip()
-                if data:
-                    tree_list += (node.data.strip(),)
-        return tree_list
-
-    def convert_to_dict(self, deep_list):
-        out = {}
-
-        if len(deep_list) > 2:
-            lists = [l for l in deep_list if isinstance(l, tuple)]
-            keys = [l for l in deep_list if isinstance(l, six.string_types)]
-
-            if len(keys) > 1 and len(set(keys)) == 1:
-                # This is a collection... all of the keys are the same.
-                return [self.convert_to_dict(data) for data in lists]
-
-            for key, data in zip(keys, lists):
-                if not data:
-                    # Skip things that are empty tags?
-                    continue
-
-                if len(data) == 1:
-                    # we're setting a value
-                    # check to see if we need to apply any special
-                    # formatting to the value
-                    val = data[0]
-                    if key in self.DECIMAL_FIELDS:
-                        val = Decimal(val)
-                    elif key in self.BOOLEAN_FIELDS:
-                        val = True if val.lower() == 'true' else False
-                    elif key in self.DATETIME_FIELDS:
-                        val = parse(val)
-                    elif key in self.DATE_FIELDS:
-                        if val.isdigit():
-                          val = int(val)
-                        else:
-                          val = parse(val).date()
-                    elif key in self.INTEGER_FIELDS:
-                        val = int(val)
-                    data = val
-                else:
-                    # We have a deeper data structure, that we need
-                    # to recursively process.
-                    data = self.convert_to_dict(data)
-                    # Which may itself be a collection. Quick, check!
-                    if isinstance(data, dict) and isplural(key) and [singular(key)] == data.keys():
-                        data = [data[singular(key)]]
-
-                out[key] = data
-
-        elif len(deep_list) == 2:
-            key = deep_list[0]
-            data = self.convert_to_dict(deep_list[1])
-
-            # If our key is repeated in our child object, but in singular
-            # form (and is the only key), then this object is a collection.
-            if isplural(key) and [singular(key)] == data.keys():
-                data = [data[singular(key)]]
-
-            out[key] = data
-        else:
-            out = deep_list[0]
-        return out
-
-    def dict_to_xml(self, root_elm, data):
-        for key in data.keys():
-            # Xero will complain if we send back these fields.
-            if key in self.NO_SEND_FIELDS:
-                continue
-
-            sub_data = data[key]
-            elm = SubElement(root_elm, key)
-
-            is_list = isinstance(sub_data, list) or isinstance(sub_data, tuple)
-            is_plural = key[len(key)-1] == "s"
-            plural_name = key[:len(key)-1]
-
-            # Key references a dict. Unroll the dict
-            # as it's own XML node with subnodes
-            if isinstance(sub_data, dict):
-                self.dict_to_xml(elm, sub_data)
-
-            # Key references a list/tuple
-            elif is_list:
-                # key name is a plural. This means each item
-                # in the list needs to be wrapped in an XML
-                # node that is a singular version of the list name.
-                if is_plural:
-                    for d in sub_data:
-                        plural_name = self.PLURAL_EXCEPTIONS.get(plural_name, plural_name)
-                        self.dict_to_xml(SubElement(elm, plural_name), d)
-
-                # key name isn't a plural. Just insert the content
-                # as an XML node with subnodes
-                else:
-                    for d in sub_data:
-                        self.dict_to_xml(elm, d)
-
-            # Normal element - just insert the data.
-            else:
-                if key in self.BOOLEAN_FIELDS:
-                    val = 'true' if sub_data else 'false'
-                else:
-                    val = six.text_type(sub_data)
-                elm.text = val
-
-        return root_elm
-
-    def _prepare_data_for_save(self, data):
-        if isinstance(data, list) or isinstance(data, tuple):
-            root_elm = Element(self.name)
-            for d in data:
-                sub_elm = SubElement(root_elm, self.singular)
-                self.dict_to_xml(sub_elm, d)
-        else:
-            root_elm = self.dict_to_xml(Element(self.singular), data)
-
-        return tostring(root_elm)
 
     def _get_results(self, data):
         response = data['Response']
@@ -241,16 +95,7 @@ class Manager(object):
                     params=params, cert=cert)
 
             if response.status_code == 200:
-                if response.headers['content-type'].startswith('text/xml'):
-                    # parseString takes byte content, not unicode.
-                    dom = parseString(response.text.encode(response.encoding))
-                    data = self.convert_to_dict(self.walk_dom(dom))
-                    results = self._get_results(data)
-                    # If we're dealing with Manager.get, return a single object.
-                    if singleobject and isinstance(results, list):
-                        return results[0]
-                    return results
-                elif response.headers['content-type'].startswith('application/json'):             
+                if response.headers['content-type'].startswith('application/json'):             
                     return response.json()
                 else:
                     # return a byte string without doing any Unicode conversions
@@ -290,8 +135,11 @@ class Manager(object):
 
         return wrapper
 
-    def _get(self, id, headers=None):
-        uri = '/'.join([self.base_url, self.name, id])
+    def _get(self, id=None, headers=None):
+        if not id is None:
+            uri = '/'.join([self.base_url, self.name, id])
+        else:
+            uri = '/'.join([self.base_url, self.name])
         return uri, {}, 'get', None, headers, True
 
     def _get_attachments(self, id):
@@ -316,37 +164,25 @@ class Manager(object):
         file.write(data)
         return len(data)
 
-    def save_or_put(self, data, method='post', headers=None, summarize_errors=True, json_request=False):
-        uri = '/'.join([self.base_url, self.name])
-        
-        if json_request:
-            body = data
+    def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
+        if not data["Id"] is None:
+            uri = '/'.join([self.base_url, self.name])
         else:
-            body = {'xml': self._prepare_data_for_save(data)}
-        
+            uri = '/'.join([self.base_url, self.name, data["Id"]])
+
+        print(uri)
+        body = data        
         if summarize_errors:
             params = {}
         else:
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers, False
 
-    def _save(self, data, json_request=False):
-        return self.save_or_put(data, method='post', json_request=json_request)
+    def _post(self, data):
+        return self.save_or_put(data, method='post')
 
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
-
-    def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
-        """Upload an attachment to the Xero object."""
-        uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
-        params = {'IncludeOnline': 'true'} if include_online else {}
-        headers = {'Content-Type': content_type, 'Content-Length': len(data)}
-        return uri, params, 'put', data, headers, False
-
-    def put_attachment(self, id, filename, file, content_type, include_online=False):
-        """Upload an attachment to the Xero object (from file object)."""
-        self.put_attachment_data(id, filename, file.read(), content_type,
-                                 include_online=include_online)
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
@@ -412,7 +248,3 @@ class Manager(object):
                 params['where'] = '&&'.join(filter_params)
 
         return uri, params, 'get', None, headers, False
-
-    def _all(self):
-        uri = '/'.join([self.base_url, self.name])
-        return uri, {}, 'get', None, None, False
