@@ -17,44 +17,22 @@ class FilesManager(object):
         'post',
         'filter',
         'put',
+        'delete',
+        'get_files',
+        #'get_association',
+        #'get_associations',
+        #'get_content',
         )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
-        'Updated',
-        'FullyPaidOnDate',
-        'DateTimeUTC',
         'CreatedDateUTC',
         )
-    DATE_FIELDS = (
-        'DueDate',
-        'Date',
-        'PaymentDate',
-        'StartDate',
-        'EndDate',
-        'PeriodLockDate',
-        'DateOfBirth',
-        'OpeningBalanceDate',
-        )
+    DATE_FIELDS = ()
     BOOLEAN_FIELDS = (
-        'IsSupplier',
-        'IsCustomer',
-        'IsDemoCompany',
-        'PaysTax',
-        'IsAuthorisedToApproveTimesheets',
-        'IsAuthorisedToApproveLeave',
-        'HasHELPDebt',
-        'AustralianResidentForTaxPurposes',
-        'TaxFreeThresholdClaimed',
-        'HasSFSSDebt',
-        'EligibleToReceiveLeaveLoading',
-        'IsExemptFromTax',
-        'IsExemptFromSuper',
-        'SentToContact',
+        'IsInbox',
         )
     DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
-    INTEGER_FIELDS = ('FinancialYearEndDay', 'FinancialYearEndMonth')
-    PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
-
+    INTEGER_FIELDS = ('Size', 'FileCount')
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
     def __init__(self, name, credentials):
@@ -94,15 +72,18 @@ class FilesManager(object):
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert)
 
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 201:
                 if response.headers['content-type'].startswith('application/json'):             
                     return response.json()
                 else:
                     # return a byte string without doing any Unicode conversions
                     return response.content
 
+            #Delete will return a response code of 204 - No Content
+            elif response.status_code == 204:
+                return "Deleted"
+
             elif response.status_code == 400:
-                print(response.text)
                 raise XeroBadRequest(response)
 
             elif response.status_code == 401:
@@ -142,35 +123,28 @@ class FilesManager(object):
             uri = '/'.join([self.base_url, self.name])
         return uri, {}, 'get', None, headers, True
 
-    def _get_attachments(self, id):
+    def _get_files(self, folderId):
+        """Retrieve the list of files contained in a folder"""
+        uri = '/'.join([self.base_url, self.name, folderId, 'Files'])
+        return uri, {}, 'get', None, None, False
+
+    def _get_associations(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
-        uri = '/'.join([self.base_url, self.name, id, 'Attachments']) + '/'
+        uri = '/'.join([self.base_url, self.name, id, 'Associations']) + '/'
         return uri, {}, 'get', None, None, False
 
-    def _get_attachment_data(self, id, filename):
+    def _get_association(self, fileId, objectId):
         """
         Retrieve the contents of a specific attachment (identified by filename).
         """
-        uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
+        uri = '/'.join([self.base_url, self.name, fileId, 'Associations', objectId])
         return uri, {}, 'get', None, None, False
-
-    def get_attachment(self, id, filename, file):
-        """
-        Retrieve the contents of a specific attachment (identified by filename).
-
-        Writes data to file object, returns length of data written.
-        """
-        data = self.get_attachment_data(id, filename)
-        file.write(data)
-        return len(data)
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
-        if not data["Id"] is None:
+        if not "Id" in data:
             uri = '/'.join([self.base_url, self.name])
         else:
             uri = '/'.join([self.base_url, self.name, data["Id"]])
-
-        print(uri)
         body = data        
         if summarize_errors:
             params = {}
@@ -183,6 +157,10 @@ class FilesManager(object):
 
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+
+    def _delete(self, id):
+        uri = '/'.join([self.base_url, self.name, id])
+        return uri, {}, 'delete', None, None, False
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):

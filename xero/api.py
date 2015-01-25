@@ -6,13 +6,7 @@ from .filesmanager import FilesManager
 class Xero(object):
 
     def __init__(self, credentials):
-        
-        setattr(self, "accounting", Accounting(credentials))
-        setattr(self, "files", Files(credentials))
-        
-
-class Accounting(object):
-    """An ORM-like interface to the Xero API"""
+        """An ORM-like interface to the Xero API"""
 
     OBJECT_LIST = (
       "Attachments",
@@ -46,14 +40,17 @@ class Accounting(object):
         # instance of a Manager object to operate on it
         for name in self.OBJECT_LIST:
             setattr(self, name.lower(), Manager(name, credentials))
+        
+        setattr(self, "files", Files(credentials))
+        
 
 class Files(object):
     """An ORM-like interface to the Xero Files API"""
 
     OBJECT_LIST = (
-      "Files",
+      #"Files",
       "Folders",
-      "Associations",
+      #"Associations",
     )
 
     def __init__(self, credentials):
