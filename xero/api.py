@@ -50,6 +50,7 @@ class Files(object):
     OBJECT_LIST = (
       #"Files",
       "Folders",
+      "Inbox",
       #"Associations",
     )
 
