@@ -8,30 +8,30 @@ class Xero(object):
 
     def __init__(self, credentials):
         
-    OBJECT_LIST = (
-      "Attachments",
-      "Accounts",
-      "BankTransactions",
-      "BankTransfers",
-      "BrandingThemes",
-      "Contacts",
-      "CreditNotes",
-      "Currencies",
-      "Employees",
-      "ExpenseClaims",
-      "Invoices",
-      "Items",
-      "Journals",
-      "ManualJournals",
-      "Organisation",
-      "Payments",
-      "Receipts",
-      "RepeatingInvoices",
-      "Reports",
-      "TaxRates",
-      "TrackingCategories",
-      "Users",
-    )
+        OBJECT_LIST = (
+          "Attachments",
+          "Accounts",
+          "BankTransactions",
+          "BankTransfers",
+          "BrandingThemes",
+          "Contacts",
+          "CreditNotes",
+          "Currencies",
+          "Employees",
+          "ExpenseClaims",
+          "Invoices",
+          "Items",
+          "Journals",
+          "ManualJournals",
+          "Organisation",
+          "Payments",
+          "Receipts",
+          "RepeatingInvoices",
+          "Reports",
+          "TaxRates",
+          "TrackingCategories",
+          "Users",
+        )
 
     def __init__(self, credentials):
         # Iterate through the list of objects we support, for
