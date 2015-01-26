@@ -20,6 +20,7 @@ class FilesManager(object):
         'put',
         'delete',
         'get_files',
+        'upload_file',
         #'get_association',
         #'get_associations',
         #'get_content',
@@ -66,12 +67,12 @@ class FilesManager(object):
             uri, params, method, body, headers, singleobject
         """
         def wrapper(*args, **kwargs):
-            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
+            uri, params, method, body, headers, singleobject, files = func(*args, **kwargs)
 
             cert = getattr(self.credentials, 'client_cert', None)
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, cert=cert)
+                    params=params, cert=cert, files = files)
 
             if response.status_code == 200 or response.status_code == 201:
                 if response.headers['content-type'].startswith('application/json'):             
@@ -122,24 +123,24 @@ class FilesManager(object):
             uri = '/'.join([self.base_url, self.name, id])
         else:
             uri = '/'.join([self.base_url, self.name])
-        return uri, {}, 'get', None, headers, True
+        return uri, {}, 'get', None, headers, True, None
 
     def _get_files(self, folderId):
         """Retrieve the list of files contained in a folder"""
         uri = '/'.join([self.base_url, self.name, folderId, 'Files'])
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
 
     def _get_associations(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Associations']) + '/'
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
 
     def _get_association(self, fileId, objectId):
         """
         Retrieve the contents of a specific attachment (identified by filename).
         """
         uri = '/'.join([self.base_url, self.name, fileId, 'Associations', objectId])
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         if not "Id" in data:
@@ -151,7 +152,7 @@ class FilesManager(object):
             params = {}
         else:
             params = {'summarizeErrors': 'false'}
-        return uri, params, method, body, headers, False
+        return uri, params, method, body, headers, False, None
 
     def _post(self, data):
         return self.save_or_put(data, method='post')
@@ -161,7 +162,18 @@ class FilesManager(object):
 
     def _delete(self, id):
         uri = '/'.join([self.base_url, self.name, id])
-        return uri, {}, 'delete', None, None, False
+        return uri, {}, 'delete', None, None, False, None
+
+    def _upload_file(self, path, folderId=None):
+        if not folderId is None:
+            uri = '/'.join([self.base_url, self.name, folderId])
+        else:    
+            uri = '/'.join([self.base_url, self.name])
+        files = dict()
+        files['File'] = open(path, mode="rb")
+            
+        return uri, {}, 'post', None, None, False, files
+
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
@@ -226,8 +238,8 @@ class FilesManager(object):
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
-        return uri, params, 'get', None, headers, False
+        return uri, params, 'get', None, headers, False, None
 
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
-        return uri, {}, 'get', None, None, False
+        return uri, {}, 'get', None, None, False, None
