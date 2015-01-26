@@ -249,8 +249,8 @@ class Manager(object):
                 results = self._get_results(data)
                 # If we're dealing with Manager.get, return a single object.
                 if singleobject and isinstance(results, list):
-                        return results[0]
-                    return results 
+                    return results[0]
+                return results 
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
@@ -314,7 +314,6 @@ class Manager(object):
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
-        
         if summarize_errors:
             params = {}
         else:
