@@ -41,7 +41,7 @@ class Xero(object):
         for name in self.OBJECT_LIST:
             setattr(self, name.lower(), Manager(name, credentials))
         
-        setattr(self, "files", Files(credentials))
+        setattr(self, "filesAPI", Files(credentials))
         
 
 class Files(object):
