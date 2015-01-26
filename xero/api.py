@@ -48,7 +48,7 @@ class Files(object):
     """An ORM-like interface to the Xero Files API"""
 
     OBJECT_LIST = (
-      #"Associations",
+      "Associations",
       "Files",
       "Folders",
       "Inbox",

@@ -21,8 +21,10 @@ class FilesManager(object):
         'delete',
         'get_files',
         'upload_file',
-        #'get_association',
-        #'get_associations',
+        'get_association',
+        'get_associations',
+        'make_association',
+        'delete_association',
         'get_content',
         )
     DATETIME_FIELDS = (
@@ -133,11 +135,12 @@ class FilesManager(object):
         return uri, {}, 'get', None, None, False, None
 
     def _get_association(self, fileId, objectId):
-        """
-        Retrieve the contents of a specific attachment (identified by filename).
-        """
         uri = '/'.join([self.base_url, self.name, fileId, 'Associations', objectId])
         return uri, {}, 'get', None, None, False, None
+
+    def _delete_association(self, fileId, objectId):
+        uri = '/'.join([self.base_url, self.name, fileId, 'Associations', objectId])
+        return uri, {}, 'delete', None, None, False, None
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         if not "Id" in data:
@@ -174,6 +177,11 @@ class FilesManager(object):
     def _get_content(self, fileId):
         uri = '/'.join([self.base_url, self.name, fileId, "Content"])
         return uri, {}, 'get', None, None, False, None
+
+    def _make_association(self, data, id):
+        uri = '/'.join([self.base_url, self.name, id, 'Associations'])
+        body = data
+        return uri, {}, 'post', body, None, False, None 
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
