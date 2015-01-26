@@ -48,10 +48,10 @@ class Files(object):
     """An ORM-like interface to the Xero Files API"""
 
     OBJECT_LIST = (
-      #"Files",
+      #"Associations",
+      "Files",
       "Folders",
       "Inbox",
-      #"Associations",
     )
 
     def __init__(self, credentials):

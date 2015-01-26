@@ -14,6 +14,7 @@ from .exceptions import *
 class FilesManager(object):
     DECORATED_METHODS = (
         'get',
+        'all',
         'post',
         'filter',
         'put',
@@ -33,7 +34,7 @@ class FilesManager(object):
         )
     DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
     INTEGER_FIELDS = ('Size', 'FileCount')
-    NO_SEND_FIELDS = ('UpdatedDateUTC',)
+    NO_SEND_FIELDS = ('UpdatedDateUTC', 'User')
 
     def __init__(self, name, credentials):
         self.credentials = credentials
@@ -226,3 +227,7 @@ class FilesManager(object):
                 params['where'] = '&&'.join(filter_params)
 
         return uri, params, 'get', None, headers, False
+
+    def _all(self):
+        uri = '/'.join([self.base_url, self.name])
+        return uri, {}, 'get', None, None, False
