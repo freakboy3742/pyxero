@@ -17,8 +17,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_bad_request(self, r_put):
         "Data with validation errors raises a bad request exception"
         # Verified response from the live API
+        head = dict()
+        head['content-type'] = 'text/xml; charset=utf-8'
         r_put.return_value = Mock(status_code=400, encoding='utf-8',
-            text=mock_data.bad_request_text)
+            text=mock_data.bad_request_text, headers = head)
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
