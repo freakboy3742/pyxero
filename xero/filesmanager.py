@@ -23,7 +23,7 @@ class FilesManager(object):
         'upload_file',
         #'get_association',
         #'get_associations',
-        #'get_content',
+        'get_content',
         )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
@@ -118,11 +118,8 @@ class FilesManager(object):
 
         return wrapper
 
-    def _get(self, id=None, headers=None):
-        if not id is None:
-            uri = '/'.join([self.base_url, self.name, id])
-        else:
-            uri = '/'.join([self.base_url, self.name])
+    def _get(self, id, headers=None):
+        uri = '/'.join([self.base_url, self.name, id])
         return uri, {}, 'get', None, headers, True, None
 
     def _get_files(self, folderId):
@@ -174,6 +171,9 @@ class FilesManager(object):
             
         return uri, {}, 'post', None, None, False, files
 
+    def _get_content(self, fileId):
+        uri = '/'.join([self.base_url, self.name, fileId, "Content"])
+        return uri, {}, 'get', None, None, False, None
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
