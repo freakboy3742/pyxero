@@ -5,7 +5,6 @@ from datetime import datetime
 from dateutil.parser import parse
 from decimal import Decimal
 import requests
-import json
 from six.moves.urllib.parse import parse_qs
 import six
 from .constants import XERO_API_URL
@@ -70,10 +69,10 @@ class Manager(object):
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
-    def __init__(self, name, credentials, url = XERO_API_URL):
+    def __init__(self, name, credentials):
         self.credentials = credentials
         self.name = name
-        self.base_url = credentials.base_url + url
+        self.base_url = credentials.base_url + XERO_API_URL
 
         # setup our singular variants of the name
         # only if the name ends in 's'
@@ -241,23 +240,19 @@ class Manager(object):
                     params=params, cert=cert)
 
             if response.status_code == 200:
-                if response.headers['content-type'].startswith('text/xml'):
-                    # parseString takes byte content, not unicode.
-                    dom = parseString(response.text.encode(response.encoding))
-                    data = self.convert_to_dict(self.walk_dom(dom))
-                    results = self._get_results(data)
-                    # If we're dealing with Manager.get, return a single object.
-                    if singleobject and isinstance(results, list):
-                        return results[0]
-                    return results
-                elif response.headers['content-type'].startswith('application/json'):             
-                    return response.json()
-                else:
+                if not response.headers['content-type'].startswith('text/xml'):
                     # return a byte string without doing any Unicode conversions
                     return response.content
+                # parseString takes byte content, not unicode.
+                dom = parseString(response.text.encode(response.encoding))
+                data = self.convert_to_dict(self.walk_dom(dom))
+                results = self._get_results(data)
+                # If we're dealing with Manager.get, return a single object.
+                if singleobject and isinstance(results, list):
+                        return results[0]
+                    return results 
 
             elif response.status_code == 400:
-                print(response.text)
                 raise XeroBadRequest(response)
 
             elif response.status_code == 401:
@@ -316,13 +311,9 @@ class Manager(object):
         file.write(data)
         return len(data)
 
-    def save_or_put(self, data, method='post', headers=None, summarize_errors=True, json_request=False):
+    def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
-        
-        if json_request:
-            body = data
-        else:
-            body = {'xml': self._prepare_data_for_save(data)}
+        body = {'xml': self._prepare_data_for_save(data)}
         
         if summarize_errors:
             params = {}
@@ -330,8 +321,8 @@ class Manager(object):
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers, False
 
-    def _save(self, data, json_request=False):
-        return self.save_or_put(data, method='post', json_request=json_request)
+    def _save(self, data):
+        return self.save_or_put(data, method='post')
 
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
