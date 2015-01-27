@@ -16,7 +16,6 @@ class FilesManager(object):
         'get',
         'all',
         'post',
-        'filter',
         'put',
         'delete',
         'get_files',
@@ -27,18 +26,6 @@ class FilesManager(object):
         'delete_association',
         'get_content',
         )
-    DATETIME_FIELDS = (
-        'UpdatedDateUTC',
-        'CreatedDateUTC',
-        )
-    DATE_FIELDS = ()
-    BOOLEAN_FIELDS = (
-        'IsInbox',
-        )
-    DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
-    INTEGER_FIELDS = ('Size', 'FileCount')
-    NO_SEND_FIELDS = ('UpdatedDateUTC', 'User')
-
     def __init__(self, name, credentials):
         self.credentials = credentials
         self.name = name
@@ -130,7 +117,6 @@ class FilesManager(object):
         return uri, {}, 'get', None, None, False, None
 
     def _get_associations(self, id):
-        """Retrieve a list of attachments associated with this Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Associations']) + '/'
         return uri, {}, 'get', None, None, False, None
 
@@ -141,6 +127,7 @@ class FilesManager(object):
     def _delete_association(self, fileId, objectId):
         uri = '/'.join([self.base_url, self.name, fileId, 'Associations', objectId])
         return uri, {}, 'delete', None, None, False, None
+
 
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         if not "Id" in data:
@@ -178,75 +165,10 @@ class FilesManager(object):
         uri = '/'.join([self.base_url, self.name, fileId, "Content"])
         return uri, {}, 'get', None, None, False, None
 
-    def _make_association(self, data, id):
+    def _make_association(self, id, data):
         uri = '/'.join([self.base_url, self.name, id, 'Associations'])
         body = data
         return uri, {}, 'post', body, None, False, None 
-
-    def prepare_filtering_date(self, val):
-        if isinstance(val, datetime):
-            val = val.strftime('%a, %d %b %Y %H:%M:%S GMT')
-        else:
-            val = '"%s"' % val
-        return {'If-Modified-Since': val}
-
-    def _filter(self, **kwargs):
-        params = {}
-        headers = None
-        uri = '/'.join([self.base_url, self.name])
-        if kwargs:
-            if 'since' in kwargs:
-                val = kwargs['since']
-                headers = self.prepare_filtering_date(val)
-                del kwargs['since']
-
-            def get_filter_params(key, value):
-                last_key = key.split('_')[-1]
-                if last_key.upper().endswith('ID'):
-                    return 'Guid("%s")' % six.text_type(value)
-
-                if key in self.BOOLEAN_FIELDS:
-                    return 'true' if value else 'false'
-                elif key in self.DATETIME_FIELDS:
-                    return value.isoformat()
-                else:
-                    return '"%s"' % six.text_type(value)
-
-            def generate_param(key, value):
-                parts = key.split("__")
-                field = key.replace('_', '.')
-                fmt = '%s==%s'
-                if len(parts) == 2:
-                    # support filters:
-                    # Name__Contains=John becomes Name.Contains("John")
-                    if parts[1] in ["contains", "startswith", "endswith"]:
-                        field = parts[0]
-                        fmt = ''.join(['%s.', parts[1], '(%s)'])
-                    elif parts[1] in ["isnull"]:
-                        sign = '=' if value else '!'
-                        return '%s%s=null' % (parts[0], sign)
-
-                return fmt % (
-                    field,
-                    get_filter_params(key, value)
-                )
-
-            # Move any known parameter names to the query string
-            KNOWN_PARAMETERS = ['order', 'offset', 'page']
-            for param in KNOWN_PARAMETERS:
-                if param in kwargs:
-                    params[param] = kwargs.pop(param)
-
-            # Treat any remaining arguments as filter predicates
-            # Xero will break if you search without a check for null in the first position:
-            # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
-            sortedkwargs = sorted(six.iteritems(kwargs),
-                    key=lambda item: -1 if 'isnull' in item[0] else 0)
-            filter_params = [generate_param(key, value) for key, value in sortedkwargs]
-            if filter_params:
-                params['where'] = '&&'.join(filter_params)
-
-        return uri, params, 'get', None, headers, False, None
 
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
