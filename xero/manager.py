@@ -250,7 +250,7 @@ class Manager(object):
                 # If we're dealing with Manager.get, return a single object.
                 if singleobject and isinstance(results, list):
                     return results[0]
-                return results 
+                return results
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
