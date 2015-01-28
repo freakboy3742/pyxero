@@ -15,8 +15,8 @@ class FilesManager(object):
     DECORATED_METHODS = (
         'get',
         'all',
-        'post',
-        'put',
+        'create',
+        'save',
         'delete',
         'get_files',
         'upload_file',
@@ -86,6 +86,9 @@ class FilesManager(object):
             elif response.status_code == 404:
                 raise XeroNotFound(response)
 
+            elif response.status_code == 415:
+                raise XeroUnsupportedMediaType(response)
+
             elif response.status_code == 500:
                 raise XeroInternalError(response)
 
@@ -129,7 +132,7 @@ class FilesManager(object):
         return uri, {}, 'delete', None, None, False, None
 
 
-    def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
+    def create_or_save(self, data, method='post', headers=None, summarize_errors=True):
         if not "Id" in data:
             uri = '/'.join([self.base_url, self.name])
         else:
@@ -141,11 +144,11 @@ class FilesManager(object):
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers, False, None
 
-    def _post(self, data):
-        return self.save_or_put(data, method='post')
+    def _create(self, data):
+        return self.create_or_save(data, method='post')
 
-    def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+    def _save(self, data, summarize_errors=True):
+        return self.create_or_save(data, method='put', summarize_errors=summarize_errors)
 
     def _delete(self, id):
         uri = '/'.join([self.base_url, self.name, id])

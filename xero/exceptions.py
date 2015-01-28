@@ -18,9 +18,7 @@ class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
         if response.headers['content-type'].startswith('application/json'):
-            js = json.loads(response.text)
-            msg = js[0]['detail']
-            super(XeroBadRequest, self).__init__(response, msg)
+            super(XeroBadRequest, self).__init__(response, response.text)
         
         else:
             # Extract the messages from the text.
@@ -54,6 +52,10 @@ class XeroNotFound(XeroException):
     def __init__(self, response):
         super(XeroNotFound, self).__init__(response, response.text)
 
+class XeroUnsupportedMediaType(XeroException):
+    # HTTP 415: UnsupportedMediaType
+    def __init__(self, response):
+        super(XeroUnsupportedMediaType, self).__init__(response, response.text)
 
 class XeroInternalError(XeroException):
     # HTTP 500: Internal Error
