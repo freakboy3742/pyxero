@@ -1,5 +1,6 @@
 from six.moves.urllib.parse import parse_qs
 from xml.dom.minidom import parseString
+import json
 
 
 class XeroException(Exception):
@@ -16,16 +17,20 @@ class XeroNotVerified(Exception):
 class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
-        # Extract the messages from the text.
-        # parseString takes byte content, not unicode.
-        dom = parseString(response.text.encode(response.encoding))
-        messages = dom.getElementsByTagName('Message')
+        if response.headers['content-type'].startswith('application/json'):
+            super(XeroBadRequest, self).__init__(response, response.text)
+        
+        else:
+            # Extract the messages from the text.
+            # parseString takes byte content, not unicode.
+            dom = parseString(response.text.encode(response.encoding))
+            messages = dom.getElementsByTagName('Message')
 
-        msg = messages[0].childNodes[0].data
-        self.errors = [
-            m.childNodes[0].data for m in messages[1:]
-        ]
-        super(XeroBadRequest, self).__init__(response, msg)
+            msg = messages[0].childNodes[0].data
+            self.errors = [
+                m.childNodes[0].data for m in messages[1:]
+            ]
+            super(XeroBadRequest, self).__init__(response, msg)
 
 
 class XeroUnauthorized(XeroException):
@@ -47,6 +52,10 @@ class XeroNotFound(XeroException):
     def __init__(self, response):
         super(XeroNotFound, self).__init__(response, response.text)
 
+class XeroUnsupportedMediaType(XeroException):
+    # HTTP 415: UnsupportedMediaType
+    def __init__(self, response):
+        super(XeroUnsupportedMediaType, self).__init__(response, response.text)
 
 class XeroInternalError(XeroException):
     # HTTP 500: Internal Error
