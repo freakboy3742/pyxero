@@ -19,7 +19,12 @@ class XeroBadRequest(XeroException):
     def __init__(self, response):
         if response.headers['content-type'].startswith('application/json'):
             super(XeroBadRequest, self).__init__(response, response.text)
-        
+
+        elif response.headers['content-type'].startswith('text/html'):
+            payload = parse_qs(response.text)
+            self.problem = payload['oauth_problem'][0]
+            super(XeroBadRequest, self).__init__(response, payload['oauth_problem_advice'][0])
+
         else:
             # Extract the messages from the text.
             # parseString takes byte content, not unicode.
