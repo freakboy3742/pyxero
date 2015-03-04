@@ -9,6 +9,7 @@ import json
 from six.moves.urllib.parse import parse_qs
 import six
 from .constants import XERO_API_URL, XERO_FILES_URL
+import ntpath
 from .exceptions import *
 
 class FilesManager(object):
@@ -160,7 +161,7 @@ class FilesManager(object):
         else:    
             uri = '/'.join([self.base_url, self.name])
         files = dict()
-        files['File'] = open(path, mode="rb")
+        files[self.filename(path)] = open(path, mode="rb")
             
         return uri, {}, 'post', None, None, False, files
 
@@ -176,3 +177,8 @@ class FilesManager(object):
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
         return uri, {}, 'get', None, None, False, None
+
+
+    def filename(self, path):
+        head, tail = ntpath.split(path)
+        return tail or ntpath.basename(head)
