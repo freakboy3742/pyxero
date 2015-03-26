@@ -137,3 +137,23 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params,
            {u'where': u'Date<=DateTime(2007,12,6)'})
 
+
+    def test_unit4dps(self):
+        """The manager should add a query param of unitdp iff enabled"""
+
+        credentials = Mock(base_url="")
+
+        # test 4dps is disabled by default
+        manager = Manager('contacts', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter()
+        self.assertEqual(params, {}, "test 4dps not enabled by default")
+
+        # test 4dps is enabled by default
+        manager = Manager('contacts', credentials, unit_price_4dps=True)
+        uri, params, method, body, headers, singleobject = manager._filter()
+        self.assertEqual(params, {"unitdp": 4}, "test 4dps can be enabled explicitly")
+
+        # test 4dps can be disable explicitly
+        manager = Manager('contacts', credentials, unit_price_4dps=False)
+        uri, params, method, body, headers, singleobject = manager._filter()
+        self.assertEqual(params, {}, "test 4dps can be disabled explicitly")

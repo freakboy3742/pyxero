@@ -77,10 +77,11 @@ class Manager(object):
         'ne': '!='
     }
 
-    def __init__(self, name, credentials):
+    def __init__(self, name, credentials, unit_price_4dps=False):
         self.credentials = credentials
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
+        self.extra_params = {"unitdp": 4} if unit_price_4dps else {}
 
         # setup our singular variants of the name
         # only if the name ends in 's'
@@ -298,7 +299,8 @@ class Manager(object):
 
     def _get(self, id, headers=None):
         uri = '/'.join([self.base_url, self.name, id])
-        return uri, {}, 'get', None, headers, True
+        params = self.extra_params.copy()
+        return uri, params, 'get', None, headers, True
 
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
@@ -325,10 +327,9 @@ class Manager(object):
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
-        if summarize_errors:
-            params = {}
-        else:
-            params = {'summarizeErrors': 'false'}
+        params = self.extra_params.copy()
+        if not summarize_errors:
+            params['summarizeErrors'] = 'false'
         return uri, params, method, body, headers, False
 
     def _save(self, data):
@@ -357,7 +358,7 @@ class Manager(object):
         return {'If-Modified-Since': val}
 
     def _filter(self, **kwargs):
-        params = {}
+        params = self.extra_params.copy()
         headers = None
         uri = '/'.join([self.base_url, self.name])
 
