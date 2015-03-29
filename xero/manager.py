@@ -73,7 +73,8 @@ class Manager(object):
         'gt': '>',
         'lt': '<',
         'lte': '<=',
-        'gte': '>='
+        'gte': '>=',
+        'ne': '!='
     }
 
     def __init__(self, name, credentials):
