@@ -232,12 +232,15 @@ class Manager(object):
             uri, params, method, body, headers, singleobject
         """
         def wrapper(*args, **kwargs):
+            
+            timeout = kwargs.pop('timeout', None)
+            
             uri, params, method, body, headers, singleobject = func(*args, **kwargs)
 
             cert = getattr(self.credentials, 'client_cert', None)
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, cert=cert)
+                    params=params, cert=cert, timeout=timeout)
 
             if response.status_code == 200:
                 if not response.headers['content-type'].startswith('text/xml'):
