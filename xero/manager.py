@@ -69,8 +69,9 @@ class Manager(object):
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
-    def __init__(self, name, credentials):
+    def __init__(self, name, credentials, on_data_fetched=None):
         self.credentials = credentials
+        self.on_data_fetched = on_data_fetched
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
 
@@ -215,6 +216,8 @@ class Manager(object):
         response = data['Response']
         if self.name in response:
             result = response[self.name]
+        elif self.name + 's' in response:
+            result = response[self.name + 's']
         elif 'Attachments' in response:
             result = response['Attachments']
         else:
@@ -241,6 +244,11 @@ class Manager(object):
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert, timeout=timeout)
+            if type(self.on_data_fetched) == type(lambda x: x):
+                try:
+                    self.on_data_fetched(uri=uri, method=method, body=body, response=response)
+                except:
+                    pass
 
             if response.status_code == 200:
                 if not response.headers['content-type'].startswith('text/xml'):
@@ -323,11 +331,11 @@ class Manager(object):
             params = {'summarizeErrors': 'false'}
         return uri, params, method, body, headers, False
 
-    def _save(self, data):
-        return self.save_or_put(data, method='post')
+    def _save(self, data, headers=None):
+        return self.save_or_put(data, method='post', headers=headers)
 
-    def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+    def _put(self, data, summarize_errors=True, headers=None):
+        return self.save_or_put(data, method='put', summarize_errors=summarize_errors, headers=headers)
 
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
@@ -353,10 +361,16 @@ class Manager(object):
         headers = None
         uri = '/'.join([self.base_url, self.name])
         if kwargs:
+            headers = kwargs.get('headers', {})
+            if 'headers' in kwargs:
+                del kwargs['headers'] 
             if 'since' in kwargs:
                 val = kwargs['since']
-                headers = self.prepare_filtering_date(val)
+                headers.update(self.prepare_filtering_date(val))
                 del kwargs['since']
+            where = kwargs.get('where', '').strip()
+            if 'where' in kwargs:
+                del kwargs['where']
 
             def get_filter_params(key, value):
                 last_key = key.split('_')[-1]
@@ -390,7 +404,7 @@ class Manager(object):
                 )
 
             # Move any known parameter names to the query string
-            KNOWN_PARAMETERS = ['order', 'offset', 'page']
+            KNOWN_PARAMETERS = ['order', 'offset', 'page', 'includeArchived']
             for param in KNOWN_PARAMETERS:
                 if param in kwargs:
                     params[param] = kwargs.pop(param)
@@ -401,6 +415,8 @@ class Manager(object):
             sortedkwargs = sorted(six.iteritems(kwargs),
                     key=lambda item: -1 if 'isnull' in item[0] else 0)
             filter_params = [generate_param(key, value) for key, value in sortedkwargs]
+            if where:
+                filter_params.append(where)
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 
