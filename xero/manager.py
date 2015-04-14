@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
-from decimal import Decimal
 from dateutil.parser import parse
 from decimal import Decimal
 import requests
