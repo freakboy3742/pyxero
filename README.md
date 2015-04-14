@@ -16,7 +16,7 @@ This packages differs in three significant was from `XeroPy`:
   extension) instead of httplib2.
 * It uses the pure-python [PyCrypto](https://www.dlitz.net/software/pycrypto/) library instead of the hard-to-compile
   native M2Crypto wrapper for RSA signing.
-* It has been tested on both Public and Private Xero Applications.
+* It has been tested on Public, Private and Partner Xero Applications.
 
 
 ## Quickstart:

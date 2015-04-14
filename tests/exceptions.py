@@ -17,8 +17,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_bad_request(self, r_put):
         "Data with validation errors raises a bad request exception"
         # Verified response from the live API
+        head = dict()
+        head['content-type'] = 'text/xml; charset=utf-8'
         r_put.return_value = Mock(status_code=400, encoding='utf-8',
-            text=mock_data.bad_request_text)
+            text=mock_data.bad_request_text, headers = head)
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -51,6 +53,37 @@ class ExceptionsTest(unittest.TestCase):
             # The response has also been stored
             self.assertEqual(e.response.status_code, 400)
             self.assertTrue(e.response.text.startswith('<ApiException'))
+        except Exception as e:
+            self.fail("Should raise a XeroBadRequest, not %s" % e)
+
+    @patch('requests.get')
+    def test_unregistered_app(self, r_get):
+        "An app without a signature raises a BadRequest exception, but with HTML payload"
+        # Verified response from the live API
+        head = dict()
+        head['content-type'] = 'text/html; charset=utf-8'
+        r_get.return_value = Mock(
+            status_code=400,
+            text='oauth_problem=signature_method_rejected&oauth_problem_advice=No%20certificates%20have%20been%20registered%20for%20the%20consumer',
+            headers=head
+        )
+
+        credentials = Mock(base_url="")
+        xero = Xero(credentials)
+
+        try:
+            xero.contacts.all()
+            self.fail("Should raise a XeroUnauthorized.")
+
+        except XeroBadRequest as e:
+            # Error messages have been extracted
+            self.assertEqual(str(e), 'No certificates have been registered for the consumer')
+            self.assertEqual(e.problem, 'signature_method_rejected')
+
+            # The response has also been stored
+            self.assertEqual(e.response.status_code, 400)
+            self.assertEqual(e.response.text, 'oauth_problem=signature_method_rejected&oauth_problem_advice=No%20certificates%20have%20been%20registered%20for%20the%20consumer')
+
         except Exception as e:
             self.fail("Should raise a XeroBadRequest, not %s" % e)
 

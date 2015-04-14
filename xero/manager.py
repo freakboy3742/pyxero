@@ -4,12 +4,12 @@ from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
 from decimal import Decimal
 from dateutil.parser import parse
+from decimal import Decimal
 import requests
 from six.moves.urllib.parse import parse_qs
 import six
 from .constants import XERO_API_URL
 from .exceptions import *
-
 
 def isplural(word):
     return word[-1].lower() == 's'
@@ -21,24 +21,49 @@ def singular(word):
 
 
 class Manager(object):
-    DECORATED_METHODS = ('get', 'save', 'filter', 'all', 'put',
-                         'get_attachments', 'get_attachment_data', 'put_attachment_data')
-    DATETIME_FIELDS = ('UpdatedDateUTC', 'Updated', 'FullyPaidOnDate',
-                       'DateTimeUTC', 'CreatedDateUTC', )
-    DATE_FIELDS = ('DueDate', 'Date',  'PaymentDate',
-                   'StartDate', 'EndDate',
-                   'PeriodLockDate', 'DateOfBirth',
-                   'OpeningBalanceDate',
-                   )
-    BOOLEAN_FIELDS = ('IsSupplier', 'IsCustomer', 'IsDemoCompany',
-                      'PaysTax', 'IsAuthorisedToApproveTimesheets',
-                      'IsAuthorisedToApproveLeave', 'HasHELPDebt',
-                      'AustralianResidentForTaxPurposes',
-                      'TaxFreeThresholdClaimed', 'HasSFSSDebt',
-                      'EligibleToReceiveLeaveLoading',
-                      'IsExemptFromTax', 'IsExemptFromSuper',
-                      'SentToContact',
-                      )
+    DECORATED_METHODS = (
+        'get',
+        'save',
+        'filter',
+        'all',
+        'put',
+        'get_attachments',
+        'get_attachment_data',
+        'put_attachment_data',
+        )
+    DATETIME_FIELDS = (
+        'UpdatedDateUTC',
+        'Updated',
+        'FullyPaidOnDate',
+        'DateTimeUTC',
+        'CreatedDateUTC',
+        )
+    DATE_FIELDS = (
+        'DueDate',
+        'Date',
+        'PaymentDate',
+        'StartDate',
+        'EndDate',
+        'PeriodLockDate',
+        'DateOfBirth',
+        'OpeningBalanceDate',
+        )
+    BOOLEAN_FIELDS = (
+        'IsSupplier',
+        'IsCustomer',
+        'IsDemoCompany',
+        'PaysTax',
+        'IsAuthorisedToApproveTimesheets',
+        'IsAuthorisedToApproveLeave',
+        'HasHELPDebt',
+        'AustralianResidentForTaxPurposes',
+        'TaxFreeThresholdClaimed',
+        'HasSFSSDebt',
+        'EligibleToReceiveLeaveLoading',
+        'IsExemptFromTax',
+        'IsExemptFromSuper',
+        'SentToContact',
+        )
     DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
     INTEGER_FIELDS = ('FinancialYearEndDay', 'FinancialYearEndMonth')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
@@ -102,7 +127,10 @@ class Manager(object):
                     elif key in self.DATETIME_FIELDS:
                         val = parse(val)
                     elif key in self.DATE_FIELDS:
-                        val = parse(val).date()
+                        if val.isdigit():
+                          val = int(val)
+                        else:
+                          val = parse(val).date()
                     elif key in self.INTEGER_FIELDS:
                         val = int(val)
                     data = val
@@ -208,12 +236,15 @@ class Manager(object):
             uri, params, method, body, headers, singleobject
         """
         def wrapper(*args, **kwargs):
+            
+            timeout = kwargs.pop('timeout', None)
+            
             uri, params, method, body, headers, singleobject = func(*args, **kwargs)
 
             cert = getattr(self.credentials, 'client_cert', None)
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, cert=cert)
+                    params=params, cert=cert, timeout=timeout)
             if type(self.on_data_fetched) == type(lambda x: x):
                 try:
                     self.on_data_fetched(uri=uri, method=method, body=body, response=response)
