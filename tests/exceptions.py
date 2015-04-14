@@ -1,8 +1,12 @@
 from __future__ import unicode_literals
 
 from datetime import date
-import unittest
-from xml.dom.minidom import parseString
+try:
+    # Try importing from unittest2 first. This is primarily for Py2.6 support.
+    import unittest2 as unittest
+except ImportError:
+    import unittest
+
 
 from mock import Mock, patch
 

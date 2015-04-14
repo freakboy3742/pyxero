@@ -5,6 +5,7 @@ __pycache__
 *.egg-info
 *.egg
 .eggs
+.tox
 local
 dist
 build
