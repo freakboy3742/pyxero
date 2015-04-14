@@ -189,6 +189,8 @@ class Manager(object):
         response = data['Response']
         if self.name in response:
             result = response[self.name]
+        elif self.name + 's' in response:
+            result = response[self.name + 's']
         elif 'Attachments' in response:
             result = response['Attachments']
         else:
