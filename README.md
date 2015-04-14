@@ -332,7 +332,7 @@ running the following from the root directory of the project:
 
     $ python setup.py test
 
-If you find any problems with pyxero, you can log them on [Github Issues](https://github.com/freakboy3742/pyxero/issues).
+If you find any problems with PyXero, you can log them on [Github Issues](https://github.com/freakboy3742/pyxero/issues).
 When reporting problems, it's extremely helpful if you can provide
 reproduction instructions -- the sequence of calls and/or test data that
 can be used to reproduce the issue.
