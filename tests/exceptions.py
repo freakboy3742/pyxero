@@ -23,8 +23,12 @@ class ExceptionsTest(unittest.TestCase):
         # Verified response from the live API
         head = dict()
         head['content-type'] = 'text/xml; charset=utf-8'
-        r_put.return_value = Mock(status_code=400, encoding='utf-8',
-            text=mock_data.bad_request_text, headers = head)
+        r_put.return_value = Mock(
+            status_code=400,
+            encoding='utf-8',
+            text=mock_data.bad_request_text,
+            headers=head
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -95,7 +99,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_unauthorized_invalid(self, r_get):
         "A session with an invalid token raises an unauthorized exception"
         # Verified response from the live API
-        r_get.return_value = Mock(status_code=401, text='oauth_problem=signature_invalid&oauth_problem_advice=Failed%20to%20validate%20signature')
+        r_get.return_value = Mock(
+            status_code=401,
+            text='oauth_problem=signature_invalid&oauth_problem_advice=Failed%20to%20validate%20signature'
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -119,7 +126,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_unauthorized_expired(self, r_get):
         "A session with an expired token raises an unauthorized exception"
         # Verified response from the live API
-        r_get.return_value = Mock(status_code=401, text="oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired")
+        r_get.return_value = Mock(
+            status_code=401,
+            text="oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired"
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -143,7 +153,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_forbidden(self, r_get):
         "In case of an SSL failure, a Forbidden exception is raised"
         # This is unconfirmed; haven't been able to verify this response from API.
-        r_get.return_value = Mock(status_code=403, text="The client SSL certificate was not valid.")
+        r_get.return_value = Mock(
+            status_code=403,
+            text="The client SSL certificate was not valid."
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -166,7 +179,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_not_found(self, r_get):
         "If you request an object that doesn't exist, a Not Found exception is raised"
         # Verified response from the live API
-        r_get.return_value = Mock(status_code=404, text="The resource you're looking for cannot be found")
+        r_get.return_value = Mock(
+            status_code=404,
+            text="The resource you're looking for cannot be found"
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -189,7 +205,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_internal_error(self, r_get):
         "In case of an SSL failure, a Forbidden exception is raised"
         # This is unconfirmed; haven't been able to verify this response from API.
-        r_get.return_value = Mock(status_code=500, text='An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.')
+        r_get.return_value = Mock(
+            status_code=500,
+            text='An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.'
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -212,8 +231,11 @@ class ExceptionsTest(unittest.TestCase):
     def test_not_implemented(self, r_post):
         "In case of an SSL failure, a Forbidden exception is raised"
         # Verified response from the live API
-        r_post.return_value = Mock(status_code=501, encoding='utf-8',
-            text=mock_data.not_implemented_text)
+        r_post.return_value = Mock(
+            status_code=501,
+            encoding='utf-8',
+            text=mock_data.not_implemented_text
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -236,7 +258,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_rate_limit_exceeded(self, r_get):
         "If you exceed the rate limit, an exception is raised."
         # Response based off Xero documentation; not confirmed by reality.
-        r_get.return_value = Mock(status_code=503, text="oauth_problem=rate%20limit%20exceeded&oauth_problem_advice=please%20wait%20before%20retrying%20the%20xero%20api")
+        r_get.return_value = Mock(
+            status_code=503,
+            text="oauth_problem=rate%20limit%20exceeded&oauth_problem_advice=please%20wait%20before%20retrying%20the%20xero%20api"
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -260,7 +285,10 @@ class ExceptionsTest(unittest.TestCase):
     def test_not_available(self, r_get):
         "If Xero goes down for maintenance, an exception is raised"
         # Response based off Xero documentation; not confirmed by reality.
-        r_get.return_value = Mock(status_code=503, text="The Xero API is currently offline for maintenance")
+        r_get.return_value = Mock(
+            status_code=503,
+            text="The Xero API is currently offline for maintenance"
+        )
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)

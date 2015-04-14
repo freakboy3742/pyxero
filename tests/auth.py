@@ -16,7 +16,10 @@ class PublicCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_initial_constructor(self, r_post):
         "Initial construction causes a requst to get a request token"
-        r_post.return_value = Mock(status_code=200, text='oauth_token=token&oauth_token_secret=token_secret')
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token&oauth_token_secret=token_secret'
+        )
 
         credentials = PublicCredentials(
             consumer_key='key',
@@ -43,7 +46,10 @@ class PublicCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_bad_credentials(self, r_post):
         "Initial construction with bad credentials raises an exception"
-        r_post.return_value = Mock(status_code=401, text='oauth_problem=consumer_key_unknown&oauth_problem_advice=Consumer%20key%20was%20not%20recognised')
+        r_post.return_value = Mock(
+            status_code=401,
+            text='oauth_problem=consumer_key_unknown&oauth_problem_advice=Consumer%20key%20was%20not%20recognised'
+        )
 
         with self.assertRaises(XeroUnauthorized):
             PublicCredentials(
@@ -102,7 +108,10 @@ class PublicCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_url(self, r_post):
         "The request token URL can be obtained"
-        r_post.return_value = Mock(status_code=200, text='oauth_token=token&oauth_token_secret=token_secret')
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token&oauth_token_secret=token_secret'
+        )
 
         credentials = PublicCredentials(
             consumer_key='key',
@@ -114,7 +123,10 @@ class PublicCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_verify(self, r_post):
         "Unverfied credentials can be verified"
-        r_post.return_value = Mock(status_code=200, text='oauth_token=verified_token&oauth_token_secret=verified_token_secret')
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=verified_token&oauth_token_secret=verified_token_secret'
+        )
 
         credentials = PublicCredentials(
             consumer_key='key',
@@ -150,7 +162,10 @@ class PublicCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_verify_failure(self, r_post):
         "If verification credentials are bad, an error is raised"
-        r_post.return_value = Mock(status_code=401, text='oauth_problem=bad_verifier&oauth_problem_advice=The consumer was denied access to this resource.')
+        r_post.return_value = Mock(
+            status_code=401,
+            text='oauth_problem=bad_verifier&oauth_problem_advice=The consumer was denied access to this resource.'
+        )
 
         credentials = PublicCredentials(
             consumer_key='key',
@@ -188,11 +203,15 @@ class PublicCredentialsTest(unittest.TestCase):
         # Expired
         self.assertTrue(credentials.expired(now=soon))
 
+
 class PartnerCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_initial_constructor(self, r_post):
         "Initial construction causes a request to get a request token"
-        r_post.return_value = Mock(status_code=200, text='oauth_token=token&oauth_token_secret=token_secret')
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token&oauth_token_secret=token_secret'
+        )
 
         credentials = PartnerCredentials(
             consumer_key='key',
@@ -221,7 +240,10 @@ class PartnerCredentialsTest(unittest.TestCase):
     @patch('requests.post')
     def test_refresh(self, r_post):
         "Refresh function gets a new token"
-        r_post.return_value = Mock(status_code=200, text='oauth_token=token2&oauth_token_secret=token_secret2&oauth_session_handle=session')
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token2&oauth_token_secret=token_secret2&oauth_session_handle=session'
+        )
 
         credentials = PartnerCredentials(
             consumer_key='key',
