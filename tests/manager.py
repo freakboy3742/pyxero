@@ -24,6 +24,7 @@ class ManagerTest(unittest.TestCase):
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
+        self.maxDiff = None
 
         original = {
             'Invoice': {
@@ -117,3 +118,22 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(params,
             {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'})
+
+    def test_magnitude_filters(self):
+        """The filter function should correctlu handle date arguments and gt, lt operators"""
+        credentials = Mock(base_url="")
+
+        manager = Manager('invoices', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+                **{'Date__gt': datetime(2007, 12, 6)})
+
+        self.assertEqual(params,
+           {u'where': u'Date>DateTime(2007,12,6)'})
+
+        manager = Manager('invoices', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+                **{'Date__lte': datetime(2007, 12, 6)})
+
+        self.assertEqual(params,
+           {u'where': u'Date<=DateTime(2007,12,6)'})
+

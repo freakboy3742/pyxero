@@ -35,7 +35,7 @@ class Manager(object):
         'Updated',
         'FullyPaidOnDate',
         'DateTimeUTC',
-        'CreatedDateUTC',
+        'CreatedDateUTC'
         )
     DATE_FIELDS = (
         'DueDate',
@@ -68,6 +68,14 @@ class Manager(object):
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
+
+    OPERATOR_MAPPINGS = {
+        'gt': '>',
+        'lt': '<',
+        'lte': '<=',
+        'gte': '>=',
+        'ne': '!='
+    }
 
     def __init__(self, name, credentials):
         self.credentials = credentials
@@ -352,6 +360,7 @@ class Manager(object):
         params = {}
         headers = None
         uri = '/'.join([self.base_url, self.name])
+
         if kwargs:
             if 'since' in kwargs:
                 val = kwargs['since']
@@ -362,9 +371,10 @@ class Manager(object):
                 last_key = key.split('_')[-1]
                 if last_key.upper().endswith('ID'):
                     return 'Guid("%s")' % six.text_type(value)
-
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if value else 'false'
+                elif key in self.DATE_FIELDS:
+                   return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
@@ -380,10 +390,13 @@ class Manager(object):
                     if parts[1] in ["contains", "startswith", "endswith"]:
                         field = parts[0]
                         fmt = ''.join(['%s.', parts[1], '(%s)'])
+                    elif parts[1] in self.OPERATOR_MAPPINGS:
+                        field = parts[0]
+                        key = field
+                        fmt = '%s' + self.OPERATOR_MAPPINGS[parts[1]] + '%s'
                     elif parts[1] in ["isnull"]:
                         sign = '=' if value else '!'
                         return '%s%s=null' % (parts[0], sign)
-
                 return fmt % (
                     field,
                     get_filter_params(key, value)
