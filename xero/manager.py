@@ -15,6 +15,8 @@ def isplural(word):
 
 def singular(word):
     if isplural(word):
+        if word[-3:] == 'ies':
+            return word[:-3] + 'y'
         return word[:-1]
     return word
 
@@ -86,7 +88,7 @@ class Manager(object):
         # setup our singular variants of the name
         # only if the name ends in 's'
         if name[-1] == "s":
-            self.singular = name[:len(name)-1]
+            self.singular = singular(name)
         else:
             self.singular = name
 
