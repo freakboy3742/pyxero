@@ -87,7 +87,7 @@ class Manager(object):
 
         # setup our singular variants of the name
         # only if the name ends in 's'
-        if name[-1] == "s":
+        if isplural(name[-1]):
             self.singular = singular(name)
         else:
             self.singular = name
