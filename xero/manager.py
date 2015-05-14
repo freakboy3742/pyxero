@@ -10,14 +10,21 @@ import six
 from .constants import XERO_API_URL
 from .exceptions import *
 
+PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
+
 def isplural(word):
     return word[-1].lower() == 's'
 
+def plural(word):
+    if isplural(word):
+        return word
+    return word + 's'
+
 def singular(word):
     if isplural(word):
-        return word[:-1]
+        singular_word = word[:-1]
+        return PLURAL_EXCEPTIONS.get(singular_word, singular_word)
     return word
-
 
 class Manager(object):
     DECORATED_METHODS = (
@@ -65,7 +72,6 @@ class Manager(object):
         )
     DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
     INTEGER_FIELDS = ('FinancialYearEndDay', 'FinancialYearEndMonth')
-    PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
 
     NO_SEND_FIELDS = ('UpdatedDateUTC',)
 
@@ -83,12 +89,9 @@ class Manager(object):
         self.base_url = credentials.base_url + XERO_API_URL
         self.extra_params = {"unitdp": 4} if unit_price_4dps else {}
 
-        # setup our singular variants of the name
-        # only if the name ends in 's'
-        if name[-1] == "s":
-            self.singular = name[:len(name)-1]
-        else:
-            self.singular = name
+        # setup our singular and plural variants of the name
+        self.plural = plural(name)
+        self.singular = singular(name)
 
         for method_name in self.DECORATED_METHODS:
             method = getattr(self, '_%s' % method_name)
@@ -175,8 +178,7 @@ class Manager(object):
             elm = SubElement(root_elm, key)
 
             is_list = isinstance(sub_data, list) or isinstance(sub_data, tuple)
-            is_plural = key[len(key)-1] == "s"
-            plural_name = key[:len(key)-1]
+            is_plural = isplural(key)
 
             # Key references a dict. Unroll the dict
             # as it's own XML node with subnodes
@@ -189,9 +191,9 @@ class Manager(object):
                 # in the list needs to be wrapped in an XML
                 # node that is a singular version of the list name.
                 if is_plural:
+                    signular_key = singular(key)
                     for d in sub_data:
-                        plural_name = self.PLURAL_EXCEPTIONS.get(plural_name, plural_name)
-                        self.dict_to_xml(SubElement(elm, plural_name), d)
+                        self.dict_to_xml(SubElement(elm, signular_key), d)
 
                 # key name isn't a plural. Just insert the content
                 # as an XML node with subnodes
@@ -222,8 +224,8 @@ class Manager(object):
 
     def _get_results(self, data):
         response = data['Response']
-        if self.name in response:
-            result = response[self.name]
+        if self.plural in response:
+            result = response[self.plural]
         elif 'Attachments' in response:
             result = response['Attachments']
         else:
