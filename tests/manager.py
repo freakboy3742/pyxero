@@ -130,6 +130,19 @@ class ManagerTest(unittest.TestCase):
             {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'}
         )
 
+    def test_rawfilter(self):
+        """The filter function should correctly handle various arguments"""
+        credentials = Mock(base_url="")
+        manager = Manager('invoices', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+            Status="VOIDED",
+            raw='Name.ToLower()=="test contact"'
+        )
+        self.assertEqual(
+            params,
+            {'where': 'Name.ToLower()=="test contact"&&Status=="VOIDED"'}
+        )
+
     def test_magnitude_filters(self):
         """The filter function should correctlu handle date arguments and gt, lt operators"""
         credentials = Mock(base_url="")

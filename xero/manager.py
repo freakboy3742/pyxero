@@ -317,12 +317,20 @@ class Manager(object):
                 if param in kwargs:
                     params[param] = kwargs.pop(param)
 
+            filter_params = []
+
+            if 'raw' in kwargs:
+                raw = kwargs.pop('raw')
+                filter_params.append(raw)
+
             # Treat any remaining arguments as filter predicates
             # Xero will break if you search without a check for null in the first position:
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
             sortedkwargs = sorted(six.iteritems(kwargs),
-                    key=lambda item: -1 if 'isnull' in item[0] else 0)
-            filter_params = [generate_param(key, value) for key, value in sortedkwargs]
+                key=lambda item: -1 if 'isnull' in item[0] else 0)
+            for key, value in sortedkwargs:
+                filter_params.append(generate_param(key, value))
+
             if filter_params:
                 params['where'] = '&&'.join(filter_params)
 

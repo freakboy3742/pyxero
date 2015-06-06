@@ -241,7 +241,7 @@ class ExceptionsTest(unittest.TestCase):
         xero = Xero(credentials)
 
         try:
-            xero.organisation.save({})
+            xero.organisations.save({})
             self.fail("Should raise a XeroNotImplemented.")
 
         except XeroNotImplemented as e:
