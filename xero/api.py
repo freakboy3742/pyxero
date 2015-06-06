@@ -7,30 +7,30 @@ class Xero(object):
     """An ORM-like interface to the Xero API"""
 
     OBJECT_LIST = (
-      "Attachments",
-      "Accounts",
-      "BankTransactions",
-      "BankTransfers",
-      "BrandingThemes",
-      "Contacts",
-      "CreditNotes",
-      "Currencies",
-      "Employees",
-      "ExpenseClaims",
-      "Invoices",
-      "Items",
-      "Journals",
-      "ManualJournals",
-      "Organisation",
-      "Overpayments",
-      "Payments",
-      "Prepayments",
-      "Receipts",
-      "RepeatingInvoices",
-      "Reports",
-      "TaxRates",
-      "TrackingCategories",
-      "Users",
+        "Attachments",
+        "Accounts",
+        "BankTransactions",
+        "BankTransfers",
+        "BrandingThemes",
+        "Contacts",
+        "CreditNotes",
+        "Currencies",
+        "Employees",
+        "ExpenseClaims",
+        "Invoices",
+        "Items",
+        "Journals",
+        "ManualJournals",
+        "Organisation",
+        "Overpayments",
+        "Payments",
+        "Prepayments",
+        "Receipts",
+        "RepeatingInvoices",
+        "Reports",
+        "TaxRates",
+        "TrackingCategories",
+        "Users",
     )
 
     def __init__(self, credentials, unit_price_4dps=False):
@@ -48,10 +48,10 @@ class Files(object):
     """An ORM-like interface to the Xero Files API"""
 
     OBJECT_LIST = (
-      "Associations",
-      "Files",
-      "Folders",
-      "Inbox",
+        "Associations",
+        "Files",
+        "Folders",
+        "Inbox",
     )
 
     def __init__(self, credentials):
