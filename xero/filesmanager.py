@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
-from xml.dom.minidom import parseString
-from xml.etree.ElementTree import tostring, SubElement, Element
-from datetime import datetime
-from dateutil.parser import parse
-from decimal import Decimal
+
 import requests
 import json
-from six.moves.urllib.parse import parse_qs
 import six
+
+from datetime import datetime
+from six.moves.urllib.parse import parse_qs
+
 from .constants import XERO_API_URL, XERO_FILES_URL
 from .exceptions import *
+
 
 class FilesManager(object):
     DECORATED_METHODS = (
@@ -159,8 +159,10 @@ class FilesManager(object):
             uri = '/'.join([self.base_url, self.name, folderId])
         else:
             uri = '/'.join([self.base_url, self.name])
+        filename = self.filename(path)
+
         files = dict()
-        files['File'] = open(path, mode="rb")
+        files[filename] = open(path, mode="rb")
 
         return uri, {}, 'post', None, None, False, files
 
@@ -176,3 +178,7 @@ class FilesManager(object):
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
         return uri, {}, 'get', None, None, False, None
+
+    def filename(self, path):
+        head, tail = os.path.split(path)
+        return tail or os.path.basename(head)
