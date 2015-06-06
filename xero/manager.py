@@ -1,22 +1,19 @@
 from __future__ import unicode_literals
+
+import requests
+import six
+import json
+
 from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
 from dateutil.parser import parse
 from decimal import Decimal
-import requests
 from six.moves.urllib.parse import parse_qs
-import six
+
 from .constants import XERO_API_URL
 from .exceptions import *
-
-def isplural(word):
-    return word[-1].lower() == 's'
-
-def singular(word):
-    if isplural(word):
-        return word[:-1]
-    return word
+from .utils import singular, isplural, parse_date, json_load_object_hook
 
 
 class Manager(object):
@@ -82,88 +79,11 @@ class Manager(object):
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
         self.extra_params = {"unitdp": 4} if unit_price_4dps else {}
-
-        # setup our singular variants of the name
-        # only if the name ends in 's'
-        if name[-1] == "s":
-            self.singular = name[:len(name)-1]
-        else:
-            self.singular = name
+        self.singular = singular(name)
 
         for method_name in self.DECORATED_METHODS:
             method = getattr(self, '_%s' % method_name)
             setattr(self, method_name, self._get_data(method))
-
-    def walk_dom(self, dom):
-        tree_list = tuple()
-        for node in dom.childNodes:
-            tagName = getattr(node, 'tagName', None)
-            if tagName:
-                tree_list += (tagName, self.walk_dom(node),)
-            else:
-                data = node.data.strip()
-                if data:
-                    tree_list += (node.data.strip(),)
-        return tree_list
-
-    def convert_to_dict(self, deep_list):
-        out = {}
-
-        if len(deep_list) > 2:
-            lists = [l for l in deep_list if isinstance(l, tuple)]
-            keys = [l for l in deep_list if isinstance(l, six.string_types)]
-
-            if len(keys) > 1 and len(set(keys)) == 1:
-                # This is a collection... all of the keys are the same.
-                return [self.convert_to_dict(data) for data in lists]
-
-            for key, data in zip(keys, lists):
-                if not data:
-                    # Skip things that are empty tags?
-                    continue
-
-                if len(data) == 1:
-                    # we're setting a value
-                    # check to see if we need to apply any special
-                    # formatting to the value
-                    val = data[0]
-                    if key in self.DECIMAL_FIELDS:
-                        val = Decimal(val)
-                    elif key in self.BOOLEAN_FIELDS:
-                        val = True if val.lower() == 'true' else False
-                    elif key in self.DATETIME_FIELDS:
-                        val = parse(val)
-                    elif key in self.DATE_FIELDS:
-                        if val.isdigit():
-                          val = int(val)
-                        else:
-                          val = parse(val).date()
-                    elif key in self.INTEGER_FIELDS:
-                        val = int(val)
-                    data = val
-                else:
-                    # We have a deeper data structure, that we need
-                    # to recursively process.
-                    data = self.convert_to_dict(data)
-                    # Which may itself be a collection. Quick, check!
-                    if isinstance(data, dict) and isplural(key) and [singular(key)] == data.keys():
-                        data = [data[singular(key)]]
-
-                out[key] = data
-
-        elif len(deep_list) == 2:
-            key = deep_list[0]
-            data = self.convert_to_dict(deep_list[1])
-
-            # If our key is repeated in our child object, but in singular
-            # form (and is the only key), then this object is a collection.
-            if isplural(key) and [singular(key)] == data.keys():
-                data = [data[singular(key)]]
-
-            out[key] = data
-        else:
-            out = deep_list[0]
-        return out
 
     def dict_to_xml(self, root_elm, data):
         for key in data.keys():
@@ -220,20 +140,10 @@ class Manager(object):
 
         return tostring(root_elm)
 
-    def _get_results(self, data):
-        response = data['Response']
-        if self.name in response:
-            result = response[self.name]
-        elif 'Attachments' in response:
-            result = response['Attachments']
-        else:
-            return None
-
-        if isinstance(result, tuple) or isinstance(result, list):
-            return result
-
-        if isinstance(result, dict) and self.singular in result:
-            return result[self.singular]
+    def _parse_api_response(self, response, resource_name):
+        data = json.loads(response.text, object_hook=json_load_object_hook)
+        assert data['Status'] == 'OK', "Expected the API to say OK but received %s" % data['Status']
+        return data[resource_name]
 
     def _get_data(self, func):
         """ This is the decorator for our DECORATED_METHODS.
@@ -241,28 +151,27 @@ class Manager(object):
             uri, params, method, body, headers, singleobject
         """
         def wrapper(*args, **kwargs):
-            
+            from xero import __version__ as VERSION
             timeout = kwargs.pop('timeout', None)
-            
-            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
 
+            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
             cert = getattr(self.credentials, 'client_cert', None)
+
+            if headers is None:
+                headers = {}
+            headers['Accept'] = 'application/json'
+            headers['User-Agent'] = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
+
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert, timeout=timeout)
 
             if response.status_code == 200:
-                if not response.headers['content-type'].startswith('text/xml'):
-                    # return a byte string without doing any Unicode conversions
+                # If we haven't got XML or JSON, assume we're being returned a binary file
+                if not response.headers['content-type'].startswith('application/json'):
                     return response.content
-                # parseString takes byte content, not unicode.
-                dom = parseString(response.text.encode(response.encoding))
-                data = self.convert_to_dict(self.walk_dom(dom))
-                results = self._get_results(data)
-                # If we're dealing with Manager.get, return a single object.
-                if singleobject and isinstance(results, list):
-                    return results[0]
-                return results
+
+                return self._parse_api_response(response, self.name)
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)

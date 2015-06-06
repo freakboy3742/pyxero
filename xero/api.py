@@ -40,9 +40,9 @@ class Xero(object):
         # instance of a Manager object to operate on it
         for name in self.OBJECT_LIST:
             setattr(self, name.lower(), Manager(name, credentials, unit_price_4dps))
-        
+
         setattr(self, "filesAPI", Files(credentials))
-        
+
 
 class Files(object):
     """An ORM-like interface to the Xero Files API"""
