@@ -88,6 +88,46 @@ class ManagerTest(unittest.TestCase):
         # )
 
 
+    def test_serializer_nested_singular(self):
+        credentials = Mock(base_url="")
+        manager = Manager('contacts', credentials)
+
+        example_invoice_input = {
+            'Date': datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
+            'Reference': 'ABAS 123',
+            'LineItems': [
+                {'Description': 'Example description only'},
+            ],
+            'Status': 'DRAFT',
+            'Type': 'ACCREC',
+            'DueDate': datetime.datetime(2015, 7, 6, 16, 25, 2, 711136),
+            'LineAmountTypes': 'Exclusive',
+            'Contact': {'Name': 'Basket Case'}
+        }
+        resultant_xml = manager._prepare_data_for_save(example_invoice_input)
+
+        expected_xml = """
+            <Status>DRAFT</Status>
+            <Contact><Name>Basket Case</Name></Contact>
+            <Reference>ABAS 123</Reference>
+            <Date>2015-06-06 16:25:02.711109</Date>
+            <LineAmountTypes>Exclusive</LineAmountTypes>
+            <LineItems>
+              <LineItem>
+                <Description>Example description only</Description>
+              </LineItem>
+            </LineItems>
+            <Type>ACCREC</Type>
+            <DueDate>2015-07-06 16:25:02.711136</DueDate>
+        """
+
+        # @todo Need a py2/3 way to compare XML easily.
+        # self.assertEqual(
+        #     resultant_xml,
+        #     expected_xml,
+        # )
+
+
     def test_filter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
