@@ -64,7 +64,7 @@ class FilesManager(object):
                     params=params, cert=cert, files = files)
 
             if response.status_code == 200 or response.status_code == 201:
-                if response.headers['content-type'].startswith('application/json'):             
+                if response.headers['content-type'].startswith('application/json'):
                     return response.json()
                 else:
                     # return a byte string without doing any Unicode conversions
@@ -137,7 +137,7 @@ class FilesManager(object):
             uri = '/'.join([self.base_url, self.name])
         else:
             uri = '/'.join([self.base_url, self.name, data["Id"]])
-        body = data        
+        body = data
         if summarize_errors:
             params = {}
         else:
@@ -157,11 +157,11 @@ class FilesManager(object):
     def _upload_file(self, path, folderId=None):
         if not folderId is None:
             uri = '/'.join([self.base_url, self.name, folderId])
-        else:    
+        else:
             uri = '/'.join([self.base_url, self.name])
         files = dict()
         files['File'] = open(path, mode="rb")
-            
+
         return uri, {}, 'post', None, None, False, files
 
     def _get_content(self, fileId):
@@ -171,7 +171,7 @@ class FilesManager(object):
     def _make_association(self, id, data):
         uri = '/'.join([self.base_url, self.name, id, 'Associations'])
         body = data
-        return uri, {}, 'post', body, None, False, None 
+        return uri, {}, 'post', body, None, False, None
 
     def _all(self):
         uri = '/'.join([self.base_url, self.name])
