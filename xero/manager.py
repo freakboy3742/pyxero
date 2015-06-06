@@ -43,6 +43,8 @@ class Manager(object):
         'PeriodLockDate',
         'DateOfBirth',
         'OpeningBalanceDate',
+        'PaymentDueDate',
+        'ReportingDate',
     )
     BOOLEAN_FIELDS = (
         'IsSupplier',
@@ -59,6 +61,8 @@ class Manager(object):
         'IsExemptFromTax',
         'IsExemptFromSuper',
         'SentToContact',
+        'IsSubscriber',
+        'HasAttachments',
     )
     DECIMAL_FIELDS = (
         'Hours',
