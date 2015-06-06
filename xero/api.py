@@ -21,7 +21,7 @@ class Xero(object):
         "Items",
         "Journals",
         "ManualJournals",
-        "Organisation",
+        "Organisations",
         "Overpayments",
         "Payments",
         "Prepayments",
