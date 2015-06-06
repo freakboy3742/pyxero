@@ -26,14 +26,14 @@ class Manager(object):
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
-        )
+    )
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
         'Updated',
         'FullyPaidOnDate',
         'DateTimeUTC',
         'CreatedDateUTC'
-        )
+    )
     DATE_FIELDS = (
         'DueDate',
         'Date',
@@ -43,7 +43,7 @@ class Manager(object):
         'PeriodLockDate',
         'DateOfBirth',
         'OpeningBalanceDate',
-        )
+    )
     BOOLEAN_FIELDS = (
         'IsSupplier',
         'IsCustomer',
@@ -59,13 +59,18 @@ class Manager(object):
         'IsExemptFromTax',
         'IsExemptFromSuper',
         'SentToContact',
-        )
-    DECIMAL_FIELDS = ('Hours', 'NumberOfUnit')
-    INTEGER_FIELDS = ('FinancialYearEndDay', 'FinancialYearEndMonth')
-    PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
-
-    NO_SEND_FIELDS = ('UpdatedDateUTC',)
-
+    )
+    DECIMAL_FIELDS = (
+        'Hours',
+        'NumberOfUnit',
+    )
+    INTEGER_FIELDS = (
+        'FinancialYearEndDay',
+        'FinancialYearEndMonth',
+    )
+    NO_SEND_FIELDS = (
+        'UpdatedDateUTC',
+    )
     OPERATOR_MAPPINGS = {
         'gt': '>',
         'lt': '<',
@@ -94,24 +99,19 @@ class Manager(object):
             sub_data = data[key]
             elm = SubElement(root_elm, key)
 
-            is_list = isinstance(sub_data, list) or isinstance(sub_data, tuple)
-            is_plural = key[len(key)-1] == "s"
-            plural_name = key[:len(key)-1]
-
             # Key references a dict. Unroll the dict
             # as it's own XML node with subnodes
             if isinstance(sub_data, dict):
                 self.dict_to_xml(elm, sub_data)
 
             # Key references a list/tuple
-            elif is_list:
+            elif isinstance(sub_data, list) or isinstance(sub_data, tuple):
                 # key name is a plural. This means each item
                 # in the list needs to be wrapped in an XML
                 # node that is a singular version of the list name.
-                if is_plural:
+                if isplural(key):
                     for d in sub_data:
-                        plural_name = self.PLURAL_EXCEPTIONS.get(plural_name, plural_name)
-                        self.dict_to_xml(SubElement(elm, plural_name), d)
+                        self.dict_to_xml(SubElement(elm, singular(key)), d)
 
                 # key name isn't a plural. Just insert the content
                 # as an XML node with subnodes
@@ -161,7 +161,6 @@ class Manager(object):
                 headers = {}
             headers['Accept'] = 'application/json'
             headers['User-Agent'] = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
-
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert, timeout=timeout)

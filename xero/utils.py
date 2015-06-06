@@ -10,13 +10,43 @@ DATE = re.compile(
     r'(?P<hour>[0-5]\d):(?P<minute>[0-5]\d):(?P<second>[0-6]\d))$'
 )
 
+OBJECT_NAMES = {
+    "Attachments": "Attachment",
+    "Accounts": "Account",
+    "BankTransactions": "BankTransaction",
+    "BankTransfers": "BankTransfer",
+    "BrandingThemes": "BrandingTheme",
+    "Contacts": "Contact",
+    "CreditNotes": "CreditNote",
+    "Currencies": "Currency",
+    "Employees": "Employee",
+    "ExpenseClaims": "ExpenseClaim",
+    "Invoices": "Invoice",
+    "Items": "Item",
+    "Journals": "Journal",
+    "ManualJournals": "ManualJournal",
+    "Organisation": "Organisation",
+    "Overpayments": "Overpayment",
+    "Payments": "Payment",
+    "Prepayments": "Prepayment",
+    "Receipts": "Receipt",
+    "RepeatingInvoices": "RepeatingInvoice",
+    "Reports": "Report",
+    "TaxRates": "TaxRate",
+    "TrackingCategories": "TrackingCategory",
+    "Users": "User",
+    "Associations": "Association",
+    "Files": "File",
+    "Folders": "Folder",
+    "Inbox": "Inbox",
+    "LineItems": "LineItem",
+}
+
 def isplural(word):
-    return word[-1].lower() == 's'
+    return word in OBJECT_NAMES.keys()
 
 def singular(word):
-    if isplural(word):
-        return word[:-1]
-    return word
+    return OBJECT_NAMES.get(word)
 
 def parse_date(string, force_datetime=False):
     """ Takes a Xero formatted date, e.g. /Date(1426849200000+1300)/"""

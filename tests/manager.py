@@ -1,7 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from datetime import date, datetime
+import datetime
+
 try:
     # Try importing from unittest2 first. This is primarily for Py2.6 support.
     import unittest2 as unittest
@@ -18,6 +19,75 @@ from tests import mock_data
 
 
 class ManagerTest(unittest.TestCase):
+    def test_serializer(self):
+        credentials = Mock(base_url="")
+        manager = Manager('contacts', credentials)
+
+        example_invoice_input = {
+            'Date': datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
+            'Reference': 'ABAS 123',
+            'LineItems': [
+                {'Description': 'Example description only'},
+                {
+                    'UnitAmount': '0.0000',
+                    'Quantity': 1,
+                    'AccountCode': '200',
+                    'Description': 'Example line item 2',
+                    'TaxType': 'OUTPUT'
+                },
+                {
+                    'UnitAmount': '231.0000',
+                    'Quantity': 1,
+                    'AccountCode': '200',
+                    'Description': 'Example line item 3',
+                    'TaxType': 'OUTPUT'
+                },
+            ],
+            'Status': 'DRAFT',
+            'Type': 'ACCREC',
+            'DueDate': datetime.datetime(2015, 7, 6, 16, 25, 2, 711136),
+            'LineAmountTypes': 'Exclusive',
+            'Contact': {'Name': 'Basket Case'}
+        }
+        resultant_xml = manager._prepare_data_for_save(example_invoice_input)
+
+        expected_xml = """
+            <Status>DRAFT</Status>
+            <Contact><Name>Basket Case</Name></Contact>
+            <Reference>ABAS 123</Reference>
+            <Date>2015-06-06 16:25:02.711109</Date>
+            <LineAmountTypes>Exclusive</LineAmountTypes>
+            <LineItems>
+              <LineItem>
+                <Description>Example description only</Description>
+              </LineItem>
+              <LineItem>
+                <TaxType>OUTPUT</TaxType>
+                <AccountCode>200</AccountCode>
+                <UnitAmount>0.0000</UnitAmount>
+                <Description>Example line item 2</Description>
+                <Quantity>1</Quantity>
+              </LineItem>
+              <LineItem>
+                <TaxType>OUTPUT</TaxType>
+                <AccountCode>200</AccountCode>
+                <UnitAmount>231.0000</UnitAmount>
+                <Description>Example line item 3</Description>
+                <Quantity>1</Quantity>
+              </LineItem>
+            </LineItems>
+            <Type>ACCREC</Type>
+            <DueDate>2015-07-06 16:25:02.711136</DueDate>
+        """
+
+        # @todo Need a py2/3 way to compare XML easily.
+        # self.assertEqual(
+        #     resultant_xml,
+        #     expected_xml,
+        #     "Failed to serialize data to XML correctly."
+        # )
+
+
     def test_filter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
@@ -27,7 +97,7 @@ class ManagerTest(unittest.TestCase):
                 order="LastName",
                 page=2,
                 offset=5,
-                since=datetime(2014, 8, 10, 15, 14, 46),
+                since=datetime.datetime(2014, 8, 10, 15, 14, 46),
                 Name="John")
 
         self.assertEqual(method, 'get')
@@ -65,7 +135,7 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock(base_url="")
 
         manager = Manager('invoices', credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(**{'Date__gt': datetime(2007, 12, 6)})
+        uri, params, method, body, headers, singleobject = manager._filter(**{'Date__gt': datetime.datetime(2007, 12, 6)})
 
         self.assertEqual(
             params,
@@ -73,7 +143,7 @@ class ManagerTest(unittest.TestCase):
         )
 
         manager = Manager('invoices', credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(**{'Date__lte': datetime(2007, 12, 6)})
+        uri, params, method, body, headers, singleobject = manager._filter(**{'Date__lte': datetime.datetime(2007, 12, 6)})
 
         self.assertEqual(
             params,
