@@ -18,11 +18,19 @@ class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
         if response.headers['content-type'].startswith('application/json'):
-            super(XeroBadRequest, self).__init__(response, response.text)
+            data = json.loads(response.text)
+            msg = "%s: %s" % (data['Type'], data['Message'])
+            self.errors = [err['Message']
+                for elem in data['Elements']
+                for err in elem['ValidationErrors']
+            ]
+            super(XeroBadRequest, self).__init__(response, msg=msg)
 
         elif response.headers['content-type'].startswith('text/html'):
             payload = parse_qs(response.text)
-            self.problem = payload['oauth_problem'][0]
+            self.errors = [
+                payload['oauth_problem'][0],
+            ]
             super(XeroBadRequest, self).__init__(response, payload['oauth_problem_advice'][0])
 
         else:
