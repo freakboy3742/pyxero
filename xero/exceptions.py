@@ -24,6 +24,7 @@ class XeroBadRequest(XeroException):
                 for elem in data['Elements']
                 for err in elem['ValidationErrors']
             ]
+            self.problem = self.errors[0]
             super(XeroBadRequest, self).__init__(response, msg=msg)
 
         elif response.headers['content-type'].startswith('text/html'):
@@ -31,6 +32,7 @@ class XeroBadRequest(XeroException):
             self.errors = [
                 payload['oauth_problem'][0],
             ]
+            self.problem = self.errors[0]
             super(XeroBadRequest, self).__init__(response, payload['oauth_problem_advice'][0])
 
         else:
@@ -43,6 +45,7 @@ class XeroBadRequest(XeroException):
             self.errors = [
                 m.childNodes[0].data for m in messages[1:]
             ]
+            self.problem = self.errors[0]
             super(XeroBadRequest, self).__init__(response, msg)
 
 
