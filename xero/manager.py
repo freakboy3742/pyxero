@@ -163,8 +163,15 @@ class Manager(object):
 
             if headers is None:
                 headers = {}
-            headers['Accept'] = 'application/json'
+
+            # Use the JSON API by default, but remember we might request a PDF (application/pdf)
+            # so don't force the Accept header.
+            if 'Accept' not in headers:
+                headers['Accept'] = 'application/json'
+
+            # Set a user-agent so Xero knows the traffic is coming from pyxero
             headers['User-Agent'] = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
+
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, cert=cert, timeout=timeout)
