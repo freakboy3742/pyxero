@@ -2,14 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Verify Access Token</title>
-  </head>
+    <title>Access Verified</title>
+   </head>
 
-  <body>
-    <form action="/verify/" method="GET">
-      <label for="access_token">Enter the access token provided by Xero</label>
-      <input type="text" name="access_token" id="access_token">
-      <button name="submit">Submit</button>
-    </form>
-  </body>
+   <body>
+    <p>
+      Access verified! Acquire Xero API object with the following code:
+    </p>
+    <code>
+      from xero.api import Xero
+      xero = Xero(credentials)
+    </code>
+   </body>
 </html>

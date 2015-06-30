@@ -2,10 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Example oAuth Flow</title>
+    <title>Verify Access Token</title>
   </head>
 
   <body>
-    <a href="/do-auth/"><img src="http://xerodev.wpengine.com/wp-content/uploads/2011/09/connect_xero_button_blue1.png"></a>
+    <form action="/verify/" method="GET">
+      <label for="access_token">Enter the access token provided by Xero</label>
+      <input type="text" name="access_token" id="access_token">
+      <button name="submit">Submit</button>
+    </form>
   </body>
 </html>
