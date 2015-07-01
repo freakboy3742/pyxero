@@ -1,3 +1,4 @@
+import sys
 import os
 import re
 import SimpleHTTPServer
@@ -10,28 +11,15 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
+
 from xero.auth import PublicCredentials
+from xero.exceptions import XeroException
 
 PORT = 8000
 verify_params_regex = re.compile(r'^access_token=(?P<access_token>[\w]+).*$')
 
 class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    consumer_key = None
-    consumer_secret = None
-
-    def __init__(self, request, client_address, server, consumer_key=None, consumer_secret=None):
-        if consumer_key is None:
-            self.consumer_key = os.environ.get('XERO_CONSUMER_KEY')
-        else:
-            self.consumer_key = consumer_key
-
-        if consumer_secret is None:
-            self.consumer_secret = os.environ.get('XERO_CONSUMER_SECRET')
-        else:
-            self.consumer_secret = consumer_secret
-
-        SimpleHTTPServer.SimpleHTTPRequestHandler.__init__(self, request, client_address, server)
-
     def redirect(self, url, permanent=False):
         if permanent:
             self.send_response(301)
@@ -41,6 +29,13 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        consumer_key = os.environ.get('XERO_CONSUMER_KEY')
+        consumer_secret = os.environ.get('XERO_CONSUMER_SECRET')
+
+        if consumer_key is None or consumer_secret is None:
+            raise KeyError(
+                'Please define both XERO_CONSUMER_KEY and XERO_CONSUMER_SECRET environment variables')
+
         cookie_prefix = 'credentials'
         parts = self.path.split('?', 1)
 
@@ -52,12 +47,11 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         if self.path == '/do-auth/':
             credentials = PublicCredentials(
-                self.consumer_key, self.consumer_secret,
-                callback_uri='/verify.html')
+                consumer_key, consumer_secret, callback_uri='http://localhost:8000/oauth')
 
             # Set cookies of all the credentials details.
-            # HIGHLY INSECURE but needed for persistence of credential details between requests for
-            # this example
+            # HIGHLY INSECURE. Do not persist credentials between requests this way in production.
+            # Use a session key etc instead
             credentials_cookie = Cookie.SimpleCookie()
             for key, value in credentials.state.items():
                 if isinstance(value, datetime.datetime):
@@ -67,16 +61,18 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 credentials_cookie[cookie_key]['path'] = '/'
 
             # Redirect to credentials.url
+            print(credentials.url)
             self.send_response(302)
             self.send_header("Location", credentials.url)
             self.wfile.write(str(credentials_cookie))
             self.end_headers()
             return None
-        else:
+
+        elif self.path == '/verify/':
             match = verify_params_regex.match(request_params)
             if match:
-                # Great, got a match. Parse out the credentials cookies to re-instantiate the
-                # same credentials object
+                # Great, got a match for the access_token request parameter. Parse out the
+                # credentials cookies to re-instantiate the same credentials object
                 credentials_cookie = Cookie.SimpleCookie(self.headers['cookie'])
                 credentials_kwargs = {}
                 for key, value in credentials_cookie.items():
@@ -87,10 +83,15 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 credentials = PublicCredentials(**credentials_kwargs)
 
                 params = match.groupdict()
-                credentials.verify(params['access_token'])
-
-                # Once verified, api can be invoked with xero = Xero(credentials)
-                self.redirect('/verified.html')
+                try:
+                    credentials.verify(params['access_token'])
+                except XeroException as e:
+                    self.send_error(500, message='{}: {}'.format(e.__class__, e.message))
+                    return None
+                else:
+                    # Once verified, api can be invoked with xero = Xero(credentials)
+                    self.redirect('/verified.html')
+                    return None
 
         return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
