@@ -6,7 +6,7 @@ from urlparse import urlparse, parse_qsl
 
 from StringIO import StringIO
 
-from xero.auth import PublicCredentials
+from xero.auth import PartnerCredentials
 from xero.exceptions import XeroException
 from xero import Xero
 
@@ -18,13 +18,13 @@ PORT = 8000
 OAUTH_PERSISTENT_SERVER_STORAGE = {}
 
 
-class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def page_response(self, title='', body=''):
         """
         Helper to render an html page with dynamic content
         """
         f = StringIO()
-        f.write('<!DOCTYPE html">\n')
+        f.write('<!DOCTYPE html>\n')
         f.write('<html>\n')
         f.write('<head><title>{}</title><head>\n'.format(title))
         f.write('<body>\n<h2>{}</h2>\n'.format(title))
@@ -57,17 +57,43 @@ class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """
         consumer_key = os.environ.get('XERO_CONSUMER_KEY')
         consumer_secret = os.environ.get('XERO_CONSUMER_SECRET')
+        private_key_path = os.environ.get('XERO_RSA_CERT_KEY_PATH')
+        entrust_cert_path = os.environ.get('XERO_ENTRUST_CERT_PATH')
+        entrust_private_key_path = os.environ.get('XERO_ENTRUST_PRIVATE_KEY_PATH')
 
         if consumer_key is None or consumer_secret is None:
-            raise KeyError(
+            raise ValueError(
                 'Please define both XERO_CONSUMER_KEY and XERO_CONSUMER_SECRET environment variables')
+
+        if not private_key_path:
+            raise ValueError(
+                'Use the XERO_RSA_CERT_KEY_PATH env variable to specify the path to your RSA '
+                'certificate private key file')
+
+        if not entrust_cert_path:
+            raise ValueError(
+                'Use the XERO_ENTRUST_CERT_PATH env variable to specify the path to your Entrust '
+                'certificate')
+
+        if not entrust_private_key_path:
+            raise ValueError(
+                'Use the XERO_ENTRUST_PRIVATE_KEY_PATH env variable to specify the path to your '
+                'Entrust private no-pass key')
+
+        with open(private_key_path, 'r') as f:
+            rsa_key = f.read()
+            f.close()
+
+        client_cert = (entrust_cert_path, entrust_private_key_path)
 
         print("Serving path: {}".format(self.path))
         path = urlparse(self.path)
 
         if path.path == '/do-auth':
-            credentials = PublicCredentials(
-                consumer_key, consumer_secret, callback_uri='http://localhost:8000/oauth')
+            client_cert = (entrust_cert_path, entrust_private_key_path)
+            credentials = PartnerCredentials(
+                consumer_key, consumer_secret, rsa_key, client_cert,
+                callback_uri='http://localhost:8000/oauth')
 
             # Save generated credentials details to persistent storage
             for key, value in credentials.state.items():
@@ -84,7 +110,10 @@ class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 return
 
             stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
-            credentials = PublicCredentials(**stored_values)
+            client_cert = (entrust_cert_path, entrust_private_key_path)
+            stored_values.update({'rsa_key': rsa_key, 'client_cert': client_cert})
+
+            credentials = PartnerCredentials(**stored_values)
 
             try:
                 credentials.verify(params['oauth_verifier'])
@@ -102,8 +131,14 @@ class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return
 
         elif path.path == '/verified':
+
             stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
-            credentials = PublicCredentials(**stored_values)
+            stored_values.update({'rsa_key': rsa_key, 'client_cert': client_cert})
+            credentials = PartnerCredentials(**stored_values)
+
+            # Partner credentials expire after 30 minutes. Here's how to re-activate on expiry
+            if credentials.expired():
+                credentials.refresh()
 
             try:
                 xero = Xero(credentials)
@@ -127,7 +162,7 @@ class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 if __name__ == '__main__':
-    httpd = SocketServer.TCPServer(("", PORT), PublicCredentialsHandler)
+    httpd = SocketServer.TCPServer(("", PORT), PartnerCredentialsHandler)
 
     print "serving at port", PORT
     httpd.serve_forever()
