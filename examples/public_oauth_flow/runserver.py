@@ -78,11 +78,13 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             # Redirect to Xero at url provided by credentials generation
             self.redirect_response(credentials.url)
+            return
+
         elif path.path == '/oauth':
             params = dict(parse_qsl(path.query))
             if 'oauth_token' not in params or 'oauth_verifier' not in params or 'org' not in params:
                 self.send_error(500, message='Missing parameters required.')
-                return None
+                return
 
             stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
             credentials = PublicCredentials(**stored_values)
@@ -96,10 +98,12 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             except XeroException as e:
                 self.send_error(500, message='{}: {}'.format(e.__class__, e.message))
-                return None
+                return
 
             # Once verified, api can be invoked with xero = Xero(credentials)
             self.redirect_response('/verified')
+            return
+
         elif path.path == '/verified':
             stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
             credentials = PublicCredentials(**stored_values)
@@ -109,7 +113,7 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
             except XeroException as e:
                 self.send_error(500, message='{}: {}'.format(e.__class__, e.message))
-                return None
+                return
 
             page_body = 'Your contacts:<br><br>'
 
@@ -120,8 +124,9 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 page_body += 'No contacts'
             self.page_response(title='Xero Contacts', body=page_body)
-        else:
-            SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+            return
+
+        SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
 
 if __name__ == '__main__':
