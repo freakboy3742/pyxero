@@ -1,26 +1,52 @@
 import sys
 import os
-import re
 import SimpleHTTPServer
 import SocketServer
-import Cookie
-import datetime
+from urlparse import urlparse, parse_qsl
 
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 
-sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '..'))
-
 from xero.auth import PublicCredentials
 from xero.exceptions import XeroException
+from xero import Xero
 
 PORT = 8000
-verify_params_regex = re.compile(r'^access_token=(?P<access_token>[\w]+).*$')
+
+
+# You should use redis or a file based persistent
+# storage handler if you are running multiple servers.
+OAUTH_PERSISTENT_SERVER_STORAGE = {}
+
 
 class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    def redirect(self, url, permanent=False):
+    def page_response(self, title='', body=''):
+        """
+        Helper to render an html page with dynamic content
+        """
+        f = StringIO()
+        f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">\n')
+        f.write('<html>\n')
+        f.write('<head><title>{}</title><head>\n'.format(title))
+        f.write('<body>\n<h2>Directory listing for {}</h2>\n'.format(title))
+        f.write('<div class="content">{}</div>\n'.format(body))
+        f.write('</body>\n</html>\n')
+        length = f.tell()
+        f.seek(0)
+        self.send_response(200)
+        encoding = sys.getfilesystemencoding()
+        self.send_header("Content-type", "text/html; charset=%s" % encoding)
+        self.send_header("Content-Length", str(length))
+        self.end_headers()
+        self.copyfile(f, self.wfile)
+        f.close()
+
+    def redirect_response(self, url, permanent=False):
+        """
+        Generate redirect response
+        """
         if permanent:
             self.send_response(301)
         else:
@@ -29,6 +55,9 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        """
+        Handle GET request
+        """
         consumer_key = os.environ.get('XERO_CONSUMER_KEY')
         consumer_secret = os.environ.get('XERO_CONSUMER_SECRET')
 
@@ -36,69 +65,67 @@ class ExampleHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             raise KeyError(
                 'Please define both XERO_CONSUMER_KEY and XERO_CONSUMER_SECRET environment variables')
 
-        cookie_prefix = 'credentials'
-        parts = self.path.split('?', 1)
+        print("Serving path: {}".format(self.path))
+        path = urlparse(self.path)
 
-        if len(parts) > 1:
-            self.path = parts[0]
-            request_params = parts[1]
-        else:
-            request_params = ''
-
-        if self.path == '/do-auth/':
+        if path.path == '/do-auth':
             credentials = PublicCredentials(
                 consumer_key, consumer_secret, callback_uri='http://localhost:8000/oauth')
 
-            # Set cookies of all the credentials details.
-            # HIGHLY INSECURE. Do not persist credentials between requests this way in production.
-            # Use a session key etc instead
-            credentials_cookie = Cookie.SimpleCookie()
+            # Save generated credentials details to persistent storage
             for key, value in credentials.state.items():
-                if isinstance(value, datetime.datetime):
-                    value = value.strftime('%a, %d %b %Y %H:%M:%S')
-                cookie_key = '{}_{}'.format(cookie_prefix, str(key))
-                credentials_cookie[cookie_key] = value
-                credentials_cookie[cookie_key]['path'] = '/'
+                OAUTH_PERSISTENT_SERVER_STORAGE.update({key: value})
 
-            # Redirect to credentials.url
-            print(credentials.url)
-            self.send_response(302)
-            self.send_header("Location", credentials.url)
-            self.wfile.write(str(credentials_cookie))
-            self.end_headers()
-            return None
+            # Redirect to Xero at url provided by credentials generation
+            self.redirect_response(credentials.url)
+        elif path.path == '/oauth':
+            params = dict(parse_qsl(path.query))
+            if 'oauth_token' not in params or 'oauth_verifier' not in params or 'org' not in params:
+                self.send_error(500, message='Missing parameters required.')
+                return None
 
-        elif self.path == '/verify/':
-            match = verify_params_regex.match(request_params)
-            if match:
-                # Great, got a match for the access_token request parameter. Parse out the
-                # credentials cookies to re-instantiate the same credentials object
-                credentials_cookie = Cookie.SimpleCookie(self.headers['cookie'])
-                credentials_kwargs = {}
-                for key, value in credentials_cookie.items():
-                    if key.startswith(cookie_prefix):
-                        key = key.split('_', 1)[1]
-                        credentials_kwargs[key] = str(value)
+            stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
+            credentials = PublicCredentials(**stored_values)
 
-                credentials = PublicCredentials(**credentials_kwargs)
+            try:
+                credentials.verify(params['oauth_verifier'])
 
-                params = match.groupdict()
-                try:
-                    credentials.verify(params['access_token'])
-                except XeroException as e:
-                    self.send_error(500, message='{}: {}'.format(e.__class__, e.message))
-                    return None
-                else:
-                    # Once verified, api can be invoked with xero = Xero(credentials)
-                    self.redirect('/verified.html')
-                    return None
+                # Resave our verified credentials
+                for key, value in credentials.state.items():
+                    OAUTH_PERSISTENT_SERVER_STORAGE.update({key: value})
 
-        return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+            except XeroException as e:
+                self.send_error(500, message='{}: {}'.format(e.__class__, e.message))
+                return None
+
+            # Once verified, api can be invoked with xero = Xero(credentials)
+            self.redirect_response('/verified')
+        elif path.path == '/verified':
+            stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
+            credentials = PublicCredentials(**stored_values)
+
+            try:
+                xero = Xero(credentials)
+
+            except XeroException as e:
+                self.send_error(500, message='{}: {}'.format(e.__class__, e.message))
+                return None
+
+            page_body = 'Your contacts:<br><br>'
+
+            contacts = xero.contacts.all()
+
+            if contacts:
+                page_body += '<br>'.join([str(contact) for contact in contacts])
+            else:
+                page_body += 'No contacts'
+            self.page_response(title='Xero Contacts', body=page_body)
+        else:
+            SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+
 
 if __name__ == '__main__':
     httpd = SocketServer.TCPServer(("", PORT), ExampleHandler)
 
     print "serving at port", PORT
     httpd.serve_forever()
-
-
