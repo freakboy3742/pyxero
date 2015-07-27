@@ -242,7 +242,7 @@ class ManagerTest(unittest.TestCase):
         uri, params, method, body, headers, singleobject = manager._get(
             "ProfitAndLoss", params=passed_params
         )
-        self.assertEqual(passed_params, params, "test params can be set")
+        self.assertEqual(params, passed_params, "test params can be set")
 
         # test params respect, but can override, existing configuration
         manager = Manager("reports", credentials, unit_price_4dps=True)
