@@ -216,10 +216,11 @@ class Manager(object):
 
         return wrapper
 
-    def _get(self, id, headers=None):
+    def _get(self, id, headers=None, params=None):
         uri = '/'.join([self.base_url, self.name, id])
-        params = self.extra_params.copy()
-        return uri, params, 'get', None, headers, True
+        uri_params = self.extra_params.copy()
+        uri_params.update(params if params else {})
+        return uri, uri_params, 'get', None, headers, True
 
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
