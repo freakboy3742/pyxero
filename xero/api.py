@@ -12,6 +12,7 @@ class Xero(object):
         "BankTransactions",
         "BankTransfers",
         "BrandingThemes",
+        "ContactGroups",
         "Contacts",
         "CreditNotes",
         "Currencies",
