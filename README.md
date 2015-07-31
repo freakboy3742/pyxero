@@ -318,6 +318,16 @@ This same API pattern exists for the following API objects:
 * ExpenseClaims
 * Receipts
 * Users
+* Attachments
+* BrandingThemes
+* ContactGroups
+* Employees
+* Items
+* Journals
+* Overpayments
+* Prepayments
+* RepeatingInvoices
+* Reports
 
 ## Contributing
 
