@@ -82,7 +82,7 @@ def parse_date(string, force_datetime=False):
 
 def json_load_object_hook(dct):
     for key,value in dct.items():
-        if isinstance(value, str) and value.startswith('/') and value.endswith('/'):
+        if isinstance(value, str):
             value = parse_date(value)
             if value:
                 dct[key] = value
