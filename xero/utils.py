@@ -77,7 +77,7 @@ def parse_date(string, force_datetime=False):
     if len(values) > 3 or force_datetime:
         return datetime.datetime(**values)
 
-    return date(**values)
+    return datetime.date(**values)
 
 
 def json_load_object_hook(dct):
