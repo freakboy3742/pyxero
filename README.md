@@ -232,7 +232,7 @@ For example, to deal with contacts::
 # Create a new object
 >>> xero.contacts.put({...contact info...})
 
-# Create a new object
+# Create multiple new objects
 >>> xero.contacts.put([{...contact info...}, {...contact info...}, {...contact info...}])
 
 # Save an update to an existing object
