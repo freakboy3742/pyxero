@@ -1,5 +1,6 @@
-import re
 import datetime
+import re
+import six
 
 
 DATE = re.compile(
@@ -81,8 +82,10 @@ def parse_date(string, force_datetime=False):
 
 
 def json_load_object_hook(dct):
-    for key,value in dct.items():
-        if isinstance(value, str):
+    """ Hook for json.parse(...) to parse Xero date formats.
+    """
+    for key, value in dct.items():
+        if isinstance(value, six.string_types):
             value = parse_date(value)
             if value:
                 dct[key] = value

@@ -41,6 +41,30 @@ class UtilsTest(unittest.TestCase):
             }
         )
 
+        # And in unicode
+        example_input = {
+            'date': u'2015-04-29T10:21:03',
+        }
+
+        self.assertEqual(
+            xero.utils.json_load_object_hook(example_input),
+            {
+                'date': datetime.datetime(2015, 4, 29, 10, 21, 3)
+            }
+        )
+
+        # Not a string type
+        self.assertEqual(
+            xero.utils.json_load_object_hook({'date': 6}),
+            {'date': 6}
+        )
+
+        self.assertEqual(
+            xero.utils.json_load_object_hook({'date': None}),
+            {'date': None}
+        )
+
+
     def test_parse_date(self):
         """ Tests of the parse_date input formats.
         """
