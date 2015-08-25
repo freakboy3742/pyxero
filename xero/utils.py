@@ -11,6 +11,7 @@ DATE = re.compile(
 )
 
 OBJECT_NAMES = {
+    "Addresses": "Address",
     "Attachments": "Attachment",
     "Accounts": "Account",
     "BankTransactions": "BankTransaction",
