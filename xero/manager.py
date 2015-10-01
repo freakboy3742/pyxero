@@ -83,12 +83,18 @@ class Manager(object):
         'ne': '!='
     }
 
-    def __init__(self, name, credentials, unit_price_4dps=False):
+    def __init__(self, name, credentials, unit_price_4dps=False, user_agent=None):
+        from xero import __version__ as VERSION
         self.credentials = credentials
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
         self.extra_params = {"unitdp": 4} if unit_price_4dps else {}
         self.singular = singular(name)
+
+        if user_agent is None:
+            self.user_agent = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
+        else:
+            self.user_agent = user_agent
 
         for method_name in self.DECORATED_METHODS:
             method = getattr(self, '_%s' % method_name)
@@ -155,7 +161,6 @@ class Manager(object):
             uri, params, method, body, headers, singleobject
         """
         def wrapper(*args, **kwargs):
-            from xero import __version__ as VERSION
             timeout = kwargs.pop('timeout', None)
 
             uri, params, method, body, headers, singleobject = func(*args, **kwargs)
@@ -170,7 +175,8 @@ class Manager(object):
                 headers['Accept'] = 'application/json'
 
             # Set a user-agent so Xero knows the traffic is coming from pyxero
-            headers['User-Agent'] = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
+            # or individual user/partner
+            headers['User-Agent'] = self.user_agent
 
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
