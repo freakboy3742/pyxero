@@ -21,10 +21,10 @@ class XeroBadRequest(XeroException):
             data = json.loads(response.text)
             msg = "%s: %s" % (data['Type'], data['Message'])
             self.errors = [err['Message']
-                for elem in data['Elements']
-                for err in elem['ValidationErrors']
+                for elem in data.get('Elements', [])
+                for err in elem.get('ValidationErrors', [])
             ]
-            self.problem = self.errors[0]
+            self.problem = self.errors[0] if len(self.errors) > 0 else None
             super(XeroBadRequest, self).__init__(response, msg=msg)
 
         elif response.headers['content-type'].startswith('text/html'):
