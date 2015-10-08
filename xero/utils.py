@@ -1,5 +1,6 @@
-import re
 import datetime
+import re
+import six
 
 
 DATE = re.compile(
@@ -69,12 +70,6 @@ def parse_date(string, force_datetime=False):
             seconds=int(values['timestamp']) / 1000.0
         )
         return value
-        # Hmm not sure about this either: it returns a Date object
-        # if the time is 00:00. See the note below. For now, we'll just
-        # return the datetime, and allow end-user to handle it.
-        if not value.time():
-            return value.date()
-        return value
 
     # I've made an assumption here, that a DateTime value will not
     # ever be YYYY-MM-DDT00:00:00, which is probably bad. I'm not
@@ -83,12 +78,14 @@ def parse_date(string, force_datetime=False):
     if len(values) > 3 or force_datetime:
         return datetime.datetime(**values)
 
-    return date(**values)
+    return datetime.date(**values)
 
 
 def json_load_object_hook(dct):
-    for key,value in dct.items():
-        if isinstance(value, str) and value.startswith('/') and value.endswith('/'):
+    """ Hook for json.parse(...) to parse Xero date formats.
+    """
+    for key, value in dct.items():
+        if isinstance(value, six.string_types):
             value = parse_date(value)
             if value:
                 dct[key] = value
