@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 """ Tests of the utils module.
 """
 try:
