@@ -335,3 +335,35 @@ class ManagerTest(unittest.TestCase):
         manager = Manager('contacts', credentials, unit_price_4dps=False)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps can be disabled explicitly")
+
+    def test_get_params(self):
+        """The 'get' methods should pass GET parameters if provided.
+        """
+
+        credentials = Mock(base_url="")
+        manager = Manager("reports", credentials)
+
+        # test no parameters or headers sent by default
+        uri, params, method, body, headers, singleobject = manager._get("ProfitAndLoss")
+        self.assertEqual(params, {}, "test params not sent by default")
+
+        # test params can be provided
+        passed_params = {
+            "fromDate": "2015-01-01",
+            "toDate": "2015-01-15",
+        }
+        uri, params, method, body, headers, singleobject = manager._get(
+            "ProfitAndLoss", params=passed_params
+        )
+        self.assertEqual(params, passed_params, "test params can be set")
+
+        # test params respect, but can override, existing configuration
+        manager = Manager("reports", credentials, unit_price_4dps=True)
+        uri, params, method, body, headers, singleobject = manager._get(
+            "ProfitAndLoss", params=passed_params
+        )
+        self.assertEqual(params, {
+            "fromDate": "2015-01-01",
+            "toDate": "2015-01-15",
+            "unitdp": 4,
+        }, "test params respects existing values")
