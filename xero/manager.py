@@ -148,7 +148,8 @@ class Manager(object):
         else:
             root_elm = self.dict_to_xml(Element(self.singular), data)
 
-        return tostring(root_elm)
+        # In python3 this seems to return a bytestring
+        return six.u(tostring(root_elm))
 
     def _parse_api_response(self, response, resource_name):
         data = json.loads(response.text, object_hook=json_load_object_hook)
