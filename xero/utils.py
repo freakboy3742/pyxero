@@ -12,12 +12,14 @@ DATE = re.compile(
 )
 
 OBJECT_NAMES = {
+    "Addresses": "Address",
     "Attachments": "Attachment",
     "Accounts": "Account",
     "BankTransactions": "BankTransaction",
     "BankTransfers": "BankTransfer",
     "BrandingThemes": "BrandingTheme",
     "ContactGroups": "ContactGroup",
+    "ContactPersons": "ContactPerson",
     "Contacts": "Contact",
     "CreditNotes": "CreditNote",
     "Currencies": "Currency",
@@ -30,6 +32,7 @@ OBJECT_NAMES = {
     "Organisation": "Organisation",
     "Overpayments": "Overpayment",
     "Payments": "Payment",
+    "Phones": "Phone",
     "Prepayments": "Prepayment",
     "Receipts": "Receipt",
     "RepeatingInvoices": "RepeatingInvoice",
