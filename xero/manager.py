@@ -74,6 +74,7 @@ class Manager(object):
     )
     NO_SEND_FIELDS = (
         'UpdatedDateUTC',
+        'HasValidationErrors',
     )
     OPERATOR_MAPPINGS = {
         'gt': '>',
