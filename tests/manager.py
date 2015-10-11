@@ -79,34 +79,41 @@ class ManagerTest(unittest.TestCase):
             'Contact': {'Name': 'Basket Case'}
         }
         resultant_xml = manager._prepare_data_for_save(example_invoice_input)
+        resultant_xml = '<Invoice>%s</Invoice>' % resultant_xml
+        # Normalise the whitespace before comparing, otherwise the test fails
+        resultant_xml = parseString(resultant_xml).toprettyxml()
 
-        expected_xml = """
-            <Status>DRAFT</Status>
-            <Contact><Name>Basket Case</Name></Contact>
-            <Reference>ABAS 123</Reference>
-            <Date>2015-06-06 16:25:02.711109</Date>
-            <LineAmountTypes>Exclusive</LineAmountTypes>
-            <LineItems>
-              <LineItem>
-                <Description>Example description only</Description>
-              </LineItem>
-              <LineItem>
-                <TaxType>OUTPUT</TaxType>
-                <AccountCode>200</AccountCode>
-                <UnitAmount>0.0000</UnitAmount>
-                <Description>Example line item 2</Description>
-                <Quantity>1</Quantity>
-              </LineItem>
-              <LineItem>
-                <TaxType>OUTPUT</TaxType>
-                <AccountCode>200</AccountCode>
-                <UnitAmount>231.0000</UnitAmount>
-                <Description>Example line item 3</Description>
-                <Quantity>1</Quantity>
-              </LineItem>
-            </LineItems>
-            <Type>ACCREC</Type>
-            <DueDate>2015-07-06 16:25:02.711136</DueDate>
+        expected_xml = """<?xml version="1.0" ?>
+        <Invoice>
+          <Status>DRAFT</Status>
+          <Contact>
+            <Name>Basket Case</Name>
+          </Contact>
+          <Reference>ABAS 123</Reference>
+          <Date>2015-06-06 16:25:02.711109</Date>
+          <LineAmountTypes>Exclusive</LineAmountTypes>
+          <LineItems>
+            <LineItem>
+              <Description>Example description only</Description>
+            </LineItem>
+            <LineItem>
+              <TaxType>OUTPUT</TaxType>
+              <AccountCode>200</AccountCode>
+              <UnitAmount>0.0000</UnitAmount>
+              <Description>Example line item 2</Description>
+              <Quantity>1</Quantity>
+            </LineItem>
+            <LineItem>
+              <TaxType>OUTPUT</TaxType>
+              <AccountCode>200</AccountCode>
+              <UnitAmount>231.0000</UnitAmount>
+              <Description>Example line item 3</Description>
+              <Quantity>1</Quantity>
+            </LineItem>
+          </LineItems>
+          <Type>ACCREC</Type>
+          <DueDate>2015-07-06 16:25:02.711136</DueDate>
+        </Invoice>
         """
 
         self.assertXMLEqual(
@@ -151,39 +158,41 @@ class ManagerTest(unittest.TestCase):
             'HasAttachments': False,
         }
         resultant_xml = manager._prepare_data_for_save(example_contact_input)
+        resultant_xml = '<Contact>%s</Contact>' % resultant_xml
+        # Normalise the whitespace before comparing, otherwise the test fails
+        resultant_xml = parseString(resultant_xml).toprettyxml()
 
-        expected_xml = """
-            <Contact>
-              <ContactID>565acaa9-e7f3-4fbf-80c3-16b081ddae10</ContactID>
-              <ContactStatus>ACTIVE</ContactStatus>
-              <Name>Southside Office Supplies</Name>
-              <Addresses>
-                <Address>
-                  <AddressType>POBOX</AddressType>
-                </Address>
-                <Address>
-                  <AddressType>STREET</AddressType>
-                </Address>
-              </Addresses>
-              <Phones>
-                <Phone>
-                  <PhoneType>DDI</PhoneType>
-                </Phone>
-                <Phone>
-                  <PhoneType>DEFAULT</PhoneType>
-                </Phone>
-                <Phone>
-                  <PhoneType>FAX</PhoneType>
-                </Phone>
-                <Phone>
-                  <PhoneType>MOBILE</PhoneType>
-                </Phone>
-              </Phones>
-              <UpdatedDateUTC>2015-09-18T05:06:56.893</UpdatedDateUTC>
-              <IsSupplier>false</IsSupplier>
-              <IsCustomer>false</IsCustomer>
-              <HasAttachments>false</HasAttachments>
-            </Contact>
+        expected_xml = """<?xml version="1.0" ?>
+        <Contact>
+          <ContactID>565acaa9-e7f3-4fbf-80c3-16b081ddae10</ContactID>
+          <Name>Southside Office Supplies</Name>
+          <HasAttachments>false</HasAttachments>
+          <Phones>
+            <Phone>
+              <PhoneType>DDI</PhoneType>
+            </Phone>
+            <Phone>
+              <PhoneType>DEFAULT</PhoneType>
+            </Phone>
+            <Phone>
+              <PhoneType>FAX</PhoneType>
+            </Phone>
+            <Phone>
+              <PhoneType>MOBILE</PhoneType>
+            </Phone>
+          </Phones>
+          <IsCustomer>false</IsCustomer>
+          <Addresses>
+            <Address>
+              <AddressType>POBOX</AddressType>
+            </Address>
+            <Address>
+              <AddressType>STREET</AddressType>
+            </Address>
+          </Addresses>
+          <IsSupplier>false</IsSupplier>
+          <ContactStatus>ACTIVE</ContactStatus>
+        </Contact>
         """
 
         self.assertXMLEqual(
