@@ -304,19 +304,29 @@ Download and uploading attachments is supported using the Xero GUID of the relev
 This same API pattern exists for the following API objects:
 
 * Accounts
+* Attachments
+* BankTransactions
+* BankTransfers
+* BrandingThemes
+* ContactGroups
 * Contacts
 * CreditNotes
 * Currencies
+* Employees
+* ExpenseClaims
 * Invoices
+* Items
+* Journals
+* ManualJournals
 * Organisation
+* Overpayments
 * Payments
+* Prepayments
+* Receipts
+* RepeatingInvoices
+* Reports
 * TaxRates
 * TrackingCategories
-* ManualJournals
-* BankTransactions
-* BankTransfers
-* ExpenseClaims
-* Receipts
 * Users
 
 ## Contributing
