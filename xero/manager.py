@@ -153,7 +153,10 @@ class Manager(object):
     def _parse_api_response(self, response, resource_name):
         data = json.loads(response.text, object_hook=json_load_object_hook)
         assert data['Status'] == 'OK', "Expected the API to say OK but received %s" % data['Status']
-        return data[resource_name]
+        try:
+            return data[resource_name]
+        except KeyError:
+            return data
 
     def _get_data(self, func):
         """ This is the decorator for our DECORATED_METHODS.
