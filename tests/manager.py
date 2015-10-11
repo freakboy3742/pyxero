@@ -16,9 +16,38 @@ from mock import Mock, patch
 from xero import Xero
 from xero.manager import Manager
 from tests import mock_data
+from . import compare_xml
+from unittest.util import safe_repr
+import difflib
+import six
 
 
 class ManagerTest(unittest.TestCase):
+    maxDiff = None
+
+    def assertXMLEqual(self, xml1, xml2, msg=None):
+        """
+        Asserts that two XML snippets are semantically the same.
+        Whitespace in most cases is ignored, and attribute ordering is not
+        significant. The passed-in arguments must be valid XML.
+        """
+        try:
+            result = compare_xml(xml1, xml2)
+        except Exception as e:
+            standardMsg = 'First or second argument is not valid XML\n%s' % e
+            self.fail(self._formatMessage(msg, standardMsg))
+        else:
+            if not result:
+                standardMsg = '%s != %s' % (safe_repr(xml1, True), safe_repr(xml2, True))
+                diff = ('\n' + '\n'.join(
+                    difflib.ndiff(
+                        six.text_type(xml1).splitlines(),
+                        six.text_type(xml2).splitlines(),
+                    )
+                ))
+                standardMsg = self._truncateMessage(standardMsg, diff)
+                self.fail(self._formatMessage(msg, standardMsg))
+
     def test_serializer(self):
         credentials = Mock(base_url="")
         manager = Manager('contacts', credentials)
@@ -80,12 +109,87 @@ class ManagerTest(unittest.TestCase):
             <DueDate>2015-07-06 16:25:02.711136</DueDate>
         """
 
-        # @todo Need a py2/3 way to compare XML easily.
-        # self.assertEqual(
-        #     resultant_xml,
-        #     expected_xml,
-        #     "Failed to serialize data to XML correctly."
-        # )
+        self.assertXMLEqual(
+            resultant_xml,
+            expected_xml,
+        )
+
+
+    def test_serializer_phones_addresses(self):
+        credentials = Mock(base_url="")
+        manager = Manager('contacts', credentials)
+
+        example_contact_input = {
+            'ContactID': '565acaa9-e7f3-4fbf-80c3-16b081ddae10',
+            'ContactStatus': 'ACTIVE',
+            'Name': 'Southside Office Supplies',
+            'Addresses': [
+                {
+                    'AddressType': 'POBOX',
+                },
+                {
+                    'AddressType': 'STREET',
+                },
+            ],
+            'Phones': [
+                {
+                    'PhoneType': 'DDI',
+                },
+                {
+                    'PhoneType': 'DEFAULT',
+                },
+                {
+                    'PhoneType': 'FAX',
+                },
+                {
+                    'PhoneType': 'MOBILE',
+                },
+            ],
+            'UpdatedDateUTC': datetime.datetime(2015, 9, 18, 5, 6, 56, 893),
+            'IsSupplier': False,
+            'IsCustomer': False,
+            'HasAttachments': False,
+        }
+        resultant_xml = manager._prepare_data_for_save(example_contact_input)
+
+        expected_xml = """
+            <Contact>
+              <ContactID>565acaa9-e7f3-4fbf-80c3-16b081ddae10</ContactID>
+              <ContactStatus>ACTIVE</ContactStatus>
+              <Name>Southside Office Supplies</Name>
+              <Addresses>
+                <Address>
+                  <AddressType>POBOX</AddressType>
+                </Address>
+                <Address>
+                  <AddressType>STREET</AddressType>
+                </Address>
+              </Addresses>
+              <Phones>
+                <Phone>
+                  <PhoneType>DDI</PhoneType>
+                </Phone>
+                <Phone>
+                  <PhoneType>DEFAULT</PhoneType>
+                </Phone>
+                <Phone>
+                  <PhoneType>FAX</PhoneType>
+                </Phone>
+                <Phone>
+                  <PhoneType>MOBILE</PhoneType>
+                </Phone>
+              </Phones>
+              <UpdatedDateUTC>2015-09-18T05:06:56.893</UpdatedDateUTC>
+              <IsSupplier>false</IsSupplier>
+              <IsCustomer>false</IsCustomer>
+              <HasAttachments>false</HasAttachments>
+            </Contact>
+        """
+
+        self.assertXMLEqual(
+            resultant_xml,
+            expected_xml,
+        )
 
 
     def test_serializer_nested_singular(self):
