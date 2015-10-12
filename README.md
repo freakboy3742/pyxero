@@ -81,7 +81,7 @@ When the user authorizes access to their Xero account, the `callback_url`
 will be called with three GET arguments:
 
 * `oauth_token`: The oauth_token that this request belongs to
-* `verifier`: The verifier string
+* `oauth_verifier`: The verifier string
 * `org`: An identifier for the organization that is allowing access.
 
 The verifier can then be used to verify the credentials, as with the manual
