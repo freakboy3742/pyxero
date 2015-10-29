@@ -1,13 +1,6 @@
-from __future__ import unicode_literals
-
-try:
-    # Try importing from unittest2 first. This is primarily for Py2.6 support.
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from datetime import datetime, timedelta
-
 from mock import patch, Mock
 
 from xero.auth import PublicCredentials, PartnerCredentials

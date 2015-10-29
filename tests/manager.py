@@ -1,16 +1,10 @@
 from __future__ import unicode_literals
 
 import datetime
-
-try:
-    # Try importing from unittest2 first. This is primarily for Py2.6 support.
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
-from xml.dom.minidom import parseString
+import unittest
 
 from mock import Mock, patch
+from xml.dom.minidom import parseString
 
 from xero import Xero
 from xero.manager import Manager

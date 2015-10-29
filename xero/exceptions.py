@@ -29,9 +29,7 @@ class XeroBadRequest(XeroException):
 
         elif response.headers['content-type'].startswith('text/html'):
             payload = parse_qs(response.text)
-            self.errors = [
-                payload['oauth_problem'][0],
-            ]
+            self.errors = [payload['oauth_problem'][0]]
             self.problem = self.errors[0]
             super(XeroBadRequest, self).__init__(response, payload['oauth_problem_advice'][0])
 
@@ -53,7 +51,8 @@ class XeroUnauthorized(XeroException):
     # HTTP 401: Unauthorized
     def __init__(self, response):
         payload = parse_qs(response.text)
-        self.problem = payload['oauth_problem'][0]
+        self.errors = [payload['oauth_problem'][0]]
+        self.problem = self.errors[0]
         super(XeroUnauthorized, self).__init__(response, payload['oauth_problem_advice'][0])
 
 
@@ -94,7 +93,8 @@ class XeroNotImplemented(XeroException):
 class XeroRateLimitExceeded(XeroException):
     # HTTP 503 - Rate limit exceeded
     def __init__(self, response, payload):
-        self.problem = payload['oauth_problem'][0]
+        self.errors = [payload['oauth_problem'][0]]
+        self.problem = self.errors[0]
         super(XeroRateLimitExceeded, self).__init__(response, payload['oauth_problem_advice'][0])
 
 
