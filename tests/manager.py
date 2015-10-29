@@ -1,38 +1,38 @@
 from __future__ import unicode_literals
 
 import datetime
+import re
+import six
 import unittest
 
 from mock import Mock
+from xml.dom.minidom import parseString
 
 from xero.manager import Manager
 
-
 class ManagerTest(unittest.TestCase):
-    maxDiff = None
+    def assertXMLEqual(self, xml1, xml2, message=''):
+        def to_str(s):
+            return s.decode('utf-8') if six.PY3 and isinstance(s, bytes) else str(s)
 
-    def assertXMLEqual(self, xml1, xml2, msg=None):
-        """
-        Asserts that two XML snippets are semantically the same.
-        Whitespace in most cases is ignored, and attribute ordering is not
-        significant. The passed-in arguments must be valid XML.
-        """
-        try:
-            result = compare_xml(xml1, xml2)
-        except Exception as e:
-            standardMsg = 'First or second argument is not valid XML\n%s' % e
-            self.fail(self._formatMessage(msg, standardMsg))
-        else:
-            if not result:
-                standardMsg = '%s != %s' % (safe_repr(xml1, True), safe_repr(xml2, True))
-                diff = ('\n' + '\n'.join(
-                    difflib.ndiff(
-                        six.text_type(xml1).splitlines(),
-                        six.text_type(xml2).splitlines(),
-                    )
-                ))
-                standardMsg = self._truncateMessage(standardMsg, diff)
-                self.fail(self._formatMessage(msg, standardMsg))
+        def xml_to_dict(xml):
+            nodes = re.findall('(<([^>]*)>(.*?)</\\2>)', xml)
+            if len(nodes) == 0:
+                return xml
+            d = {}
+            for node in nodes:
+                d[node[1]] = xml_to_dict(node[2])
+            return d
+
+        d1, d2 = tuple(map(lambda s:
+            xml_to_dict(str(re.sub('>\n *<','><', parseString(
+                '<root>%s</root>' % to_str(s)
+            ).toxml()))),
+            (xml1, xml2)
+        ))
+
+        self.assertEqual(d1, d2, message)
+
 
     def test_serializer(self):
         credentials = Mock(base_url="")
@@ -66,10 +66,8 @@ class ManagerTest(unittest.TestCase):
         }
         resultant_xml = manager._prepare_data_for_save(example_invoice_input)
         resultant_xml = '<Invoice>%s</Invoice>' % resultant_xml
-        # Normalise the whitespace before comparing, otherwise the test fails
-        resultant_xml = parseString(resultant_xml).toprettyxml()
 
-        expected_xml = """<?xml version="1.0" ?>
+        expected_xml = """
         <Invoice>
           <Status>DRAFT</Status>
           <Contact>
@@ -145,10 +143,8 @@ class ManagerTest(unittest.TestCase):
         }
         resultant_xml = manager._prepare_data_for_save(example_contact_input)
         resultant_xml = '<Contact>%s</Contact>' % resultant_xml
-        # Normalise the whitespace before comparing, otherwise the test fails
-        resultant_xml = parseString(resultant_xml).toprettyxml()
 
-        expected_xml = """<?xml version="1.0" ?>
+        expected_xml = """
         <Contact>
           <ContactID>565acaa9-e7f3-4fbf-80c3-16b081ddae10</ContactID>
           <Name>Southside Office Supplies</Name>
@@ -184,6 +180,7 @@ class ManagerTest(unittest.TestCase):
         self.assertXMLEqual(
             resultant_xml,
             expected_xml,
+            "Resultant XML does not match expected."
         )
 
 
@@ -220,11 +217,10 @@ class ManagerTest(unittest.TestCase):
             <DueDate>2015-07-06 16:25:02.711136</DueDate>
         """
 
-        # @todo Need a py2/3 way to compare XML easily.
-        # self.assertEqual(
-        #     resultant_xml,
-        #     expected_xml,
-        # )
+        self.assertXMLEqual(
+            resultant_xml,
+            expected_xml,
+        )
 
 
     def test_filter(self):
