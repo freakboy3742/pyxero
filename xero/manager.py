@@ -4,16 +4,13 @@ import requests
 import six
 import json
 
-from xml.dom.minidom import parseString
 from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
-from dateutil.parser import parse
-from decimal import Decimal
 from six.moves.urllib.parse import parse_qs
 
 from .constants import XERO_API_URL
 from .exceptions import *
-from .utils import singular, isplural, parse_date, json_load_object_hook
+from .utils import singular, isplural, json_load_object_hook
 
 
 class Manager(object):

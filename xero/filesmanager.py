@@ -1,13 +1,10 @@
 from __future__ import unicode_literals
 
 import requests
-import json
-import six
 
-from datetime import datetime
 from six.moves.urllib.parse import parse_qs
 
-from .constants import XERO_API_URL, XERO_FILES_URL
+from .constants import XERO_FILES_URL
 from .exceptions import *
 
 

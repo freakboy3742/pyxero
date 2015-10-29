@@ -3,16 +3,9 @@ from __future__ import unicode_literals
 import datetime
 import unittest
 
-from mock import Mock, patch
-from xml.dom.minidom import parseString
+from mock import Mock
 
-from xero import Xero
 from xero.manager import Manager
-from tests import mock_data
-from . import compare_xml
-from unittest.util import safe_repr
-import difflib
-import six
 
 
 class ManagerTest(unittest.TestCase):
