@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+
 # exceptions.py
 
 bad_request_text = """<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">

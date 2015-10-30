@@ -6,8 +6,12 @@ from datetime import date
 from mock import Mock, patch
 
 from xero import Xero
-from xero.exceptions import *
-from tests import mock_data
+from xero.exceptions import (
+    XeroBadRequest, XeroForbidden, XeroInternalError, XeroNotAvailable,
+    XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded, XeroUnauthorized
+)
+
+from . import mock_data
 
 
 class ExceptionsTest(unittest.TestCase):

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from mock import patch, Mock
 
 from xero.auth import PublicCredentials, PartnerCredentials
-from xero.exceptions import *
+from xero.exceptions import XeroException, XeroNotVerified, XeroUnauthorized
 
 
 class PublicCredentialsTest(unittest.TestCase):

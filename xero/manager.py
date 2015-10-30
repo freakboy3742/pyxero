@@ -1,15 +1,19 @@
 from __future__ import unicode_literals
 
+import json
 import requests
 import six
-import json
 
-from xml.etree.ElementTree import tostring, SubElement, Element
 from datetime import datetime
 from six.moves.urllib.parse import parse_qs
+from xml.etree.ElementTree import tostring, SubElement, Element
 
 from .constants import XERO_API_URL
-from .exceptions import *
+from .exceptions import (
+    XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
+    XeroNotAvailable, XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded,
+    XeroUnauthorized
+)
 from .utils import singular, isplural, json_load_object_hook
 
 

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-from .manager import Manager
+
 from .filesmanager import FilesManager
+from .manager import Manager
 
 
 class Xero(object):
