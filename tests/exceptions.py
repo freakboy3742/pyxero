@@ -1,13 +1,8 @@
 from __future__ import unicode_literals
 
+import unittest
+
 from datetime import date
-try:
-    # Try importing from unittest2 first. This is primarily for Py2.6 support.
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
-
 from mock import Mock, patch
 
 from xero import Xero
@@ -86,7 +81,7 @@ class ExceptionsTest(unittest.TestCase):
         except XeroBadRequest as e:
             # Error messages have been extracted
             self.assertEqual(str(e), 'No certificates have been registered for the consumer')
-            self.assertEqual(e.problem, 'signature_method_rejected')
+            self.assertEqual(e.errors[0], 'signature_method_rejected')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 400)
@@ -114,7 +109,7 @@ class ExceptionsTest(unittest.TestCase):
         except XeroUnauthorized as e:
             # Error messages have been extracted
             self.assertEqual(str(e), 'Failed to validate signature')
-            self.assertEqual(e.problem, 'signature_invalid')
+            self.assertEqual(e.errors[0], 'signature_invalid')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 401)
@@ -141,7 +136,7 @@ class ExceptionsTest(unittest.TestCase):
         except XeroUnauthorized as e:
             # Error messages have been extracted
             self.assertEqual(str(e), 'The access token has expired')
-            self.assertEqual(e.problem, 'token_expired')
+            self.assertEqual(e.errors[0], 'token_expired')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 401)
@@ -273,7 +268,7 @@ class ExceptionsTest(unittest.TestCase):
         except XeroRateLimitExceeded as e:
             # Error messages have been extracted
             self.assertEqual(str(e), 'please wait before retrying the xero api')
-            self.assertEqual(e.problem, 'rate limit exceeded')
+            self.assertEqual(e.errors[0], 'rate limit exceeded')
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 503)
