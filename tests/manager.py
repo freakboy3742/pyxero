@@ -10,26 +10,24 @@ from xml.dom.minidom import parseString
 
 from xero.manager import Manager
 
+
 class ManagerTest(unittest.TestCase):
     def assertXMLEqual(self, xml1, xml2, message=''):
         def to_str(s):
             return s.decode('utf-8') if six.PY3 and isinstance(s, bytes) else str(s)
 
+        def clean_xml(xml):
+            xml = '<root>%s</root>' % to_str(xml)
+            return str(re.sub('>\n *<','><', parseString(xml).toxml()))
+
         def xml_to_dict(xml):
             nodes = re.findall('(<([^>]*)>(.*?)</\\2>)', xml)
             if len(nodes) == 0:
                 return xml
-            d = {}
-            for node in nodes:
-                d[node[1]] = xml_to_dict(node[2])
-            return d
+            return dict((node[1],xml_to_dict(node[2])) for node in nodes)
 
-        d1, d2 = tuple(map(lambda s:
-            xml_to_dict(str(re.sub('>\n *<','><', parseString(
-                '<root>%s</root>' % to_str(s)
-            ).toxml()))),
-            (xml1, xml2)
-        ))
+        cleaned = map(clean_xml, (xml1, xml2))
+        d1, d2 = tuple(map(xml_to_dict, cleaned))
 
         self.assertEqual(d1, d2, message)
 
