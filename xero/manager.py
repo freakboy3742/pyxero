@@ -8,7 +8,7 @@ from datetime import datetime
 from six.moves.urllib.parse import parse_qs
 from xml.etree.ElementTree import tostring, SubElement, Element
 
-from .constants import XERO_API_URL
+from .constants import XERO_API_URL, XERO_PAYROLL_URL
 from .exceptions import (
     XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
     XeroNotAvailable, XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded,
@@ -89,11 +89,14 @@ class Manager(object):
         'ne': '!='
     }
 
-    def __init__(self, name, credentials, unit_price_4dps=False, user_agent=None):
+    def __init__(self, name, credentials, unit_price_4dps=False, user_agent=None, api='core'):
         from xero import __version__ as VERSION
         self.credentials = credentials
         self.name = name
-        self.base_url = credentials.base_url + XERO_API_URL
+        if api == 'payroll':
+            self.base_url = credentials.base_url + XERO_PAYROLL_URL
+        else:
+            self.base_url = credentials.base_url + XERO_API_URL
         self.extra_params = {"unitdp": 4} if unit_price_4dps else {}
         self.singular = singular(name)
 

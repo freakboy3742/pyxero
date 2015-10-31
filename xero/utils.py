@@ -34,6 +34,8 @@ OBJECT_NAMES = {
     "Organisation": "Organisation",
     "Overpayments": "Overpayment",
     "Payments": "Payment",
+    "PayrollCalendars": "PayrollCalendar",
+    "PayRuns": "PayRun",
     "Phones": "Phone",
     "Prepayments": "Prepayment",
     "Receipts": "Receipt",
