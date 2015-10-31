@@ -1,6 +1,7 @@
+import json
+
 from six.moves.urllib.parse import parse_qs
 from xml.dom.minidom import parseString
-import json
 
 
 class XeroException(Exception):

@@ -1,14 +1,9 @@
 from __future__ import unicode_literals
 
-""" Tests of the utils module.
-"""
-try:
-    # Try importing from unittest2 first. This is primarily for Py2.6 support.
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
+""" Tests of the utils module. """
 import datetime
+import unittest
+
 import xero.utils
 
 

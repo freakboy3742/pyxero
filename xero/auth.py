@@ -1,14 +1,23 @@
 from __future__ import unicode_literals
+
 import datetime
 import requests
+
+from oauthlib.oauth1 import (
+    SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_HMAC
+)
 from requests_oauthlib import OAuth1
-from oauthlib.oauth1 import (SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER,
-                             SIGNATURE_HMAC)
 from six.moves.urllib.parse import urlencode, parse_qs
 
-from .constants import (XERO_BASE_URL, XERO_PARTNER_BASE_URL,
-                        REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL)
-from .exceptions import *
+from .constants import (
+    XERO_BASE_URL, XERO_PARTNER_BASE_URL,
+    REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL
+)
+from .exceptions import (
+    XeroBadRequest, XeroException, XeroExceptionUnknown, XeroForbidden,
+    XeroInternalError, XeroNotAvailable, XeroNotFound, XeroNotImplemented,
+    XeroNotVerified, XeroRateLimitExceeded, XeroUnauthorized
+)
 
 
 OAUTH_EXPIRY_SECONDS = 3600 # Default unless a response reports differently
