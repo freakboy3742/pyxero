@@ -30,7 +30,6 @@ setup(
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
         'python-dateutil>=2.1',
-        'pycrypto>=2.6.1'
     ],
     tests_require=[
         'mock',

@@ -6,19 +6,6 @@ PyXero
 PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
 
-This code is based off the [sample code provided by Xero](http://developer.xero.com/getting-started/code/python/), which was
-contributed by [IRESS Wealth Management](http://www.iress.com.au), and the [XeroPy](https://github.com/fatbox/XeroPy) packaged version of
-that code.
-
-This packages differs in three significant was from `XeroPy`:
-
-* It uses the popular [requests](http://python-requests.org) library (and the [requests-oauthlib](https://github.com/requests/requests-oauthlib)
-  extension) instead of httplib2.
-* It uses the pure-python [PyCrypto](https://www.dlitz.net/software/pycrypto/) library instead of the hard-to-compile
-  native M2Crypto wrapper for RSA signing.
-* It has been tested on Public, Private and Partner Xero Applications.
-
-
 ## Quickstart:
 
 In addition to the instructions shown here, you'll need to follow the [Xero
@@ -353,3 +340,4 @@ New features or bug fixes can be submitted via a pull request. If you want
 your pull request to be merged quickly, make sure you either include
 regression test(s) for the behavior you are adding/fixing, or provide a
 good explanation of why a regression test isn't possible.
+
