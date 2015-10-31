@@ -5,6 +5,7 @@ import re
 import six
 import unittest
 
+from collections import defaultdict
 from mock import Mock
 from xml.dom.minidom import parseString
 
@@ -24,7 +25,10 @@ class ManagerTest(unittest.TestCase):
             nodes = re.findall('(<([^>]*)>(.*?)</\\2>)', xml)
             if len(nodes) == 0:
                 return xml
-            return dict((node[1],xml_to_dict(node[2])) for node in nodes)
+            d = defaultdict(list)
+            for node in nodes:
+                d[node[1]].append(xml_to_dict(node[2]))
+            return d
 
         cleaned = map(clean_xml, (xml1, xml2))
         d1, d2 = tuple(map(xml_to_dict, cleaned))
