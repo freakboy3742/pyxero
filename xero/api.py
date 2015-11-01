@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from .filesmanager import FilesManager
+from .payrollmanager import PayrollManager
 from .manager import Manager
 
 
@@ -45,7 +46,7 @@ class Xero(object):
                                                 user_agent))
 
         setattr(self, "filesAPI", Files(credentials))
-
+        setattr(self, "payrollAPI", Payroll(credentials))
 
 class Files(object):
     """An ORM-like interface to the Xero Files API"""
@@ -73,8 +74,11 @@ class Payroll(object):
         "Employees",
         "Timesheets",
         "PayItems",
+        "PayRuns",
+        "PayrollCalendars",
+        "Payslip",
     )
 
     def __init__(self, credentials):
         for name in self.OBJECT_LIST:
-            setattr(self, name.lower(), Manager(name, credentials, 'payroll'))
+            setattr(self, name.lower(), PayrollManager(name, credentials))
