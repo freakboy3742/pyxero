@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from .filesmanager import FilesManager
+from .payrollmanager import PayrollManager
 from .manager import Manager
 
 
@@ -80,4 +81,4 @@ class Payroll(object):
 
     def __init__(self, credentials):
         for name in self.OBJECT_LIST:
-            setattr(self, name.lower(), Manager(name, credentials, api='payroll'))
+            setattr(self, name.lower(), PayrollManager(name, credentials))
