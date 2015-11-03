@@ -245,19 +245,23 @@ class BaseManager(object):
         file.write(data)
         return len(data)
 
-    def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
+    def save_or_put(self, data, is_raw_xml=False, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
-        body = {'xml': self._prepare_data_for_save(data)}
+        body = None
+        if is_raw_xml:
+            body = {'xml': data}
+        else:
+            body = {'xml': self._prepare_data_for_save(data)}
         params = self.extra_params.copy()
         if not summarize_errors:
             params['summarizeErrors'] = 'false'
         return uri, params, method, body, headers, False
 
-    def _save(self, data):
-        return self.save_or_put(data, method='post')
+    def _save(self, data, is_raw_xml=False):
+        return self.save_or_put(data, method='post', is_raw_xml=is_raw_xml)
 
-    def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+    def _put(self, data, summarize_errors=True, is_raw_xml=False):
+        return self.save_or_put(data, method='put', summarize_errors=summarize_errors, is_raw_xml=is_raw_xml)
 
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
