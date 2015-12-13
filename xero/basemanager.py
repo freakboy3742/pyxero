@@ -258,6 +258,7 @@ class BaseManager(object):
         return self.save_or_put(data, method='post')
 
     def _put(self, data, summarize_errors=True):
+        print data
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
 
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
