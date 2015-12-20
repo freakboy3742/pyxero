@@ -55,11 +55,12 @@ class Xero(object):
         """
         If you wish to set new tracking category options you'll need to call this method to pre-populate the options 
         """
-        self.trackingCategoryNames = {x['Name']:x['TrackingCategoryID'] for x in self.trackingcategories.all()}
+        categories = self.trackingcategories.all()
+
+        self.trackingCategoryNames = {x['Name']:x['TrackingCategoryID'] for x in categories}
         for name, tracking_category_id in self.trackingCategoryNames.items():
             setattr(self, "TC%s" % name, TrackingCategoryOptions(self.credentials, tracking_category_id))
         return categories
-
 
 class Files(object):
     """An ORM-like interface to the Xero Files API"""
