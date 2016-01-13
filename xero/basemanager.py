@@ -64,6 +64,7 @@ class BaseManager(object):
         'IsSubscriber',
         'HasAttachments',
         'ShowOnCashBasisReports',
+        'IncludeInEmails',
     )
     DECIMAL_FIELDS = (
         'Hours',
