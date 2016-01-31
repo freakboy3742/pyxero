@@ -77,6 +77,7 @@ class Payroll(object):
         "PayRuns",
         "PayrollCalendars",
         "Payslip",
+        "LeaveApplications",
     )
 
     def __init__(self, credentials):
