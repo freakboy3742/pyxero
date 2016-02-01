@@ -126,6 +126,8 @@ class BaseManager(object):
             else:
                 if key in self.BOOLEAN_FIELDS:
                     val = 'true' if sub_data else 'false'
+                elif key in self.DATE_FIELDS:
+                    val = sub_data.strftime('%Y-%m-%dT%H:%M:%S')
                 else:
                     val = six.text_type(sub_data)
                 elm.text = val
