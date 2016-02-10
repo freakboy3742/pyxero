@@ -131,7 +131,7 @@ class PublicCredentialsTest(unittest.TestCase):
             scope="payroll.endpoint"
         )
 
-        self.assertEqual(credentials.url, 'https://api.xero.com/oauth/Authorize?scope=payroll.endpoint&oauth_token=token')
+        self.assertIn('scope=payroll.endpoint', credentials.url)
 
     @patch('requests.post')
     def test_verify(self, r_post):
