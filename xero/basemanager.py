@@ -45,6 +45,8 @@ class BaseManager(object):
         'OpeningBalanceDate',
         'PaymentDueDate',
         'ReportingDate',
+        'DeliveryDate',
+        'ExpectedArrivalDate',
     )
     BOOLEAN_FIELDS = (
         'IsSupplier',
@@ -65,6 +67,7 @@ class BaseManager(object):
         'HasAttachments',
         'ShowOnCashBasisReports',
         'IncludeInEmails',
+        'SentToContact',
     )
     DECIMAL_FIELDS = (
         'Hours',
