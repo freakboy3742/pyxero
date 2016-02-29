@@ -28,6 +28,7 @@ class Xero(object):
         "Overpayments",
         "Payments",
         "Prepayments",
+        "PurchaseOrders",
         "Receipts",
         "RepeatingInvoices",
         "Reports",
