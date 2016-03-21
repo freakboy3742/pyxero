@@ -30,6 +30,7 @@ setup(
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
         'python-dateutil>=2.1',
+        'PyJWT==1.4.0', # This is required as part of oauthlib but doesn't seem to get included sometimes.
     ],
     tests_require=[
         'mock',
