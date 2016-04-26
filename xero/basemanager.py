@@ -326,6 +326,7 @@ class BaseManager(object):
                     elif parts[1] in ["isnull"]:
                         sign = '=' if value else '!'
                         return '%s%s=null' % (parts[0], sign)
+                    field = field.replace('_', '.')
                 return fmt % (
                     field,
                     get_filter_params(key, value)
