@@ -68,10 +68,13 @@ class BaseManager(object):
         'ShowOnCashBasisReports',
         'IncludeInEmails',
         'SentToContact',
+        'IsSold',
+        'IsPurchased',
     )
     DECIMAL_FIELDS = (
         'Hours',
         'NumberOfUnit',
+        'UnitPrice',
     )
     INTEGER_FIELDS = (
         'FinancialYearEndDay',
@@ -300,12 +303,14 @@ class BaseManager(object):
                 last_key = key.split('_')[-1]
                 if last_key.upper().endswith('ID'):
                     return 'Guid("%s")' % six.text_type(value)
-                if key in self.BOOLEAN_FIELDS:
+                if last_key in self.BOOLEAN_FIELDS:
                     return 'true' if value else 'false'
-                elif key in self.DATE_FIELDS:
-                   return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
-                elif key in self.DATETIME_FIELDS:
+                elif last_key in self.DATE_FIELDS:
+                    return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
+                elif last_key in self.DATETIME_FIELDS:
                     return value.isoformat()
+                elif last_key in self.DECIMAL_FIELDS:
+                    return value
                 else:
                     return '"%s"' % six.text_type(value)
 
