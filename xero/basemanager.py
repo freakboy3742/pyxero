@@ -303,7 +303,7 @@ class BaseManager(object):
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if value else 'false'
                 elif key in self.DATE_FIELDS:
-                   return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
+                    return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
