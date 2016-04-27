@@ -42,6 +42,7 @@ OBJECT_NAMES = {
     "RepeatingInvoices": "RepeatingInvoice",
     "Reports": "Report",
     "TaxRates": "TaxRate",
+    "TaxComponents": "TaxComponent",
     "TrackingCategories": "TrackingCategory",
     "Users": "User",
     "Associations": "Association",
