@@ -1,24 +1,41 @@
-# coding: utf-8
 from __future__ import unicode_literals
 
 import datetime
+import re
+import six
+import unittest
 
-try:
-    # Try importing from unittest2 first. This is primarily for Py2.6 support.
-    import unittest2 as unittest
-except ImportError:
-    import unittest
-
+from collections import defaultdict
+from mock import Mock
 from xml.dom.minidom import parseString
 
-from mock import Mock, patch
-
-from xero import Xero
 from xero.manager import Manager
-from tests import mock_data
 
 
 class ManagerTest(unittest.TestCase):
+    def assertXMLEqual(self, xml1, xml2, message=''):
+        def to_str(s):
+            return s.decode('utf-8') if six.PY3 and isinstance(s, bytes) else str(s)
+
+        def clean_xml(xml):
+            xml = '<root>%s</root>' % to_str(xml)
+            return str(re.sub('>\n *<','><', parseString(xml).toxml()))
+
+        def xml_to_dict(xml):
+            nodes = re.findall('(<([^>]*)>(.*?)</\\2>)', xml)
+            if len(nodes) == 0:
+                return xml
+            d = defaultdict(list)
+            for node in nodes:
+                d[node[1]].append(xml_to_dict(node[2]))
+            return d
+
+        cleaned = map(clean_xml, (xml1, xml2))
+        d1, d2 = tuple(map(xml_to_dict, cleaned))
+
+        self.assertEqual(d1, d2, message)
+
+
     def test_serializer(self):
         credentials = Mock(base_url="")
         manager = Manager('contacts', credentials)
@@ -50,42 +67,123 @@ class ManagerTest(unittest.TestCase):
             'Contact': {'Name': 'Basket Case'}
         }
         resultant_xml = manager._prepare_data_for_save(example_invoice_input)
+        resultant_xml = '<Invoice>%s</Invoice>' % resultant_xml
 
         expected_xml = """
-            <Status>DRAFT</Status>
-            <Contact><Name>Basket Case</Name></Contact>
-            <Reference>ABAS 123</Reference>
-            <Date>2015-06-06 16:25:02.711109</Date>
-            <LineAmountTypes>Exclusive</LineAmountTypes>
-            <LineItems>
-              <LineItem>
-                <Description>Example description only</Description>
-              </LineItem>
-              <LineItem>
-                <TaxType>OUTPUT</TaxType>
-                <AccountCode>200</AccountCode>
-                <UnitAmount>0.0000</UnitAmount>
-                <Description>Example line item 2</Description>
-                <Quantity>1</Quantity>
-              </LineItem>
-              <LineItem>
-                <TaxType>OUTPUT</TaxType>
-                <AccountCode>200</AccountCode>
-                <UnitAmount>231.0000</UnitAmount>
-                <Description>Example line item 3</Description>
-                <Quantity>1</Quantity>
-              </LineItem>
-            </LineItems>
-            <Type>ACCREC</Type>
-            <DueDate>2015-07-06 16:25:02.711136</DueDate>
+        <Invoice>
+          <Status>DRAFT</Status>
+          <Contact>
+            <Name>Basket Case</Name>
+          </Contact>
+          <Reference>ABAS 123</Reference>
+          <Date>2015-06-06T16:25:02</Date>
+          <LineAmountTypes>Exclusive</LineAmountTypes>
+          <LineItems>
+            <LineItem>
+              <Description>Example description only</Description>
+            </LineItem>
+            <LineItem>
+              <TaxType>OUTPUT</TaxType>
+              <AccountCode>200</AccountCode>
+              <UnitAmount>0.0000</UnitAmount>
+              <Description>Example line item 2</Description>
+              <Quantity>1</Quantity>
+            </LineItem>
+            <LineItem>
+              <TaxType>OUTPUT</TaxType>
+              <AccountCode>200</AccountCode>
+              <UnitAmount>231.0000</UnitAmount>
+              <Description>Example line item 3</Description>
+              <Quantity>1</Quantity>
+            </LineItem>
+          </LineItems>
+          <Type>ACCREC</Type>
+          <DueDate>2015-07-06T16:25:02</DueDate>
+        </Invoice>
         """
 
-        # @todo Need a py2/3 way to compare XML easily.
-        # self.assertEqual(
-        #     resultant_xml,
-        #     expected_xml,
-        #     "Failed to serialize data to XML correctly."
-        # )
+        self.assertXMLEqual(
+            resultant_xml,
+            expected_xml,
+        )
+
+
+    def test_serializer_phones_addresses(self):
+        credentials = Mock(base_url="")
+        manager = Manager('contacts', credentials)
+
+        example_contact_input = {
+            'ContactID': '565acaa9-e7f3-4fbf-80c3-16b081ddae10',
+            'ContactStatus': 'ACTIVE',
+            'Name': 'Southside Office Supplies',
+            'Addresses': [
+                {
+                    'AddressType': 'POBOX',
+                },
+                {
+                    'AddressType': 'STREET',
+                },
+            ],
+            'Phones': [
+                {
+                    'PhoneType': 'DDI',
+                },
+                {
+                    'PhoneType': 'DEFAULT',
+                },
+                {
+                    'PhoneType': 'FAX',
+                },
+                {
+                    'PhoneType': 'MOBILE',
+                },
+            ],
+            'UpdatedDateUTC': datetime.datetime(2015, 9, 18, 5, 6, 56, 893),
+            'IsSupplier': False,
+            'IsCustomer': False,
+            'HasAttachments': False,
+        }
+        resultant_xml = manager._prepare_data_for_save(example_contact_input)
+        resultant_xml = '<Contact>%s</Contact>' % resultant_xml
+
+        expected_xml = """
+        <Contact>
+          <ContactID>565acaa9-e7f3-4fbf-80c3-16b081ddae10</ContactID>
+          <Name>Southside Office Supplies</Name>
+          <HasAttachments>false</HasAttachments>
+          <Phones>
+            <Phone>
+              <PhoneType>DDI</PhoneType>
+            </Phone>
+            <Phone>
+              <PhoneType>DEFAULT</PhoneType>
+            </Phone>
+            <Phone>
+              <PhoneType>FAX</PhoneType>
+            </Phone>
+            <Phone>
+              <PhoneType>MOBILE</PhoneType>
+            </Phone>
+          </Phones>
+          <IsCustomer>false</IsCustomer>
+          <Addresses>
+            <Address>
+              <AddressType>POBOX</AddressType>
+            </Address>
+            <Address>
+              <AddressType>STREET</AddressType>
+            </Address>
+          </Addresses>
+          <IsSupplier>false</IsSupplier>
+          <ContactStatus>ACTIVE</ContactStatus>
+        </Contact>
+        """
+
+        self.assertXMLEqual(
+            resultant_xml,
+            expected_xml,
+            "Resultant XML does not match expected."
+        )
 
 
     def test_serializer_nested_singular(self):
@@ -110,7 +208,7 @@ class ManagerTest(unittest.TestCase):
             <Status>DRAFT</Status>
             <Contact><Name>Basket Case</Name></Contact>
             <Reference>ABAS 123</Reference>
-            <Date>2015-06-06 16:25:02.711109</Date>
+            <Date>2015-06-06T16:25:02</Date>
             <LineAmountTypes>Exclusive</LineAmountTypes>
             <LineItems>
               <LineItem>
@@ -118,14 +216,13 @@ class ManagerTest(unittest.TestCase):
               </LineItem>
             </LineItems>
             <Type>ACCREC</Type>
-            <DueDate>2015-07-06 16:25:02.711136</DueDate>
+            <DueDate>2015-07-06T16:25:02</DueDate>
         """
 
-        # @todo Need a py2/3 way to compare XML easily.
-        # self.assertEqual(
-        #     resultant_xml,
-        #     expected_xml,
-        # )
+        self.assertXMLEqual(
+            resultant_xml,
+            expected_xml,
+        )
 
 
     def test_filter(self):
@@ -222,3 +319,35 @@ class ManagerTest(unittest.TestCase):
         manager = Manager('contacts', credentials, unit_price_4dps=False)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps can be disabled explicitly")
+
+    def test_get_params(self):
+        """The 'get' methods should pass GET parameters if provided.
+        """
+
+        credentials = Mock(base_url="")
+        manager = Manager("reports", credentials)
+
+        # test no parameters or headers sent by default
+        uri, params, method, body, headers, singleobject = manager._get("ProfitAndLoss")
+        self.assertEqual(params, {}, "test params not sent by default")
+
+        # test params can be provided
+        passed_params = {
+            "fromDate": "2015-01-01",
+            "toDate": "2015-01-15",
+        }
+        uri, params, method, body, headers, singleobject = manager._get(
+            "ProfitAndLoss", params=passed_params
+        )
+        self.assertEqual(params, passed_params, "test params can be set")
+
+        # test params respect, but can override, existing configuration
+        manager = Manager("reports", credentials, unit_price_4dps=True)
+        uri, params, method, body, headers, singleobject = manager._get(
+            "ProfitAndLoss", params=passed_params
+        )
+        self.assertEqual(params, {
+            "fromDate": "2015-01-01",
+            "toDate": "2015-01-15",
+            "unitdp": 4,
+        }, "test params respects existing values")

@@ -1,14 +1,23 @@
 from __future__ import unicode_literals
+
 import datetime
 import requests
+
+from oauthlib.oauth1 import (
+    SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_HMAC
+)
 from requests_oauthlib import OAuth1
-from oauthlib.oauth1 import (SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER,
-                             SIGNATURE_HMAC)
 from six.moves.urllib.parse import urlencode, parse_qs
 
-from .constants import (XERO_BASE_URL, XERO_PARTNER_BASE_URL,
-                        REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL)
-from .exceptions import *
+from .constants import (
+    XERO_BASE_URL, XERO_PARTNER_BASE_URL,
+    REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL
+)
+from .exceptions import (
+    XeroBadRequest, XeroException, XeroExceptionUnknown, XeroForbidden,
+    XeroInternalError, XeroNotAvailable, XeroNotFound, XeroNotImplemented,
+    XeroNotVerified, XeroRateLimitExceeded, XeroUnauthorized
+)
 
 
 OAUTH_EXPIRY_SECONDS = 3600 # Default unless a response reports differently
@@ -89,7 +98,8 @@ class PublicCredentials(object):
     def __init__(self, consumer_key, consumer_secret,
                  callback_uri=None, verified=False,
                  oauth_token=None, oauth_token_secret=None,
-                 oauth_expires_at=None, oauth_authorization_expires_at=None):
+                 oauth_expires_at=None, oauth_authorization_expires_at=None,
+                 scope=None):
         """Construct the auth instance.
 
         Must provide the consumer key and secret.
@@ -104,6 +114,7 @@ class PublicCredentials(object):
         self._oauth = None
         self.oauth_expires_at = oauth_expires_at
         self.oauth_authorization_expires_at = oauth_authorization_expires_at
+        self.scope = scope
 
         self.base_url = XERO_BASE_URL
         self._signature_method = SIGNATURE_HMAC
@@ -236,7 +247,7 @@ class PublicCredentials(object):
                 'consumer_key', 'consumer_secret', 'callback_uri',
                 'verified', 'oauth_token', 'oauth_token_secret',
                 'oauth_session_handle', 'oauth_expires_at',
-                'oauth_authorization_expires_at'
+                'oauth_authorization_expires_at', 'scope'
             )
             if getattr(self, attr) is not None
         )
@@ -265,8 +276,13 @@ class PublicCredentials(object):
     def url(self):
         "Returns the URL that can be visited to obtain a verifier code"
         # The authorize url is always api.xero.com
+        query_string = {'oauth_token': self.oauth_token}
+
+        if self.scope:
+            query_string['scope'] = self.scope
+
         url = XERO_BASE_URL + AUTHORIZE_URL + '?' + \
-              urlencode({'oauth_token': self.oauth_token})
+              urlencode(query_string)
         return url
 
     @property
@@ -324,7 +340,7 @@ class PartnerCredentials(PublicCredentials):
                  callback_uri=None, verified=False,
                  oauth_token=None, oauth_token_secret=None,
                  oauth_expires_at=None, oauth_authorization_expires_at=None,
-                 oauth_session_handle=None):
+                 oauth_session_handle=None, scope=None):
         """Construct the auth instance.
 
         Must provide the consumer key and secret.
@@ -339,6 +355,7 @@ class PartnerCredentials(PublicCredentials):
         self._oauth = None
         self.oauth_expires_at = oauth_expires_at
         self.oauth_authorization_expires_at = oauth_authorization_expires_at
+        self.scope = scope
 
         self._signature_method = SIGNATURE_RSA
         self.base_url = XERO_PARTNER_BASE_URL
