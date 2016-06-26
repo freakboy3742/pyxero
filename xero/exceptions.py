@@ -25,7 +25,11 @@ class XeroBadRequest(XeroException):
                 for elem in data.get('Elements', [])
                 for err in elem.get('ValidationErrors', [])
             ]
-            self.problem = self.errors[0] if len(self.errors) > 0 else None
+            if len(self.errors) > 0:
+                self.problem = self.errors[0]
+                msg += ': ' + self.problem
+            else:
+                self.problem = None
             super(XeroBadRequest, self).__init__(response, msg=msg)
 
         elif response.headers['content-type'].startswith('text/html'):
