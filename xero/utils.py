@@ -43,6 +43,7 @@ OBJECT_NAMES = {
     "Reports": "Report",
     "TaxRates": "TaxRate",
     "TrackingCategories": "TrackingCategory",
+    "Tracking": "TrackingCategory",
     "Users": "User",
     "Associations": "Association",
     "Files": "File",
