@@ -1,7 +1,7 @@
 import json
+from xml.dom.minidom import parseString
 
 from six.moves.urllib.parse import parse_qs
-from xml.dom.minidom import parseString
 
 
 class XeroException(Exception):
@@ -102,7 +102,10 @@ class XeroNotImplemented(XeroException):
 class XeroRateLimitExceeded(XeroException):
     # HTTP 503 - Rate limit exceeded
     def __init__(self, response, payload):
-        self.errors = [payload['oauth_problem'][0]]
+        try:
+            self.errors = [payload['oauth_problem'][0]]
+        except KeyError:
+            return super(XeroRateLimitExceeded, self).__init__(response, response.text)
         self.problem = self.errors[0]
         super(XeroRateLimitExceeded, self).__init__(response, payload['oauth_problem_advice'][0])
 
