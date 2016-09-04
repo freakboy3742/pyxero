@@ -309,6 +309,7 @@ This same API pattern exists for the following API objects:
 * Overpayments
 * Payments
 * Prepayments
+* Purchase Orders
 * Receipts
 * RepeatingInvoices
 * Reports

@@ -23,6 +23,7 @@ class BaseManager(object):
         'filter',
         'all',
         'put',
+        'delete',
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
@@ -45,6 +46,8 @@ class BaseManager(object):
         'OpeningBalanceDate',
         'PaymentDueDate',
         'ReportingDate',
+        'DeliveryDate',
+        'ExpectedArrivalDate',
     )
     BOOLEAN_FIELDS = (
         'IsSupplier',
@@ -64,6 +67,8 @@ class BaseManager(object):
         'IsSubscriber',
         'HasAttachments',
         'ShowOnCashBasisReports',
+        'IncludeInEmails',
+        'SentToContact',
     )
     DECIMAL_FIELDS = (
         'Hours',
@@ -125,6 +130,8 @@ class BaseManager(object):
             else:
                 if key in self.BOOLEAN_FIELDS:
                     val = 'true' if sub_data else 'false'
+                elif key in self.DATE_FIELDS:
+                    val = sub_data.strftime('%Y-%m-%dT%H:%M:%S')
                 else:
                     val = six.text_type(sub_data)
                 elm.text = val
@@ -184,6 +191,9 @@ class BaseManager(object):
                     return response.content
 
                 return self._parse_api_response(response, self.name)
+
+            elif response.status_code == 204:
+                return response.content
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
@@ -260,6 +270,10 @@ class BaseManager(object):
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
 
+    def _delete(self, id):
+        uri = '/'.join([self.base_url, self.name, id])
+        return uri, {}, 'delete', None, None, False
+
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
@@ -297,7 +311,7 @@ class BaseManager(object):
                 if key in self.BOOLEAN_FIELDS:
                     return 'true' if value else 'false'
                 elif key in self.DATE_FIELDS:
-                   return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
+                    return 'DateTime(%s,%s,%s)' % (value.year, value.month, value.day)
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
@@ -320,6 +334,7 @@ class BaseManager(object):
                     elif parts[1] in ["isnull"]:
                         sign = '=' if value else '!'
                         return '%s%s=null' % (parts[0], sign)
+                    field = field.replace('_', '.')
                 return fmt % (
                     field,
                     get_filter_params(key, value)

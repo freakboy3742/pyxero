@@ -28,6 +28,7 @@ class Xero(object):
         "Overpayments",
         "Payments",
         "Prepayments",
+        "PurchaseOrders",
         "Receipts",
         "RepeatingInvoices",
         "Reports",
@@ -62,6 +63,7 @@ class Xero(object):
             setattr(self, "TC%s" % name, TrackingCategoryOptions(self.credentials, tracking_category_id))
         return categories
 
+
 class Files(object):
     """An ORM-like interface to the Xero Files API"""
 
@@ -91,14 +93,15 @@ class Payroll(object):
         "PayRuns",
         "PayrollCalendars",
         "Payslip",
+        "LeaveApplications",
     )
 
-    def __init__(self, credentials):
+    def __init__(self, credentials, unit_price_4dps=False, user_agent=None):
         for name in self.OBJECT_LIST:
             setattr(self, name.lower(), PayrollManager(name, credentials))
 
 class TrackingCategoryOptions(object):
-    """An ORM-like interface to the Xero Payroll API"""
+    """An ORM-like interface to the Xero Tracking Category API"""
 
     OBJECT_LIST = (
         "Options",
