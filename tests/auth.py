@@ -1,15 +1,10 @@
-try:
-    # Try importing from unittest2 first. This is primarily for Py2.6 support.
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from datetime import datetime, timedelta
-
 from mock import patch, Mock
 
 from xero.auth import PublicCredentials, PartnerCredentials
-from xero.exceptions import *
+from xero.exceptions import XeroException, XeroNotVerified, XeroUnauthorized
 
 
 class PublicCredentialsTest(unittest.TestCase):
@@ -23,7 +18,8 @@ class PublicCredentialsTest(unittest.TestCase):
 
         credentials = PublicCredentials(
             consumer_key='key',
-            consumer_secret='secret'
+            consumer_secret='secret',
+            scope='payroll.endpoint'
         )
 
         # A HTTP request was made
@@ -40,7 +36,8 @@ class PublicCredentialsTest(unittest.TestCase):
             'consumer_secret': 'secret',
             'oauth_token': 'token',
             'oauth_token_secret': 'token_secret',
-            'verified': False
+            'verified': False,
+            'scope': 'payroll.endpoint'
         })
 
     @patch('requests.post')
@@ -118,7 +115,23 @@ class PublicCredentialsTest(unittest.TestCase):
             consumer_secret='secret'
         )
 
-        self.assertEquals(credentials.url, 'https://api.xero.com/oauth/Authorize?oauth_token=token')
+        self.assertEqual(credentials.url, 'https://api.xero.com/oauth/Authorize?oauth_token=token')
+
+    @patch('requests.post')
+    def test_url_with_scope(self, r_post):
+        "The request token URL includes the scope parameter"
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token&oauth_token_secret=token_secret'
+        )
+
+        credentials = PublicCredentials(
+            consumer_key='key',
+            consumer_secret='secret',
+            scope="payroll.endpoint"
+        )
+
+        self.assertIn('scope=payroll.endpoint', credentials.url)
 
     @patch('requests.post')
     def test_verify(self, r_post):
@@ -217,7 +230,8 @@ class PartnerCredentialsTest(unittest.TestCase):
             consumer_key='key',
             consumer_secret='secret',
             rsa_key='abc',
-            client_cert=('/fake/path', '/fake/otherpath')
+            client_cert=('/fake/path', '/fake/otherpath'),
+            scope='payroll.endpoint'
         )
 
         # A HTTP request was made
@@ -234,7 +248,8 @@ class PartnerCredentialsTest(unittest.TestCase):
             'consumer_secret': 'secret',
             'oauth_token': 'token',
             'oauth_token_secret': 'token_secret',
-            'verified': False
+            'verified': False,
+            'scope': 'payroll.endpoint'
         })
 
     @patch('requests.post')

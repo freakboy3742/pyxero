@@ -1,6 +1,7 @@
-from six.moves.urllib.parse import parse_qs
-from xml.dom.minidom import parseString
 import json
+from xml.dom.minidom import parseString
+
+from six.moves.urllib.parse import parse_qs
 
 
 class XeroException(Exception):
@@ -21,17 +22,23 @@ class XeroBadRequest(XeroException):
             data = json.loads(response.text)
             msg = "%s: %s" % (data['Type'], data['Message'])
             self.errors = [err['Message']
-                for elem in data['Elements']
-                for err in elem['ValidationErrors']
+                for elem in data.get('Elements', [])
+                for err in elem.get('ValidationErrors', [])
             ]
-            self.problem = self.errors[0]
+            if len(self.errors) > 0:
+                self.problem = self.errors[0]
+                if len(self.errors) > 1:
+                    msg += ' (%s, and %s other issues)' % (
+                            self.problem, len(self.errors))
+                else:
+                    msg += ' (%s)' % self.problem
+            else:
+                self.problem = None
             super(XeroBadRequest, self).__init__(response, msg=msg)
 
         elif response.headers['content-type'].startswith('text/html'):
             payload = parse_qs(response.text)
-            self.errors = [
-                payload['oauth_problem'][0],
-            ]
+            self.errors = [payload['oauth_problem'][0]]
             self.problem = self.errors[0]
             super(XeroBadRequest, self).__init__(response, payload['oauth_problem_advice'][0])
 
@@ -53,7 +60,8 @@ class XeroUnauthorized(XeroException):
     # HTTP 401: Unauthorized
     def __init__(self, response):
         payload = parse_qs(response.text)
-        self.problem = payload['oauth_problem'][0]
+        self.errors = [payload['oauth_problem'][0]]
+        self.problem = self.errors[0]
         super(XeroUnauthorized, self).__init__(response, payload['oauth_problem_advice'][0])
 
 
@@ -94,7 +102,11 @@ class XeroNotImplemented(XeroException):
 class XeroRateLimitExceeded(XeroException):
     # HTTP 503 - Rate limit exceeded
     def __init__(self, response, payload):
-        self.problem = payload['oauth_problem'][0]
+        try:
+            self.errors = [payload['oauth_problem'][0]]
+        except KeyError:
+            return super(XeroRateLimitExceeded, self).__init__(response, response.text)
+        self.problem = self.errors[0]
         super(XeroRateLimitExceeded, self).__init__(response, payload['oauth_problem_advice'][0])
 
 

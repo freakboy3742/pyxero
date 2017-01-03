@@ -6,19 +6,6 @@ PyXero
 PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
 
-This code is based off the [sample code provided by Xero](http://developer.xero.com/getting-started/code/python/), which was
-contributed by [IRESS Wealth Management](http://www.iress.com.au), and the [XeroPy](https://github.com/fatbox/XeroPy) packaged version of
-that code.
-
-This packages differs in three significant was from `XeroPy`:
-
-* It uses the popular [requests](http://python-requests.org) library (and the [requests-oauthlib](https://github.com/requests/requests-oauthlib)
-  extension) instead of httplib2.
-* It uses the pure-python [PyCrypto](https://www.dlitz.net/software/pycrypto/) library instead of the hard-to-compile
-  native M2Crypto wrapper for RSA signing.
-* It has been tested on Public, Private and Partner Xero Applications.
-
-
 ## Quickstart:
 
 In addition to the instructions shown here, you'll need to follow the [Xero
@@ -81,7 +68,7 @@ When the user authorizes access to their Xero account, the `callback_url`
 will be called with three GET arguments:
 
 * `oauth_token`: The oauth_token that this request belongs to
-* `verifier`: The verifier string
+* `oauth_verifier`: The verifier string
 * `org`: An identifier for the organization that is allowing access.
 
 The verifier can then be used to verify the credentials, as with the manual
@@ -232,7 +219,7 @@ For example, to deal with contacts::
 # Create a new object
 >>> xero.contacts.put({...contact info...})
 
-# Create a new object
+# Create multiple new objects
 >>> xero.contacts.put([{...contact info...}, {...contact info...}, {...contact info...}])
 
 # Save an update to an existing object
@@ -304,19 +291,30 @@ Download and uploading attachments is supported using the Xero GUID of the relev
 This same API pattern exists for the following API objects:
 
 * Accounts
+* Attachments
+* BankTransactions
+* BankTransfers
+* BrandingThemes
+* ContactGroups
 * Contacts
 * CreditNotes
 * Currencies
+* Employees
+* ExpenseClaims
 * Invoices
+* Items
+* Journals
+* ManualJournals
 * Organisation
+* Overpayments
 * Payments
+* Prepayments
+* Purchase Orders
+* Receipts
+* RepeatingInvoices
+* Reports
 * TaxRates
 * TrackingCategories
-* ManualJournals
-* BankTransactions
-* BankTransfers
-* ExpenseClaims
-* Receipts
 * Users
 
 ## Contributing
@@ -343,3 +341,4 @@ New features or bug fixes can be submitted via a pull request. If you want
 your pull request to be merged quickly, make sure you either include
 regression test(s) for the behavior you are adding/fixing, or provide a
 good explanation of why a regression test isn't possible.
+
