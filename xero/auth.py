@@ -336,7 +336,7 @@ class PartnerCredentials(PublicCredentials):
         oauth_authorization_expires_at tells when the overall access
         permissions expire (~10 year window)
     """
-    def __init__(self, consumer_key, consumer_secret, rsa_key, client_cert,
+    def __init__(self, consumer_key, consumer_secret, rsa_key, client_cert=None,
                  callback_uri=None, verified=False,
                  oauth_token=None, oauth_token_secret=None,
                  oauth_expires_at=None, oauth_authorization_expires_at=None,
