@@ -318,10 +318,8 @@ class PartnerCredentials(PublicCredentials):
 
         >>> rsa_key = "-----BEGIN RSA PRIVATE KEY----- ..."
 
-     2) client_cert is no longer needed regarding new Xero security policy, 
-        but stays for now to be backward-compatible.
-        If you are still implementing Entrust Certificates you'll need 
-        to pass a tuple to the Entrust certificate pair.
+     2) client_cert is no longer used regarding new Xero security policy, 
+        but stays for now for backward-compatibility.
         
         >>> client_cert = ('/path/to/entrust-cert.pem',
                            '/path/to/entrust-private-nopass.pem')
