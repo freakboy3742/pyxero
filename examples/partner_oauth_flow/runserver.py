@@ -58,9 +58,7 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         consumer_key = os.environ.get('XERO_CONSUMER_KEY')
         consumer_secret = os.environ.get('XERO_CONSUMER_SECRET')
         private_key_path = os.environ.get('XERO_RSA_CERT_KEY_PATH')
-        entrust_cert_path = os.environ.get('XERO_ENTRUST_CERT_PATH')
-        entrust_private_key_path = os.environ.get('XERO_ENTRUST_PRIVATE_KEY_PATH')
-
+        
         if consumer_key is None or consumer_secret is None:
             raise ValueError(
                 'Please define both XERO_CONSUMER_KEY and XERO_CONSUMER_SECRET environment variables')
@@ -70,29 +68,16 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 'Use the XERO_RSA_CERT_KEY_PATH env variable to specify the path to your RSA '
                 'certificate private key file')
 
-        if not entrust_cert_path:
-            raise ValueError(
-                'Use the XERO_ENTRUST_CERT_PATH env variable to specify the path to your Entrust '
-                'certificate')
-
-        if not entrust_private_key_path:
-            raise ValueError(
-                'Use the XERO_ENTRUST_PRIVATE_KEY_PATH env variable to specify the path to your '
-                'Entrust private no-pass key')
-
         with open(private_key_path, 'r') as f:
             rsa_key = f.read()
             f.close()
-
-        client_cert = (entrust_cert_path, entrust_private_key_path)
 
         print("Serving path: {}".format(self.path))
         path = urlparse(self.path)
 
         if path.path == '/do-auth':
-            client_cert = (entrust_cert_path, entrust_private_key_path)
             credentials = PartnerCredentials(
-                consumer_key, consumer_secret, rsa_key, client_cert,
+                consumer_key, consumer_secret, rsa_key,
                 callback_uri='http://localhost:8000/oauth')
 
             # Save generated credentials details to persistent storage
@@ -110,8 +95,7 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 return
 
             stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
-            client_cert = (entrust_cert_path, entrust_private_key_path)
-            stored_values.update({'rsa_key': rsa_key, 'client_cert': client_cert})
+            stored_values.update({'rsa_key': rsa_key})
 
             credentials = PartnerCredentials(**stored_values)
 
@@ -133,7 +117,7 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif path.path == '/verified':
 
             stored_values = OAUTH_PERSISTENT_SERVER_STORAGE
-            stored_values.update({'rsa_key': rsa_key, 'client_cert': client_cert})
+            stored_values.update({'rsa_key': rsa_key})
             credentials = PartnerCredentials(**stored_values)
 
             # Partner credentials expire after 30 minutes. Here's how to re-activate on expiry
