@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from .filesmanager import FilesManager
 from .payrollmanager import PayrollManager
 from .manager import Manager
-
+from .trackingcategoryoptionsmanager import TrackingCategoryOptionsManager
 
 class Xero(object):
     """An ORM-like interface to the Xero API"""
@@ -47,8 +47,21 @@ class Xero(object):
                                                 user_agent))
 
         setattr(self, "filesAPI", Files(credentials))
-        setattr(self, "payrollAPI", Payroll(credentials, unit_price_4dps,
-                                            user_agent))
+        setattr(self, "payrollAPI", Payroll(credentials))
+        
+        # Might be a better place to hold onto this?
+        self.credentials = credentials
+
+    def populate_tracking_categories(self):
+        """
+        If you wish to set new tracking category options you'll need to call this method to pre-populate the options 
+        """
+        categories = self.trackingcategories.all()
+
+        self.trackingCategoryNames = {x['Name']:x['TrackingCategoryID'] for x in categories}
+        for name, tracking_category_id in self.trackingCategoryNames.items():
+            setattr(self, "TC%s" % name, TrackingCategoryOptions(self.credentials, tracking_category_id))
+        return categories
 
 
 class Files(object):
@@ -85,5 +98,17 @@ class Payroll(object):
 
     def __init__(self, credentials, unit_price_4dps=False, user_agent=None):
         for name in self.OBJECT_LIST:
-            setattr(self, name.lower(), PayrollManager(name, credentials, unit_price_4dps,
-                                                       user_agent))
+            setattr(self, name.lower(), PayrollManager(name, credentials))
+
+class TrackingCategoryOptions(object):
+    """An ORM-like interface to the Xero Tracking Category API"""
+
+    OBJECT_LIST = (
+        "Options",
+    )
+
+    def __init__(self, credentials, tracking_category_id):
+        for name in self.OBJECT_LIST:
+            setattr(self, name.lower(), TrackingCategoryOptionsManager(name, credentials, tracking_category_id))
+
+

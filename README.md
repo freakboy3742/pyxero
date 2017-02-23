@@ -315,6 +315,49 @@ This same API pattern exists for the following API objects:
 * TrackingCategories
 * Users
 
+
+## Tracking Category Options API
+
+As this api diverges somewhat from the 'normal' api and has sub options a special endpoint has been added
+to it.
+
+While all the currently available options and tracking categories are returned with xero.trackingcategories.all(),
+it doesn't let you create new options on the fly which you may need to do if you need to add these dynamically.
+
+The URLS that are used are generated based on the ID of the TrackingCategory, so these need 'setup' prior to use.
+
+So, lets assume you have a Tracking Category that you've named Region.  Run xero.populate_tracking_categories(),
+this will add one or two (xero restricts us to two tracking categories), and this will create two new API objects
+called TC%{YourCategoryName} - in this example it'll be called 'TCRegion'.
+
+For example:
+
+```python
+>>> xero.populate_tracking_categories()
+
+>>> xero.TCRegion.options.put([{'Name': 'one'}, {'Name':'two'} ]
+```
+
+Note: As far as I can tell there is no way to search tracking options using filter, but you should be able to update and
+archive these through this api.
+
+## Debugging
+
+While developing its useful to see what the api is submitting to Xero.  By calling the save_or_put method,
+you get an idea of the URL its trying to hit and the XML that's being submitted, eg.
+
+```python
+>>> xero.TCRegion.options.save_or_put([{'Name': 'one'}, {'Name':'two'} ]
+
+(u'https://api.xero.com/api.xro/2.0/TrackingCategories/your-category-id-will-be-here/Options',
+ {},
+ u'post',
+ {u'xml': u'<Options><Option><Name>one</Name></Option><Option><Name>two</Name></Option></Options>'},
+ None,
+ False)
+```
+
+
 ## Contributing
 
 If you're going to run the PyXero test suite, in addition to the dependencies

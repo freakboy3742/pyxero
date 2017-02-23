@@ -7,3 +7,5 @@ ACCESS_TOKEN_URL = "/oauth/AccessToken"
 XERO_API_URL = "/api.xro/2.0"
 XERO_FILES_URL = "/files.xro/1.0"
 XERO_PAYROLL_URL = "/payroll.xro/1.0"
+
+XERO_TRACKING_CATEGORY_OPTIONS_URL =  XERO_API_URL + '/TrackingCategories/%(TrackingCategoryID)s'
