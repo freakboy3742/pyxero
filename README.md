@@ -8,8 +8,13 @@ accounting tool. It allows access to both Public, Private and Partner applicatio
 
 ## Quickstart:
 
-In addition to the instructions shown here, you'll need to follow the [Xero
-Developer documentation](http://developer.xero.com/) to register your application.
+Install this library using the python package manager:
+
+```
+pip install pyxero
+```
+
+You'll need to follow the [Xero Developer documentation](http://developer.xero.com/api-overview/) to register your application. Do that as follows:
 
 ### Public Applications
 
@@ -229,10 +234,15 @@ For example, to deal with contacts::
 >>> xero.contacts.save([c1, c2])
 ```
 
-Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact::
+Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact:
 
 ```python
 >>> xero.invoices.filter(Contact_ContactID='83ad77d8-48a7-4f77-9146-e6933b7fb63b')
+```
+
+Filters which aren't supported by this API can also be constructed using 'raw' mode like this:
+```python
+>>> xero.invoices.filter(raw='AmountDue > 0')
 ```
 
 Be careful when dealing with large amounts of data, the Xero API will take an
