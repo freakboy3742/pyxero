@@ -7,6 +7,7 @@ master (unreleased)
 -------------------
 
 *New:*
+    - GH-170: Add User-Agent customisation on OAuth related requests.
     - GH-168: Deprecate Entrust Certificates for Partners API (thanks Sidney Allen).
     - GH-157: Add PurchaseOrders handling (thanks vadim-pavlov).
     - GH-153: Add TaxComponents handling (thanks Richard Bell).
@@ -14,7 +15,6 @@ master (unreleased)
     - GH-151: Add delete method in BaseManager (thanks Craig Handley).
 
 *Bugfix:*
-
     - GH-154: Handle wrong date timestamp format received from Xero (thanks Matt Healy).
     - GH-149: Change Tracking Category structure in Invoices API (thanks Jacob Hansson).
     - GH-138: Indentation fix in BaseManager (thanks Asav Patel).
