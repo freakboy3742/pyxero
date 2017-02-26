@@ -14,7 +14,7 @@ Install this library using the python package manager:
 pip install pyxero
 ```
 
-You'll need to follow the [Xero Developer documentation](http://developer.xero.com/api-overview/) to register your application. Do that as follows:
+You'll need to follow the [Xero Developer documentation](https://developer.xero.com/documentation/) to register your application. Do that as follows:
 
 ### Public Applications
 
