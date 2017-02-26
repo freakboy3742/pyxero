@@ -325,6 +325,25 @@ This same API pattern exists for the following API objects:
 * TrackingCategories
 * Users
 
+## Payroll
+
+In order to access the payroll methods from Xero, you can do it like this:
+
+```
+xero.payrollAPI.payruns.all()
+```
+
+Within the payrollAPI you have access to:
+
+* employees
+* leaveapplications
+* payitems
+* payrollcalendars
+* payruns
+* payslip
+* timesheets
+
+
 ## Contributing
 
 If you're going to run the PyXero test suite, in addition to the dependencies
