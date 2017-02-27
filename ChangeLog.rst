@@ -7,6 +7,7 @@ master (unreleased)
 -------------------
 
 *New:*
+    - GH-170: Add User-Agent customisation on OAuth related requests.
     - GH-168: Deprecate Entrust Certificates for Partners API (thanks Sidney Allen).
     - GH-157: Add PurchaseOrders handling (thanks vadim-pavlov).
     - GH-153: Add TaxComponents handling (thanks Richard Bell).
