@@ -15,6 +15,7 @@ master (unreleased)
     - GH-151: Add delete method in BaseManager (thanks Craig Handley).
 
 *Bugfix:*
+    - GH-173: Send Content-Length as string for working attachment uploads (thanks João Neves).
     - GH-154: Handle wrong date timestamp format received from Xero (thanks Matt Healy).
     - GH-149: Change Tracking Category structure in Invoices API (thanks Jacob Hansson).
     - GH-138: Indentation fix in BaseManager (thanks Asav Patel).

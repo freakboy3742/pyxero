@@ -278,7 +278,7 @@ class BaseManager(object):
         """Upload an attachment to the Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
         params = {'IncludeOnline': 'true'} if include_online else {}
-        headers = {'Content-Type': content_type, 'Content-Length': len(data)}
+        headers = {'Content-Type': content_type, 'Content-Length': str(len(data))}
         return uri, params, 'put', data, headers, False
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
