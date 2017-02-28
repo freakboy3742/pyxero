@@ -280,6 +280,18 @@ class ManagerTest(unittest.TestCase):
             {'where': 'Name.ToLower()=="test contact"&&Status=="VOIDED"'}
         )
 
+    def test_boolean_filter(self):
+        """The filter function should correctly handle various arguments"""
+        credentials = Mock(base_url="")
+        manager = Manager('invoices', credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+            CanApplyToRevenue=True
+        )
+        self.assertEqual(
+            params,
+            {'where': 'CanApplyToRevenue==true'}
+        )
+
     def test_magnitude_filters(self):
         """The filter function should correctlu handle date arguments and gt, lt operators"""
         credentials = Mock(base_url="")
