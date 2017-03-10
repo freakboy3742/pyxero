@@ -325,6 +325,7 @@ This same API pattern exists for the following API objects:
 * TrackingCategories
 * Users
 
+
 ## Payroll
 
 In order to access the payroll methods from Xero, you can do it like this:
@@ -343,6 +344,46 @@ Within the payrollAPI you have access to:
 * payslip
 * timesheets
 
+
+## Under the hood
+
+Using a wrapper around Xero API is a really nice feature, but it's also interesting to understand what is exactly
+happening under the hood.
+
+### Filter operator
+
+``filter`` operator wraps the "where" keyword in Xero API.
+
+```python
+# Retrieves all contacts whose name is "John"
+>>> xero.contacts.filter(name="John")
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=name%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=name=="John"
+```
+
+Several parameters are separated with encoded '&&' characters:
+
+```python
+# Retrieves all contacts whose first name is "John" and last name is "Doe"
+>>> xero.contacts.filter(firstname="John", lastname="Doe")
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=lastname%3D%3D%22Doe%22%26%26firstname%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=lastname=="Doe"&&firstname=="John"
+
+```
+
+Underscores are automatically converted as "dots":
+```python
+# Retrieves all contacts whose name is "John"
+>>> xero.contacts.filter(first_name="John")
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=first.name%3D%3D%22John%22%
+Non encoded:  <XERO_API_URL>/Contacts?where=first.name=="John"
+```
 
 ## Contributing
 
