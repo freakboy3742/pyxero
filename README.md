@@ -345,21 +345,44 @@ Within the payrollAPI you have access to:
 * timesheets
 
 
-### Under the hood
+## Under the hood
 
 Using a wrapper around Xero API is a really nice feature, but it's also interesting to understand what is exactly
 happening under the hood.
 
-#### Filter operator
+### Filter operator
 
 ``filter`` operator wraps the "where" keyword in Xero API.
 
 ```python
 # Retrieves all contacts whose name is 'John'
->>> xero.contacts.filter(Name='John')
+>>> xero.contacts.filter(name='John')
 
 # Triggers this GET request:
-<XERO_API_URL>/Contacts?where=Name%3D%3DJohn
+Html encoded: <XERO_API_URL>/Contacts?where=name%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=name=='John'
+```
+
+Several parameters are separated with encoded '&&' characters:
+
+```python
+# Retrieves all contacts whose name is 'John'
+>>> xero.contacts.filter(firstname='John', lastname='Doe')
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=lastname%3D%3D%22Smith%22%26%26firstname%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=lastname=='Smith'&&firstname=='John'
+
+```
+
+Underscores are automatically converted as "dots":
+```python
+# Retrieves all contacts whose name is 'John'
+>>> xero.contacts.filter(first_name='John')
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=first.name%3D%3D%22John%22%
+Non encoded:  <XERO_API_URL>/Contacts?where=first.name=='John'
 ```
 
 ## Contributing
