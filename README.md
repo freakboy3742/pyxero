@@ -355,34 +355,34 @@ happening under the hood.
 ``filter`` operator wraps the "where" keyword in Xero API.
 
 ```python
-# Retrieves all contacts whose name is 'John'
->>> xero.contacts.filter(name='John')
+# Retrieves all contacts whose name is "John"
+>>> xero.contacts.filter(name="John")
 
 # Triggers this GET request:
 Html encoded: <XERO_API_URL>/Contacts?where=name%3D%3D%22John%22
-Non encoded:  <XERO_API_URL>/Contacts?where=name=='John'
+Non encoded:  <XERO_API_URL>/Contacts?where=name=="John"
 ```
 
 Several parameters are separated with encoded '&&' characters:
 
 ```python
-# Retrieves all contacts whose name is 'John'
->>> xero.contacts.filter(firstname='John', lastname='Doe')
+# Retrieves all contacts whose first name is "John" and last name is "Doe"
+>>> xero.contacts.filter(firstname="John", lastname="Doe")
 
 # Triggers this GET request:
-Html encoded: <XERO_API_URL>/Contacts?where=lastname%3D%3D%22Smith%22%26%26firstname%3D%3D%22John%22
-Non encoded:  <XERO_API_URL>/Contacts?where=lastname=='Smith'&&firstname=='John'
+Html encoded: <XERO_API_URL>/Contacts?where=lastname%3D%3D%22Doe%22%26%26firstname%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=lastname=="Doe"&&firstname=="John"
 
 ```
 
 Underscores are automatically converted as "dots":
 ```python
-# Retrieves all contacts whose name is 'John'
->>> xero.contacts.filter(first_name='John')
+# Retrieves all contacts whose name is "John"
+>>> xero.contacts.filter(first_name="John")
 
 # Triggers this GET request:
 Html encoded: <XERO_API_URL>/Contacts?where=first.name%3D%3D%22John%22%
-Non encoded:  <XERO_API_URL>/Contacts?where=first.name=='John'
+Non encoded:  <XERO_API_URL>/Contacts?where=first.name=="John"
 ```
 
 ## Contributing
