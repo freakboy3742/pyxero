@@ -7,6 +7,7 @@ master (unreleased)
 -------------------
 
 *New:*
+    - GH-179: Change cryptography setup version (thanks João Miguel Neves).
     - GH-170: Add User-Agent customisation on OAuth related requests.
     - GH-168: Deprecate Entrust Certificates for Partners API (thanks Sidney Allen).
     - GH-157: Add PurchaseOrders handling (thanks vadim-pavlov).
