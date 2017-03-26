@@ -168,7 +168,6 @@ class BaseManager(object):
             timeout = kwargs.pop('timeout', None)
 
             uri, params, method, body, headers, singleobject = func(*args, **kwargs)
-            cert = getattr(self.credentials, 'client_cert', None)
 
             if headers is None:
                 headers = {}
@@ -184,7 +183,7 @@ class BaseManager(object):
 
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, cert=cert, timeout=timeout)
+                    params=params, timeout=timeout)
 
             if response.status_code == 200:
                 # If we haven't got XML or JSON, assume we're being returned a binary file

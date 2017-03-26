@@ -230,7 +230,6 @@ class PartnerCredentialsTest(unittest.TestCase):
             consumer_key='key',
             consumer_secret='secret',
             rsa_key='abc',
-            client_cert=('/fake/path', '/fake/otherpath'),
             scope='payroll.endpoint'
         )
 
@@ -264,7 +263,6 @@ class PartnerCredentialsTest(unittest.TestCase):
             consumer_key='key',
             consumer_secret='secret',
             rsa_key="key",
-            client_cert=None,
             oauth_token='token',
             oauth_token_secret='token_secret',
             verified=True
