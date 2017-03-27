@@ -60,10 +60,9 @@ class FilesManager(object):
         def wrapper(*args, **kwargs):
             uri, params, method, body, headers, singleobject, files = func(*args, **kwargs)
 
-            cert = getattr(self.credentials, 'client_cert', None)
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, cert=cert, files = files)
+                    params=params, files=files)
 
             if response.status_code == 200 or response.status_code == 201:
                 if response.headers['content-type'].startswith('application/json'):

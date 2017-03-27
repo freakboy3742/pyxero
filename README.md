@@ -3,7 +3,7 @@ PyXero
 
 [![Build Status](https://travis-ci.org/freakboy3742/pyxero.svg?branch=master)](https://travis-ci.org/freakboy3742/pyxero)
 
-PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
+PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
 
 ## Quickstart:
@@ -20,7 +20,7 @@ You'll need to follow the [Xero Developer documentation](https://developer.xero.
 
 Public applications use a 3-step OAuth process.
 
-When you [register your public application with Xero](http://developer.xero.com/documentation/auth-and-limits/public-applications/), you'll be given a
+When you [register your public application with Xero](https://developer.xero.com/documentation/auth-and-limits/public-applications/), you'll be given a
 **Consumer Key** and a **Consumer secret**. These are both strings.
 
 To access the Xero API you must first create some credentials:
@@ -102,10 +102,10 @@ to reconstruct an instance of the credentials::
 If using a Private application, you will need to install `PyCrypto`, a pure
 Python cryptographic module. You'll also need to generate an signed RSA
 certificate, and submit that certificate as part of registering your
-application with Xero. See the [Xero Developer documentation](http://developer.xero.com/) for more
+application with Xero. See the [Xero Developer documentation](https://developer.xero.com/) for more
 details.
 
-When you [register your private application with Xero](http://developer.xero.com/documentation/auth-and-limits/private-applications/), you'll be given a
+When you [register your private application with Xero](https://developer.xero.com/documentation/auth-and-limits/private-applications/), you'll be given a
 **Consumer Key**. You'll also be given a **Consumer secret** - this can be
 ignored.
 
@@ -122,7 +122,7 @@ signed API requests::
 >>> xero = Xero(credentials)
 ```
 
-[Follow these steps](http://developer.xero.com/documentation/api-guides/create-publicprivate-key/) to generate a public/private key pair to sign your requests.  You'll upload your public key when you create your Xero Private app at https://app.xero.com.  You'll use the private key (aka RSA key) to generate your oAuth signature.
+[Follow these steps](https://developer.xero.com/documentation/api-guides/create-publicprivate-key/) to generate a public/private key pair to sign your requests.  You'll upload your public key when you create your Xero Private app at https://app.xero.com.  You'll use the private key (aka RSA key) to generate your oAuth signature.
 
 The RSA key is a multi-line string that will look something like::
 
@@ -147,13 +147,10 @@ store the key value as a constant, remember two things:
 ### Partner Applications
 
 Partner Application authentication works similarly to the 3-step OAuth used by
-Public Applications, but with RSA signed requests and a client-side SSL
-certificate which is issued by Xero. Partner OAuth tokens still have a 30 minute
-expiry, but can be swapped for a new token at any time.
+Public Applications, but with RSA signed requests. Partner OAuth tokens still
+have a 30 minute expiry, but can be swapped for a new token at any time.
 
-When you [register your partner application with Xero](http://developer.xero.com/documentation/auth-and-limits/partner-applications/), you'll have a
-**Consumer Key**, **Consumer Secret** and **RSA Key**
-All three elements are required.
+When you [register your partner application with Xero](https://developer.xero.com/documentation/auth-and-limits/partner-applications/), you'll have a **Consumer Key**, **Consumer Secret** and **RSA Key**. All three elements are required.
 
 
 ```python
