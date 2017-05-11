@@ -19,6 +19,7 @@ master (unreleased)
     - GH-173: Send Content-Length as string for working attachment uploads (thanks João Neves).
     - GH-154: Handle wrong date timestamp format received from Xero (thanks Matt Healy).
     - GH-149: Change Tracking Category structure in Invoices API (thanks Jacob Hansson).
+    - GH-142: Extend BOOLEAN_FIELDS in BaseManager (thanks Alex Burbidge).
     - GH-138: Indentation fix in BaseManager (thanks Asav Patel).
     - GH-137: Fix incorrect field parsing with filters (thanks Alexander Rakowski).
     - GH-90/GH-91: Pin version of cryptography (thanks Aidan Lister).
