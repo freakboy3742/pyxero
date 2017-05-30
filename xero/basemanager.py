@@ -344,7 +344,7 @@ class BaseManager(object):
                 )
 
             # Move any known parameter names to the query string
-            KNOWN_PARAMETERS = ['order', 'offset', 'page', 'includeArchived']
+            KNOWN_PARAMETERS = ['order', 'offset', 'page', 'includeArchived', 'where']
             for param in KNOWN_PARAMETERS:
                 if param in kwargs:
                     params[param] = kwargs.pop(param)
