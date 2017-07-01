@@ -9,6 +9,9 @@ from collections import defaultdict
 from mock import Mock
 from xml.dom.minidom import parseString
 
+from tests.mock_data import allocations_list
+
+from xero.allocationsmanager import PrepaymentAllocationsManager
 from xero.manager import Manager
 
 
@@ -363,3 +366,19 @@ class ManagerTest(unittest.TestCase):
             "toDate": "2015-01-15",
             "unitdp": 4,
         }, "test params respects existing values")
+
+    def test_allocationmanager(self):
+        credentials = Mock(base_url="")
+
+        prepaymentallocations = PrepaymentAllocationsManager(credentials)
+        uri, params, method, body, headers, singleobject = prepaymentallocations._put("a_prepayment_id", allocations_list)
+        last_three_uri_fragments = uri.split('/')[3:]
+        assert last_three_uri_fragments == ['Prepayments', 'a_prepayment_id', 'Allocations']
+        self.assertXMLEqual(
+            body['xml'],
+            (u'<Allocations><Allocation><Invoice><InvoiceID>'
+             u'some_invoice_id</InvoiceID></Invoice>'
+             u'<AppliedAmount>100</AppliedAmount>'
+             u'</Allocation></Allocations>')
+        )
+        assert singleobject == False
