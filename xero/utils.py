@@ -53,6 +53,7 @@ OBJECT_NAMES = {
     "LineItems": "LineItem",
     "JournalLines": "JournalLine",
     "PurchaseOrders": "PurchaseOrder",
+    "Allocations": "Allocation",
 }
 
 def isplural(word):

@@ -113,3 +113,15 @@ unicode_content_text = u"""<Response xmlns:xsd="http://www.w3.org/2001/XMLSchema
   </Contacts>
 </Response>
 """
+
+
+# allocationsmanager.py
+
+allocations_list = [
+    {
+        "AppliedAmount": 100,
+        "Invoice": {
+            "InvoiceID": 'some_invoice_id'
+        }
+    }
+]
