@@ -1,7 +1,7 @@
 #/usr/bin/env python
 import io
 import re
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 with io.open('./xero/__init__.py', encoding='utf8') as version_file:
@@ -24,7 +24,7 @@ setup(
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
     url='http://github.com/freakboy3742/pyxero',
-    packages=['xero', ],
+    packages=find_packages('xero', exclude=['tests']),
     install_requires=[
         'six>=1.8.0',
         'requests>=1.1.0',
