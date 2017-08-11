@@ -51,6 +51,10 @@ class ExceptionsTest(unittest.TestCase):
         except XeroBadRequest as e:
             # Error messages have been extracted
             self.assertEqual(str(e), 'A validation exception occurred')
+            self.assertEqual(
+                e.elements[0].getElementsByTagName("Reference")[0].toxml(),
+                '<Reference>Order # 123456</Reference>'
+            )
             self.assertEqual(e.errors, [
                 'One or more line items must be specified',
                 'Invoice not of valid status for creation',

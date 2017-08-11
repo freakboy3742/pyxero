@@ -18,6 +18,7 @@ class XeroNotVerified(Exception):
 class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
+        self.elements = []
         if response.headers['content-type'].startswith('application/json'):
             data = json.loads(response.text)
             msg = "%s: %s" % (data['Type'], data['Message'])
@@ -25,6 +26,7 @@ class XeroBadRequest(XeroException):
                 for elem in data.get('Elements', [])
                 for err in elem.get('ValidationErrors', [])
             ]
+            self.elements = data.get('Elements', [])
             if len(self.errors) > 0:
                 self.problem = self.errors[0]
                 if len(self.errors) > 1:
@@ -46,6 +48,7 @@ class XeroBadRequest(XeroException):
             # Extract the messages from the text.
             # parseString takes byte content, not unicode.
             dom = parseString(response.text.encode(response.encoding))
+            self.elements = dom.getElementsByTagName('Elements')
             messages = dom.getElementsByTagName('Message')
 
             msg = messages[0].childNodes[0].data
