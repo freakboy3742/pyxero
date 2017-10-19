@@ -91,11 +91,11 @@ class XeroNotImplemented(XeroException):
     # HTTP 501
     def __init__(self, response):
         # Extract the useful error message from the text.
-        # parseString takes byte content, not unicode.
-        dom = parseString(response.text.encode(response.encoding))
-        messages = dom.getElementsByTagName('Message')
+        msg = None
+        if response.headers['content-type'].startswith('application/json'):
+            data = json.loads(response.text)
+            msg = data.get('Message', None)
 
-        msg = messages[0].childNodes[0].data
         super(XeroNotImplemented, self).__init__(response, msg)
 
 
