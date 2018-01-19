@@ -22,7 +22,7 @@ class OptionsManager(BaseManager):
 
     def _put(self, tracking_category_id, data, summarize_errors=True, headers=None):
         uri = '/'.join([self.base_url, 'TrackingCategories', tracking_category_id, self.name])
-        params = self.extra_params.copy()
+        params = {}
         method = 'put'
         body = {'xml': self._prepare_data_for_save(data)}
         if not summarize_errors:
