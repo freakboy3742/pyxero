@@ -7,6 +7,7 @@ import six
 from datetime import datetime
 from six.moves.urllib.parse import parse_qs
 from xml.etree.ElementTree import tostring, SubElement, Element
+from xml.parsers.expat import ExpatError
 
 from .exceptions import (
     XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
@@ -199,7 +200,11 @@ class BaseManager(object):
                 return response.content
 
             elif response.status_code == 400:
-                raise XeroBadRequest(response)
+                try:
+                    raise XeroBadRequest(response)
+                except (ValueError, ExpatError):
+                    raise XeroExceptionUnknown(
+                        response, msg='Unable to parse Xero API response')
 
             elif response.status_code == 401:
                 raise XeroUnauthorized(response)
