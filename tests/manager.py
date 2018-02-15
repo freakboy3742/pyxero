@@ -11,8 +11,6 @@ from xml.dom.minidom import parseString
 
 from xero.manager import Manager
 
-from . import mock_data
-
 
 class ManagerTest(unittest.TestCase):
     def assertXMLEqual(self, xml1, xml2, message=''):
