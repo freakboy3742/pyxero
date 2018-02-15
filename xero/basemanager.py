@@ -259,16 +259,18 @@ class BaseManager(object):
         file.write(data)
         return len(data)
 
-    def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
+    def save_or_put(self, data, method='post', headers=None, summarize_errors=True, id=None):
         uri = '/'.join([self.base_url, self.name])
+        if id is not None:
+            uri += '/' + id
         body = {'xml': self._prepare_data_for_save(data)}
         params = self.extra_params.copy()
         if not summarize_errors:
             params['summarizeErrors'] = 'false'
         return uri, params, method, body, headers, False
 
-    def _save(self, data):
-        return self.save_or_put(data, method='post')
+    def _save(self, data, id=None):
+        return self.save_or_put(data, method='post', id=id)
 
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)

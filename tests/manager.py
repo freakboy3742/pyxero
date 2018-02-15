@@ -6,10 +6,12 @@ import six
 import unittest
 
 from collections import defaultdict
-from mock import Mock
+from mock import patch, Mock
 from xml.dom.minidom import parseString
 
 from xero.manager import Manager
+
+from . import mock_data
 
 
 class ManagerTest(unittest.TestCase):
@@ -363,3 +365,108 @@ class ManagerTest(unittest.TestCase):
             "toDate": "2015-01-15",
             "unitdp": 4,
         }, "test params respects existing values")
+
+    @patch('requests.post')
+    def test_save_should_issue_a_post_request(self, r_post):
+        """The save method should issue a post request."""
+
+        r_post.return_value = Mock(
+            status_code=200,
+            headers={
+                'content-type': 'text/xml; charset=utf-8'
+            },
+            text=''
+        )
+
+        credentials = Mock(base_url="https://api.xero.com")
+
+        manager = Manager("invoices", credentials)
+
+        manager.save({})
+
+        r_post.assert_called_once()
+
+    @patch('requests.post')
+    def test_save_should_post_to_api_url(self, r_post):
+        """The save method should issue a post request to a uri combined from
+        the credentials.base_url, Manager.name and optional 'id' argument.
+        """
+
+        r_post.return_value = Mock(
+            status_code=200,
+            headers={
+                'content-type': 'text/xml; charset=utf-8'
+            },
+            text=''
+        )
+
+        credentials = Mock(base_url="https://api.xero.com")
+
+        manager = Manager("invoices", credentials)
+
+        manager.save({})
+
+        self.assertEqual(
+            r_post.call_args[0],
+            ('https://api.xero.com/api.xro/2.0/invoices', ))
+
+        r_post.reset_mock()
+
+        manager.save({}, id='8694c9c5-7097-4449-a708-b8c1982921a4')
+
+        self.assertEqual(
+            r_post.call_args[0],
+            ('https://api.xero.com/api.xro/2.0/invoices/'
+             '8694c9c5-7097-4449-a708-b8c1982921a4', ))
+
+    @patch('requests.post')
+    def test_save_should_post_data_in_xml_format(self, r_post):
+        """The save method should post the input data in XML format.
+        """
+
+        r_post.return_value = Mock(
+            status_code=200,
+            headers={
+                'content-type': 'text/xml; charset=utf-8'
+            },
+            text=''
+        )
+
+        credentials = Mock(base_url="https://api.xero.com")
+
+        manager = Manager("invoices", credentials)
+
+        manager.save({
+            'Type': 'ACCREC',
+            'Contact': {
+                'Name': 'Martin Hudson',
+            },
+            'Date': datetime.date(2013, 4, 29),
+            'DueDate': datetime.date(2013, 4, 29),
+            'LineAmountTypes': 'Exclusive',
+            'LineItems': [
+                {
+                    'Description': 'Monthly rental',
+                    'Quantity': 4.34,
+                    'UnitAmount': 395.0,
+                    'AccountCode': 200
+                }
+            ]
+        })
+
+        self.assertXMLEqual(
+            r_post.call_args[1]['data']['xml'],
+            '<Contact><Name>Martin Hudson</Name></Contact>'
+            '<Date>2013-04-29T00:00:00</Date>'
+            '<LineAmountTypes>Exclusive</LineAmountTypes>'
+            '<LineItems>'
+            '<LineItem>'
+            '<AccountCode>200</AccountCode>'
+            '<UnitAmount>395.0</UnitAmount>'
+            '<Description>Monthly rental</Description>'
+            '<Quantity>4.34</Quantity>'
+            '</LineItem>'
+            '</LineItems>'
+            '<Type>ACCREC</Type>'
+            '<DueDate>2013-04-29T00:00:00</DueDate>'
+        )
