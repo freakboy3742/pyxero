@@ -16,7 +16,7 @@ from . import mock_data
 
 class ExceptionsTest(unittest.TestCase):
 
-    @patch('requests.put')
+    @patch('requests.post')
     def test_bad_request(self, r_put):
         "Data with validation errors raises a bad request exception"
         # Verified response from the live API

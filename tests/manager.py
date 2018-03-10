@@ -76,7 +76,7 @@ class ManagerTest(unittest.TestCase):
             <Name>Basket Case</Name>
           </Contact>
           <Reference>ABAS 123</Reference>
-          <Date>2015-06-06T16:25:02</Date>
+          <Date>2015-06-06</Date>
           <LineAmountTypes>Exclusive</LineAmountTypes>
           <LineItems>
             <LineItem>
@@ -98,7 +98,7 @@ class ManagerTest(unittest.TestCase):
             </LineItem>
           </LineItems>
           <Type>ACCREC</Type>
-          <DueDate>2015-07-06T16:25:02</DueDate>
+          <DueDate>2015-07-06</DueDate>
         </Invoice>
         """
 
@@ -208,7 +208,7 @@ class ManagerTest(unittest.TestCase):
             <Status>DRAFT</Status>
             <Contact><Name>Basket Case</Name></Contact>
             <Reference>ABAS 123</Reference>
-            <Date>2015-06-06T16:25:02</Date>
+            <Date>2015-06-06</Date>
             <LineAmountTypes>Exclusive</LineAmountTypes>
             <LineItems>
               <LineItem>
@@ -216,7 +216,7 @@ class ManagerTest(unittest.TestCase):
               </LineItem>
             </LineItems>
             <Type>ACCREC</Type>
-            <DueDate>2015-07-06T16:25:02</DueDate>
+            <DueDate>2015-07-06</DueDate>
         """
 
         self.assertXMLEqual(

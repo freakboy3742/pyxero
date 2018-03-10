@@ -135,7 +135,7 @@ class BaseManager(object):
                 if key in self.BOOLEAN_FIELDS:
                     val = 'true' if sub_data else 'false'
                 elif key in self.DATE_FIELDS:
-                    val = sub_data.strftime('%Y-%m-%dT%H:%M:%S')
+                    val = sub_data.strftime('%Y-%m-%d')
                 else:
                     val = six.text_type(sub_data)
                 elm.text = val
@@ -271,7 +271,7 @@ class BaseManager(object):
         return self.save_or_put(data, method='post')
 
     def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
+        return self.save_or_put(data, method='post', summarize_errors=summarize_errors)
 
     def _delete(self, id):
         uri = '/'.join([self.base_url, self.name, id])
