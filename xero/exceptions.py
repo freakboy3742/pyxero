@@ -29,7 +29,7 @@ class XeroBadRequest(XeroException):
                 self.problem = self.errors[0]
                 if len(self.errors) > 1:
                     msg += ' (%s, and %s other issues)' % (
-                            self.problem, len(self.errors))
+                            self.problem, len(self.errors) - 1)
                 else:
                     msg += ' (%s)' % self.problem
             else:
