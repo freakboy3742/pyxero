@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timedelta
 from mock import patch, Mock
 
-from xero.auth import PublicCredentials, PartnerCredentials
+from xero.auth import PublicCredentials, PartnerCredentials, PrivateCredentials
 from xero.exceptions import XeroException, XeroNotVerified, XeroUnauthorized
 
 
@@ -132,6 +132,25 @@ class PublicCredentialsTest(unittest.TestCase):
         )
 
         self.assertIn('scope=payroll.endpoint', credentials.url)
+
+    @patch('requests.post')
+    def test_configurable_url(self, r_post):
+        "Test configurable API url"
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token&oauth_token_secret=token_secret'
+        )
+
+        url = 'https//api-tls.xero.com'
+
+        credentials = PublicCredentials(
+            consumer_key='key',
+            consumer_secret='secret',
+            api_url=url
+
+        )
+
+        self.assertEqual(credentials.url, '{url}/oauth/Authorize?oauth_token=token'.format(url=url))
 
     @patch('requests.post')
     def test_verify(self, r_post):
@@ -283,3 +302,51 @@ class PartnerCredentialsTest(unittest.TestCase):
             'oauth_session_handle': 'session',
             'verified': True
         })
+
+    @patch('requests.post')
+    def test_configurable_url(self, r_post):
+        "Test configurable API url"
+        r_post.return_value = Mock(
+            status_code=200,
+            text='oauth_token=token&oauth_token_secret=token_secret&oauth_session_handle=session'
+        )
+
+        url = 'https//api-tls.xero.com'
+
+        credentials = PartnerCredentials(
+            consumer_key='key',
+            consumer_secret='secret',
+            rsa_key="key",
+            oauth_token='token',
+            oauth_token_secret='token_secret',
+            verified=True,
+            api_url=url
+        )
+
+        credentials.refresh()
+
+        self.assertEqual(credentials.url, '{url}/oauth/Authorize?oauth_token=token'.format(url=url))
+
+
+class PrivateCredentialsTest(unittest.TestCase):
+    def test_default_url(self):
+        "Test default API url"
+
+        credentials = PrivateCredentials(
+            consumer_key='key',
+            rsa_key='rsa_key'
+        )
+
+        self.assertEqual(credentials.base_url, 'https://api.xero.com')
+
+    def test_configurable_url(self):
+        "Test configurable API url"
+        url = 'https//api-tls.xero.com'
+
+        credentials = PrivateCredentials(
+            consumer_key='key',
+            rsa_key='rsa_key',
+            api_url=url
+        )
+
+        self.assertEqual(credentials.base_url, url)

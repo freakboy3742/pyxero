@@ -42,11 +42,11 @@ class PrivateCredentials(object):
         >>> xero.contacts.all()
         ...
     """
-    def __init__(self, consumer_key, rsa_key):
+    def __init__(self, consumer_key, rsa_key, api_url=XERO_BASE_URL):
         self.consumer_key = consumer_key
         self.rsa_key = rsa_key
 
-        self.base_url = XERO_BASE_URL
+        self.base_url = api_url
 
         # Private API uses consumer key as the OAuth token.
         self.oauth_token = consumer_key
@@ -98,7 +98,7 @@ class PublicCredentials(object):
                  callback_uri=None, verified=False,
                  oauth_token=None, oauth_token_secret=None,
                  oauth_expires_at=None, oauth_authorization_expires_at=None,
-                 scope=None, user_agent=None):
+                 scope=None, user_agent=None, api_url=XERO_BASE_URL):
         """Construct the auth instance.
 
         Must provide the consumer key and secret.
@@ -121,7 +121,7 @@ class PublicCredentials(object):
         else:
             self.user_agent = user_agent
 
-        self.base_url = XERO_BASE_URL
+        self.base_url = api_url
         self._signature_method = SIGNATURE_HMAC
 
         # These are not strictly used by Public Credentials, but
@@ -287,7 +287,7 @@ class PublicCredentials(object):
         if self.scope:
             query_string['scope'] = self.scope
 
-        url = XERO_BASE_URL + AUTHORIZE_URL + '?' + \
+        url = self.base_url + AUTHORIZE_URL + '?' + \
               urlencode(query_string)
         return url
 
@@ -342,7 +342,7 @@ class PartnerCredentials(PublicCredentials):
                  oauth_token=None, oauth_token_secret=None,
                  oauth_expires_at=None, oauth_authorization_expires_at=None,
                  oauth_session_handle=None, scope=None, user_agent=None,
-                 **kwargs):
+                 api_url=XERO_BASE_URL, **kwargs):
         """Construct the auth instance.
 
         Must provide the consumer key and secret.
@@ -365,7 +365,7 @@ class PartnerCredentials(PublicCredentials):
             self.user_agent = user_agent
 
         self._signature_method = SIGNATURE_RSA
-        self.base_url = XERO_BASE_URL
+        self.base_url = api_url
 
         self.rsa_key = rsa_key
         self.oauth_session_handle = oauth_session_handle
