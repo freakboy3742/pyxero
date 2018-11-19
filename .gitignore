@@ -11,3 +11,5 @@ dist
 build
 _build
 distribute-*
+.venv
+.idea
