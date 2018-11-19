@@ -286,8 +286,7 @@ class BaseManager(object):
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
         """Upload an attachment to the Xero object (from file object)."""
-        self.put_attachment_data(id, filename, file.read(), content_type,
-                                 include_online=include_online)
+        return self.put_attachment_data(id, filename, file.read(), content_type, include_online=include_online)
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
