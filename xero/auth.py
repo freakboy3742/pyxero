@@ -2,10 +2,10 @@ from __future__ import unicode_literals
 
 import datetime
 import requests
+from six.moves.urllib.parse import parse_qs, urlencode
 
 from oauthlib.oauth1 import SIGNATURE_HMAC, SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER
 from requests_oauthlib import OAuth1
-from six.moves.urllib.parse import parse_qs, urlencode
 
 from .constants import ACCESS_TOKEN_URL, AUTHORIZE_URL, REQUEST_TOKEN_URL, XERO_BASE_URL
 from .exceptions import (
@@ -19,7 +19,7 @@ from .exceptions import (
     XeroNotImplemented,
     XeroNotVerified,
     XeroRateLimitExceeded,
-    XeroUnauthorized
+    XeroUnauthorized,
 )
 from .utils import resolve_user_agent
 

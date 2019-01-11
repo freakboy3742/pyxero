@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 
 import datetime
 import re
+import six
 import unittest
 from collections import defaultdict
+from mock import Mock
 from xml.dom.minidom import parseString
 
-import six
-from mock import Mock
 from xero.manager import Manager
 
 
