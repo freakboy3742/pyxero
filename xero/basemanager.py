@@ -329,6 +329,9 @@ class BaseManager(object):
                     if parts[1] in ["contains", "startswith", "endswith"]:
                         field = parts[0]
                         fmt = ''.join(['%s.', parts[1], '(%s)'])
+                    elif parts[1] in ["tolower", "toupper"]:
+                        field = parts[0]
+                        fmt = ''.join(['%s.', parts[1], '==%s'])
                     elif parts[1] in self.OPERATOR_MAPPINGS:
                         field = parts[0]
                         key = field
