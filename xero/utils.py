@@ -19,6 +19,7 @@ OBJECT_NAMES = {
     "Accounts": "Account",
     "BankTransactions": "BankTransaction",
     "BankTransfers": "BankTransfer",
+    "BatchPayments": "BatchPayment",
     "BrandingThemes": "BrandingTheme",
     "ContactGroups": "ContactGroup",
     "ContactPersons": "ContactPerson",
