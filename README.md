@@ -3,19 +3,24 @@ PyXero
 
 [![Build Status](https://travis-ci.org/freakboy3742/pyxero.svg?branch=master)](https://travis-ci.org/freakboy3742/pyxero)
 
-PyXero is a Python API for accessing the REST API provided by the [Xero](http://developer.xero.com)
+PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
 
 ## Quickstart:
 
-In addition to the instructions shown here, you'll need to follow the [Xero
-Developer documentation](http://developer.xero.com/api-overview/) to register your application.
+Install this library using the python package manager:
+
+```
+pip install pyxero
+```
+
+You'll need to follow the [Xero Developer documentation](https://developer.xero.com/documentation/) to register your application. Do that as follows:
 
 ### Public Applications
 
 Public applications use a 3-step OAuth process.
 
-When you [register your public application with Xero](http://developer.xero.com/api-overview/public-applications/), you'll be given a
+When you [register your public application with Xero](https://developer.xero.com/documentation/auth-and-limits/public-applications/), you'll be given a
 **Consumer Key** and a **Consumer secret**. These are both strings.
 
 To access the Xero API you must first create some credentials:
@@ -97,10 +102,10 @@ to reconstruct an instance of the credentials::
 If using a Private application, you will need to install `PyCrypto`, a pure
 Python cryptographic module. You'll also need to generate an signed RSA
 certificate, and submit that certificate as part of registering your
-application with Xero. See the [Xero Developer documentation](http://developer.xero.com/api-overview/) for more
+application with Xero. See the [Xero Developer documentation](https://developer.xero.com/) for more
 details.
 
-When you [register your private application with Xero](http://developer.xero.com/api-overview/private-applications/), you'll be given a
+When you [register your private application with Xero](https://developer.xero.com/documentation/auth-and-limits/private-applications/), you'll be given a
 **Consumer Key**. You'll also be given a **Consumer secret** - this can be
 ignored.
 
@@ -116,6 +121,8 @@ signed API requests::
 >>> credentials = PrivateCredentials(<consumer_key>, rsa_key)
 >>> xero = Xero(credentials)
 ```
+
+[Follow these steps](https://developer.xero.com/documentation/api-guides/create-publicprivate-key/) to generate a public/private key pair to sign your requests.  You'll upload your public key when you create your Xero Private app at https://app.xero.com.  You'll use the private key (aka RSA key) to generate your oAuth signature.
 
 The RSA key is a multi-line string that will look something like::
 
@@ -140,24 +147,17 @@ store the key value as a constant, remember two things:
 ### Partner Applications
 
 Partner Application authentication works similarly to the 3-step OAuth used by
-Public Applications, but with RSA signed requests and a client-side SSL
-certificate which is issued by Xero. Partner OAuth tokens still have a 30 minute
-expiry, but can be swapped for a new token at any time.
+Public Applications, but with RSA signed requests. Partner OAuth tokens still
+have a 30 minute expiry, but can be swapped for a new token at any time.
 
-When you [register your partner application with Xero](http://developer.xero.com/api-overview/partner-applications/), you'll have a
-**Consumer Key**, **Consumer Secret**, **RSA Key**, and **Client Certificate**.
-All four elements are required.
+When you [register your partner application with Xero](https://developer.xero.com/documentation/auth-and-limits/partner-applications/), you'll have a **Consumer Key**, **Consumer Secret** and **RSA Key**. All three elements are required.
 
-The client certificate is represented by a tuple of file paths to the certificate
-and key.
 
 ```python
 >>> from xero import Xero
 >>> from xero.auth import PartnerCredentials
->>> client_cert = ('/path/to/entrust-cert.pem',
-...                '/path/to/entrust-private-nopass.pem')
 >>> credentials = PartnerCredentials(<consumer_key>, <consumer_secret>,
-...                                  <rsa_key>, client_cert)
+...                                  <rsa_key>)
 >>> xero = Xero(credentials)
 ```
 
@@ -192,27 +192,27 @@ For example, to deal with contacts::
 >>> xero.contacts.get(u'b2b5333a-2546-4975-891f-d71a8a640d23')
 {...contact info...}
 
-# Retrive all contacts updated since 1 Jan 2013
+# Retrieve all contacts updated since 1 Jan 2013
 >>> xero.contacts.filter(since=datetime(2013, 1, 1))
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name is 'John Smith'
+# Retrieve all contacts whose name is 'John Smith'
 >>> xero.contacts.filter(Name='John Smith')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name starts with 'John'
+# Retrieve all contacts whose name starts with 'John'
 >>> xero.contacts.filter(Name__startswith='John')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name ends with 'Smith'
+# Retrieve all contacts whose name ends with 'Smith'
 >>> xero.contacts.filter(Name__endswith='Smith')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name starts with 'John' and ends with 'Smith'
+# Retrieve all contacts whose name starts with 'John' and ends with 'Smith'
 >>> xero.contacts.filter(Name__startswith='John', Name__endswith='Smith')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name contains 'mit'
+# Retrieve all contacts whose name contains 'mit'
 >>> xero.contacts.filter(Name__contains='mit')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
@@ -231,10 +231,15 @@ For example, to deal with contacts::
 >>> xero.contacts.save([c1, c2])
 ```
 
-Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact::
+Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact:
 
 ```python
 >>> xero.invoices.filter(Contact_ContactID='83ad77d8-48a7-4f77-9146-e6933b7fb63b')
+```
+
+Filters which aren't supported by this API can also be constructed using 'raw' mode like this:
+```python
+>>> xero.invoices.filter(raw='AmountDue > 0')
 ```
 
 Be careful when dealing with large amounts of data, the Xero API will take an
@@ -316,6 +321,66 @@ This same API pattern exists for the following API objects:
 * TaxRates
 * TrackingCategories
 * Users
+
+
+## Payroll
+
+In order to access the payroll methods from Xero, you can do it like this:
+
+```
+xero.payrollAPI.payruns.all()
+```
+
+Within the payrollAPI you have access to:
+
+* employees
+* leaveapplications
+* payitems
+* payrollcalendars
+* payruns
+* payslip
+* timesheets
+
+
+## Under the hood
+
+Using a wrapper around Xero API is a really nice feature, but it's also interesting to understand what is exactly
+happening under the hood.
+
+### Filter operator
+
+``filter`` operator wraps the "where" keyword in Xero API.
+
+```python
+# Retrieves all contacts whose name is "John"
+>>> xero.contacts.filter(name="John")
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=name%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=name=="John"
+```
+
+Several parameters are separated with encoded '&&' characters:
+
+```python
+# Retrieves all contacts whose first name is "John" and last name is "Doe"
+>>> xero.contacts.filter(firstname="John", lastname="Doe")
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=lastname%3D%3D%22Doe%22%26%26firstname%3D%3D%22John%22
+Non encoded:  <XERO_API_URL>/Contacts?where=lastname=="Doe"&&firstname=="John"
+
+```
+
+Underscores are automatically converted as "dots":
+```python
+# Retrieves all contacts whose name is "John"
+>>> xero.contacts.filter(first_name="John")
+
+# Triggers this GET request:
+Html encoded: <XERO_API_URL>/Contacts?where=first.name%3D%3D%22John%22%
+Non encoded:  <XERO_API_URL>/Contacts?where=first.name=="John"
+```
 
 ## Contributing
 

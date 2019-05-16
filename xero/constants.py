@@ -1,5 +1,4 @@
 XERO_BASE_URL = "https://api.xero.com"
-XERO_PARTNER_BASE_URL = "https://api-partner.network.xero.com"
 
 REQUEST_TOKEN_URL = "/oauth/RequestToken"
 AUTHORIZE_URL = "/oauth/Authorize"

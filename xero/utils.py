@@ -41,8 +41,10 @@ OBJECT_NAMES = {
     "Receipts": "Receipt",
     "RepeatingInvoices": "RepeatingInvoice",
     "Reports": "Report",
+    "TaxComponents": "TaxComponent",
     "TaxRates": "TaxRate",
     "TrackingCategories": "TrackingCategory",
+    "Tracking": "TrackingCategory",
     "Users": "User",
     "Associations": "Association",
     "Files": "File",
@@ -50,6 +52,7 @@ OBJECT_NAMES = {
     "Inbox": "Inbox",
     "LineItems": "LineItem",
     "JournalLines": "JournalLine",
+    "PurchaseOrders": "PurchaseOrder",
 }
 
 def isplural(word):
@@ -85,6 +88,11 @@ def parse_date(string, force_datetime=False):
     # names of the field that are actually Date rather than DateTime.
     if len(values) > 3 or force_datetime:
         return datetime.datetime(**values)
+
+    # Sometimes Xero returns Date(0+0000), so we end up with no
+    # values. Return None for this case
+    if not values:
+        return None
 
     return datetime.date(**values)
 

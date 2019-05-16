@@ -1,4 +1,10 @@
+include ChangeLog.rst
 include README.md
 include LICENSE
+include tox.ini
 recursive-include xero *.py
 recursive-include tests *.py
+recursive-include examples *.csv
+recursive-include examples *.html
+recursive-include examples *.md
+recursive-include examples *.py

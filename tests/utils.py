@@ -61,6 +61,15 @@ class UtilsTest(unittest.TestCase):
             {'date': None}
         )
 
+        # Weird Date output from Xero
+        example_input = {
+            'date': '/Date(0+0000)/',
+        }
+
+        self.assertEqual(
+            xero.utils.json_load_object_hook(example_input),
+            {'date': '/Date(0+0000)/'}
+        )
 
     def test_parse_date(self):
         """ Tests of the parse_date input formats.
@@ -98,5 +107,11 @@ class UtilsTest(unittest.TestCase):
         # Not a date
         self.assertEqual(
             xero.utils.parse_date('not a date'),
+            None
+        )
+
+        # Weird Date output from Xero
+        self.assertEqual(
+            xero.utils.parse_date('/Date(0+0000)/'),
             None
         )

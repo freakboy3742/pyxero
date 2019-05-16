@@ -23,6 +23,7 @@ class BaseManager(object):
         'filter',
         'all',
         'put',
+        'delete',
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
@@ -68,6 +69,10 @@ class BaseManager(object):
         'ShowOnCashBasisReports',
         'IncludeInEmails',
         'SentToContact',
+        'CanApplyToRevenue',
+        'IsReconciled',
+        'EnablePaymentsToAccount',
+        'ShowInExpenseClaims'
     )
     DECIMAL_FIELDS = (
         'Hours',
@@ -166,7 +171,6 @@ class BaseManager(object):
             timeout = kwargs.pop('timeout', None)
 
             uri, params, method, body, headers, singleobject = func(*args, **kwargs)
-            cert = getattr(self.credentials, 'client_cert', None)
 
             if headers is None:
                 headers = {}
@@ -182,7 +186,7 @@ class BaseManager(object):
 
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, cert=cert, timeout=timeout)
+                    params=params, timeout=timeout)
 
             if response.status_code == 200:
                 # If we haven't got XML or JSON, assume we're being returned a binary file
@@ -190,6 +194,9 @@ class BaseManager(object):
                     return response.content
 
                 return self._parse_api_response(response, self.name)
+
+            elif response.status_code == 204:
+                return response.content
 
             elif response.status_code == 400:
                 raise XeroBadRequest(response)
@@ -266,17 +273,20 @@ class BaseManager(object):
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method='put', summarize_errors=summarize_errors)
 
+    def _delete(self, id):
+        uri = '/'.join([self.base_url, self.name, id])
+        return uri, {}, 'delete', None, None, False
+
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
         params = {'IncludeOnline': 'true'} if include_online else {}
-        headers = {'Content-Type': content_type, 'Content-Length': len(data)}
+        headers = {'Content-Type': content_type, 'Content-Length': str(len(data))}
         return uri, params, 'put', data, headers, False
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
         """Upload an attachment to the Xero object (from file object)."""
-        self.put_attachment_data(id, filename, file.read(), content_type,
-                                 include_online=include_online)
+        return self.put_attachment_data(id, filename, file.read(), content_type, include_online=include_online)
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):

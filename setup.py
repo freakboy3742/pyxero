@@ -30,8 +30,8 @@ setup(
         'requests>=1.1.0',
         'requests-oauthlib>=0.3.0',
         'python-dateutil>=2.1',
-        'PyJWT==1.4.0', # This is required as part of oauthlib but doesn't seem to get included sometimes.
-        'cryptography==1.3.1', # As above, but fixes issue with missing module imports not picked up for some reason.
+        'PyJWT>=1.6.4', # This is required as part of oauthlib but doesn't seem to get included sometimes.
+        'cryptography>=1.3.1', # As above, but fixes issue with missing module imports not picked up for some reason.
     ],
     tests_require=[
         'mock',
@@ -45,8 +45,10 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Office/Business :: Financial :: Accounting',
     ],
     test_suite="tests",
