@@ -28,6 +28,10 @@ class BaseManager(object):
         'get_attachment_data',
         'put_attachment_data',
     )
+    OBJECT_DECORATED_METHODS = {
+            'Invoices' : ['email', 'online_invoice'],
+    }
+
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
         'Updated',
@@ -259,6 +263,14 @@ class BaseManager(object):
         file.write(data)
         return len(data)
 
+    def _email(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'Email'])
+        return uri, {}, 'post', None, None, True
+
+    def _online_invoice(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'OnlineInvoice'])
+        return uri, {}, 'get', None, None, True
+    
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
