@@ -72,7 +72,8 @@ class BaseManager(object):
         'CanApplyToRevenue',
         'IsReconciled',
         'EnablePaymentsToAccount',
-        'ShowInExpenseClaims'
+        'ShowInExpenseClaims',
+        'DiscountEnteredAsPercent',
     )
     DECIMAL_FIELDS = (
         'Hours',
