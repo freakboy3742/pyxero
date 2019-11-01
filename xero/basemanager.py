@@ -73,7 +73,7 @@ class BaseManager(object):
         'IsReconciled',
         'EnablePaymentsToAccount',
         'ShowInExpenseClaims',
-        'DiscountEnteredAsPercent'
+        'DiscountEnteredAsPercent',
     )
     DECIMAL_FIELDS = (
         'Hours',
