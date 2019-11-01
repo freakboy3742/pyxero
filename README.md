@@ -339,6 +339,7 @@ Within the payrollAPI you have access to:
 * payrollcalendars
 * payruns
 * payslip
+* superfunds
 * timesheets
 
 
