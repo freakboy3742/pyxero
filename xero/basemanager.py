@@ -76,7 +76,7 @@ class BaseManager(object):
         'DiscountEnteredAsPercent',
         'IsPurchased',
         'IsSold',
-        'IsTrackedAsInventory'
+        'IsTrackedAsInventory',
     )
     DECIMAL_FIELDS = (
         'Hours',
@@ -99,7 +99,7 @@ class BaseManager(object):
         'lt': '<',
         'lte': '<=',
         'gte': '>=',
-        'ne': '!='
+        'ne': '!=',
     }
 
     def __init__(self):
