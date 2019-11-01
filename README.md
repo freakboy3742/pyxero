@@ -192,27 +192,27 @@ For example, to deal with contacts::
 >>> xero.contacts.get(u'b2b5333a-2546-4975-891f-d71a8a640d23')
 {...contact info...}
 
-# Retrive all contacts updated since 1 Jan 2013
+# Retrieve all contacts updated since 1 Jan 2013
 >>> xero.contacts.filter(since=datetime(2013, 1, 1))
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name is 'John Smith'
+# Retrieve all contacts whose name is 'John Smith'
 >>> xero.contacts.filter(Name='John Smith')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name starts with 'John'
+# Retrieve all contacts whose name starts with 'John'
 >>> xero.contacts.filter(Name__startswith='John')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name ends with 'Smith'
+# Retrieve all contacts whose name ends with 'Smith'
 >>> xero.contacts.filter(Name__endswith='Smith')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name starts with 'John' and ends with 'Smith'
+# Retrieve all contacts whose name starts with 'John' and ends with 'Smith'
 >>> xero.contacts.filter(Name__startswith='John', Name__endswith='Smith')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
-# Retrive all contacts whose name contains 'mit'
+# Retrieve all contacts whose name contains 'mit'
 >>> xero.contacts.filter(Name__contains='mit')
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
@@ -339,6 +339,7 @@ Within the payrollAPI you have access to:
 * payrollcalendars
 * payruns
 * payslip
+* superfunds
 * timesheets
 
 

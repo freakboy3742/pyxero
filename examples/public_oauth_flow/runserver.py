@@ -1,10 +1,8 @@
-import sys
 import os
-import SimpleHTTPServer
-import SocketServer
-from urlparse import urlparse, parse_qsl
-
-from StringIO import StringIO
+from io import BytesIO
+from http.server import SimpleHTTPRequestHandler
+import socketserver
+from urllib.parse import urlparse, parse_qsl
 
 from xero.auth import PublicCredentials
 from xero.exceptions import XeroException
@@ -18,23 +16,22 @@ PORT = 8000
 OAUTH_PERSISTENT_SERVER_STORAGE = {}
 
 
-class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class PublicCredentialsHandler(SimpleHTTPRequestHandler):
     def page_response(self, title='', body=''):
         """
         Helper to render an html page with dynamic content
         """
-        f = StringIO()
-        f.write('<!DOCTYPE html">\n')
-        f.write('<html>\n')
-        f.write('<head><title>{}</title><head>\n'.format(title))
-        f.write('<body>\n<h2>{}</h2>\n'.format(title))
-        f.write('<div class="content">{}</div>\n'.format(body))
-        f.write('</body>\n</html>\n')
+        f = BytesIO()
+        f.write('<!DOCTYPE html">\n'.encode())
+        f.write('<html>\n'.encode())
+        f.write('<head><title>{}</title><head>\n'.format(title).encode())
+        f.write('<body>\n<h2>{}</h2>\n'.format(title).encode())
+        f.write('<div class="content">{}</div>\n'.format(body).encode())
+        f.write('</body>\n</html>\n'.encode())
         length = f.tell()
         f.seek(0)
         self.send_response(200)
-        encoding = sys.getfilesystemencoding()
-        self.send_header("Content-type", "text/html; charset=%s" % encoding)
+        self.send_header("Content-type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(length))
         self.end_headers()
         self.copyfile(f, self.wfile)
@@ -123,11 +120,11 @@ class PublicCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.page_response(title='Xero Contacts', body=page_body)
             return
 
-        SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+        SimpleHTTPRequestHandler.do_GET(self)
 
 
 if __name__ == '__main__':
-    httpd = SocketServer.TCPServer(("", PORT), PublicCredentialsHandler)
+    httpd = socketserver.TCPServer(("", PORT), PublicCredentialsHandler)
 
-    print "serving at port", PORT
+    print("serving at port", PORT)
     httpd.serve_forever()
