@@ -45,6 +45,7 @@ OBJECT_NAMES = {
     "PayRuns": "PayRun",
     "Phones": "Phone",
     "Prepayments": "Prepayment",
+    "Projects": "Project",
     "Receipts": "Receipt",
     "ReimbursementLines": "ReimbursementLine",
     "RepeatingInvoices": "RepeatingInvoice",
