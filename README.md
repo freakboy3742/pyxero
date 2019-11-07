@@ -343,6 +343,22 @@ Within the payrollAPI you have access to:
 * timesheets
 
 
+## Projects
+
+In order to access the projects methods from Xero, you can do it like this:
+
+```
+xero.projectsAPI.projects.all()
+```
+
+Within the projectsAPI you have access to:
+
+* projects
+* projectsusers
+* tasks
+* time
+
+
 ## Under the hood
 
 Using a wrapper around Xero API is a really nice feature, but it's also interesting to understand what is exactly
