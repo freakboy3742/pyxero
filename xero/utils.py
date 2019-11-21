@@ -66,13 +66,17 @@ OBJECT_NAMES = {
     "LineItems": "LineItem",
     "JournalLines": "JournalLine",
     "PurchaseOrders": "PurchaseOrder",
+    "Quotes": "Quote",
 }
+
 
 def isplural(word):
     return word in OBJECT_NAMES.keys()
 
+
 def singular(word):
     return OBJECT_NAMES.get(word)
+
 
 def parse_date(string, force_datetime=False):
     """ Takes a Xero formatted date, e.g. /Date(1426849200000+1300)/"""
@@ -84,7 +88,7 @@ def parse_date(string, force_datetime=False):
         (
             k,
             v if v[0] in '+-' else int(v)
-        ) for k,v in matches.groupdict().items() if v and int(v)
+        ) for k, v in matches.groupdict().items() if v and int(v)
     ])
 
     if 'timestamp' in values:
