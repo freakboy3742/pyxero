@@ -6,7 +6,7 @@ from requests_oauthlib import OAuth2Session, OAuth2
 from xero import Xero
 from xero.constants import XERO_BASE_URL
 
-
+# Use service discovery to find the endpoints we're going to use
 connections_url = "https://api.xero.com/connections"
 discovery_url = "https://identity.xero.com/.well-known/openid-configuration"
 discovery = requests.get(discovery_url).json()
