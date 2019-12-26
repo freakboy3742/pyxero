@@ -56,6 +56,16 @@ class Flow:
         token = client.fetch_token(token_url, client_secret=self.client_secret, authorization_response=response_url)
         return XeroToken(token)
 
+    def refresh_token(self, token):
+        if isinstance(token, XeroToken):
+            token = token.as_dict()
+        client = OAuth2Session(client_id=self.client_id, scope=self.scopes,
+                               redirect_uri=self.redirect_uri, token=token)
+        # Set the authentication header for the post request
+        auth = requests.auth.HTTPBasicAuth(self.client_id, self.client_secret)
+        token = client.refresh_token(token_url, auth=auth)
+        return XeroToken(token)
+
 
 # OAuth2 version of pyxero PublicCredentials
 class XeroOAuthV2:
@@ -67,6 +77,8 @@ class XeroOAuthV2:
 
 class Client(Xero):
     def __init__(self, client_id, token, tenant_id=None):
+        if isinstance(token, XeroToken):
+            token = token.as_dict()
         creds = XeroOAuthV2(client_id=client_id, token=token)
         creds.tenant_id = tenant_id
         self.credentials = creds
