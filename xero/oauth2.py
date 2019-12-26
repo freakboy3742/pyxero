@@ -22,7 +22,7 @@ default_scopes = [
 class XeroToken:
     def __init__(self, token):
         self.access_token = token['access_token']
-        self.id_token = token['id_token']
+        self.id_token = token.get('id_token')
         self.refresh_token = token['refresh_token']
         self.token_type = token['token_type']
         self.expires_at = datetime.utcfromtimestamp(token['expires_at'])
