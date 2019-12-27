@@ -175,6 +175,9 @@ class BaseManager(object):
             if headers is None:
                 headers = {}
 
+            if self.credentials.tenant_id:
+                headers['Xero-tenant-id'] = self.credentials.tenant_id
+
             # Use the JSON API by default, but remember we might request a PDF (application/pdf)
             # so don't force the Accept header.
             if 'Accept' not in headers:

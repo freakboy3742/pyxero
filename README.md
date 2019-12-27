@@ -172,6 +172,85 @@ when they expire.
 **Important**: ``credentials.state`` changes after a token swap. Be sure to persist
 the new state.
 
+## OAuth 2.0 Applications
+
+1. Construct an OAuth2Credentials() instance. The callback URI should
+   be served by your app in order to complete the authorization:
+    ```python
+    >>> from xero.auth import OAuth2Credentials
+    >>> ...
+    >>> credentials = OAuth2Credentials(client_id, client_secret=client_secret,
+    >>>                                 callback_uri=callback_uri, scope=scope)
+   ```
+
+2. Get the anti-forgery state and authentication URL, then redirect the
+   user to it:
+   ```python
+   >>> from django.http import HttpResponseRedirect
+   >>> 
+   >>> def xero_authorize_view(request):
+   >>>     authorization_url, state = credentials.authorization_url()
+   >>>     # Store the state somewhere, then:
+   >>>     return HttpResponseRedirect(authorization_url)
+   ```
+
+   The state should be stored by your app (e.g. in the database or cache)
+   as it will be used to complete the authorization during the callback.
+
+3. After authorization the user will be redirected to the callback URI
+   provided (e.g., for `https://example.com/oauth/xero/callback`):
+
+   `https://example.com/oauth/xero/callback?oauth_token=<token>&oauth_verifier=<verifier>&org=<organization ID>`
+
+   Complete the authorization using the URI of the request and the earlier
+   state.
+   ```python
+   >>> def xero_callback_view(request):
+   >>>     authorization_response = request.get_raw_uri()
+   >>>     token = credentials.fetch_token(
+   >>>         state=state, authorization_response=authorization_response
+   >>>     )
+   ```
+   A token will be returned, which can be stored by your app in order to
+   create new credentials instances.
+
+4. Now the credentials may be used to authorize a Xero session.
+   A fresh credentials instance may be created just using the token and
+   client id.
+   ```python
+   >>> from xero import Xero
+   >>> 
+   >>> credentials = OAuth2Credentials(client_id, token=token)
+   >>> xero = Xero(credentials)
+   >>> xero.contacts.all()
+   ```
+   
+   Alternatively, the whole state of the `credentials` instance may be dumped,
+   stored and used to create a new instance:
+   ```python
+   >>> cred_state = credentials.state
+   >>> ...
+   >>> new_creds = OAuth2Credentials(**cred_state)
+   ```
+
+   By default the first tenant_id (i.e. Xero organisation) will be used by
+   the credentials. A list of possible tenant_ids can be obtained and the
+   tenant_id changed like so:
+   ```python
+   >>> tenants = credentials.get_connections()
+   >>> my_tenant_id = tenants[1]['tenantId']
+   >>> credentials.tenant_id = my_tenant_id
+   >>> xero = Xero(credentials)
+   ```
+
+5. If a refresh token is available, it can be used to generate a new token:
+   ```python
+   >>> credentials = OAuth2Credentials(client_id, client_secret=client_secret, 
+   >>>                                 token=token)
+   >>> if credentials.expired():
+   >>>     token = credentials.refresh_token()
+   ```
+
 
 ## Using the Xero API
 
