@@ -6,20 +6,22 @@ import requests
 from oauthlib.oauth1 import (
     SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_HMAC
 )
-from requests_oauthlib import OAuth1
+from requests_oauthlib import OAuth1, OAuth2Session, OAuth2
 from six.moves.urllib.parse import urlencode, parse_qs
 
 from .constants import (
-    XERO_BASE_URL, REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL
+    XERO_BASE_URL, REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL,
+    OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CONNECTIONS_URL
 )
 from .exceptions import (
     XeroBadRequest, XeroException, XeroExceptionUnknown, XeroForbidden,
     XeroInternalError, XeroNotAvailable, XeroNotFound, XeroNotImplemented,
-    XeroNotVerified, XeroRateLimitExceeded, XeroUnauthorized
+    XeroNotVerified, XeroRateLimitExceeded, XeroUnauthorized, XeroAccessDenied
 )
 
 
 OAUTH_EXPIRY_SECONDS = 3600 # Default unless a response reports differently
+DEFAULT_SCOPE = ['openid', 'profile', 'email']
 
 class PrivateCredentials(object):
     """An object wrapping the 2-step OAuth process for Private Xero API access.
@@ -391,3 +393,276 @@ class PartnerCredentials(PublicCredentials):
         response = requests.post(url=self.base_url + ACCESS_TOKEN_URL,
                 params=params, headers=headers, auth=oauth)
         self._process_oauth_response(response)
+
+
+class OAuth2Credentials(object):
+    """An object wrapping the 3-step OAuth2.0 process for Xero API access.
+
+    Usage:
+
+     1) Construct an `OAuth2Credentials` instance. The callback URI should
+        be served by your app in order to complete the authorization:
+
+        >>> from xero.auth import OAuth2Credentials
+        >>>
+        >>> credentials = OAuth2Credentials(client_id, client_secret,
+        >>>                                 callback_uri=callback_uri, scope=scope)
+        ...
+        `scope` should be the list of scopes used by the API. By default this is
+        ['openid', 'profile', 'email'].
+
+     2) Get the state and authentication URL, then redirect the user to it:
+
+        >>> from django.http import HttpResponseRedirect
+        >>> from django.core.cache import caches
+        >>>
+        >>> def start_xero_auth_view(request):
+        >>>     authorization_url = credentials.generate_url()
+        >>>     # Store the credentials state somewhere, e.g. a cache
+        >>>     cred_state = credentials.state
+        >>>     caches['mycache'].set('xero_creds', cred_state)
+        >>>     return HttpResponseRedirect(authorization_url)
+        ...
+
+        `credentials.auth_state` should be stored by your app (e.g. in the database
+        or cache) as it will be used to complete the authorization during the callback.
+        The simplest way is to dump the whole credentials object by storing `credentials.state`
+
+     3) After authorization the user will be redirected to the callback URI
+        provided (e.g. https://example.com/oauth/xero/callback) along with a querystring
+        containing the authentication secret. Pass the full URI including querystring to
+        `verify()`, using the credentials constructed earlier:
+        
+        >>> def complete_xero_auth_view(request):
+        >>>     # Create the credentials object from wherever you stored the state
+        >>>     credentials = OAuth2Credentials(**cred_state)
+        >>>     # Then pass in the full URI the user was directed back to, including
+        >>>     # querystring
+        >>>     auth_secret = request.get_raw_uri()
+        >>>     credentials.verify(auth_secret)
+
+        A token will be fetched from Xero and saved as `credentials.token`. If the credentials
+        object needs to be created again either dump the whole object using:
+
+        >>> cred_state = credentials.state
+        >>> ...
+        >>> new_creds = OAuth2Credentials(**cred_state)
+
+        or just use the client_id, client_secret and token:
+
+        >>> token = credentials.token
+        >>> ...
+        >>> new_creds = OAuth2Credentials(client_id, client_secret, token=token)
+
+     4) Now the credentials may be used to authorize a Xero session. As OAuth2 allows
+        authentication for mulitple Xero Organisations, it is necessary to set
+        the tenant_id against which the xero client's queries will run.
+
+        >>> from xero import Xero
+        >>> # Use the first xero organisation (tenant) permitted
+        >>> credentials.set_default_tenant()
+        >>> xero = Xero(credentials)
+        >>> xero.contacts.all()
+        >>> ...
+        
+        To pick from multiple possible Xero organisations `tenant_id` may be set
+        explicitly:
+        
+        >>> tenants = credentials.get_tenants()
+        >>> credentials.tenant_id = tenants[1]['tenantId']
+        >>> xero = Xero(credentials)
+
+        `OAuth2Credentials.__init__()` accepts `tenant_id` as a keyword argument.
+
+     5) If a refresh token is available, it can be used to generate a new token:
+        >>> if credentials.expired():
+        >>>     credentials.refresh()
+        >>>     # Then store the new credentials or token somewhere for future use:
+        >>>     cred_state = credentials.state
+        >>>     # or
+        >>>     new_token = credentials.token
+
+        Note that in order for tokens to be refreshable, Xero API requires
+        `offline_access` to be included in the scope.
+    """
+    def __init__(self, client_id, client_secret, callback_uri=None,
+                 auth_state=None, auth_secret=None, token=None, scope=None,
+                 tenant_id=None, user_agent=None):
+        from xero import __version__ as VERSION
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.callback_uri = callback_uri
+        self.auth_state = auth_state
+        self.tenant_id = tenant_id  # Used by BaseManager
+        self._oauth = None
+        self.scope = scope or DEFAULT_SCOPE[:]
+
+        if user_agent is None:
+            self.user_agent = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
+        else:
+            self.user_agent = user_agent
+
+        self.base_url = XERO_BASE_URL  # Used by BaseManager
+        self._init_credentials(token, auth_secret)
+        
+    def _init_credentials(self, token, auth_secret):
+        """
+        Depending on the state passed in, get self._oauth up and running.
+        """
+        if token:
+            self._init_oauth(token)
+        elif auth_secret and self.auth_state:
+            self.verify(auth_secret)
+        
+    def _init_oauth(self, token):
+        """Set self._oauth for use by the xero client."""
+        self.token = token
+        if token:
+            self._oauth = OAuth2(client_id=self.client_id, token=self.token)
+
+    @property
+    def state(self):
+        """Obtain the useful state of this credentials object so that
+        we can reconstruct it independently.
+        """
+        return dict(
+            (attr, getattr(self, attr))
+            for attr in (
+                'client_id', 'client_secret', 'callback_uri',
+                'auth_state', 'token', 'scope', 'tenant_id',
+                'user_agent',
+            )
+            if getattr(self, attr) is not None
+        )
+    
+    def verify(self, auth_secret):
+        """Verify and return OAuth2 token."""
+        session = OAuth2Session(self.client_id, state=self.auth_state, 
+                                scope=self.scope,
+                                redirect_uri=self.callback_uri)
+        try:
+            token = session.fetch_token(OAUTH2_TOKEN_URL,
+                                        client_secret=self.client_secret,
+                                        authorization_response=auth_secret,
+                                        headers=self.headers)
+        # Various different exceptions may be raised, so pass the exception
+        # through as XeroAccessDenied
+        except Exception as e:
+            raise XeroAccessDenied(e)
+        self._init_oauth(token)
+        
+    def generate_url(self):
+        """Get the authorization url. This will also set `self.auth_state` to a 
+        random string if it has not already been set.
+        """
+        session = OAuth2Session(self.client_id, scope=self.scope,
+                                redirect_uri=self.callback_uri)
+        url, self.auth_state = session.authorization_url(OAUTH2_AUTHORIZE_URL,
+                                                         state=self.auth_state)
+        return url
+
+    @property
+    def oauth(self):
+        """Return the requests-compatible OAuth object"""
+        if self._oauth is None:
+            raise XeroNotVerified("OAuth credentials haven't been verified")
+        return self._oauth
+
+    @property
+    def headers(self):
+        return {
+                "Accept": "application/json",
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                "User-Agent": self.user_agent,
+        }
+
+    def expires_at(self):
+        """Return the expires_at value from the token as a UTC datetime."""
+        return datetime.datetime.utcfromtimestamp(self.token['expires_at'])
+
+    def expired(self, seconds=30, now=None):
+        """Check if the token has expired yet.
+        :param seconds: the minimum number of seconds allowed before expiry.
+        """
+        if now is None:
+            now = datetime.datetime.utcnow()
+        # Allow a bit of time for clock differences and round trip times
+        # to prevent false negatives. If users want the precise expiry,
+        # they can use self.expires_at().
+        return (self.expires_at() - now) < datetime.timedelta(seconds=seconds)
+
+    def refresh(self):
+        """Obtain a refreshed token. Note that `offline_access` must be
+        included in scope in order for a token to be refreshable.
+        """
+        if not self.token:
+            raise XeroException(None,
+                                "Cannot refresh token, no token is present.")
+        elif not self.client_secret:
+            raise XeroException(None, "Cannot refresh token, "
+                                      "client_secret must be supplied.")
+        elif not self.token.get('refresh_token'):
+            raise XeroException(None,
+                                "Token cannot be refreshed, was "
+                                "`offline_access` included in scope?")
+        session = OAuth2Session(client_id=self.client_id,
+                                scope=self.scope, token=self.token)
+        auth = requests.auth.HTTPBasicAuth(self.client_id, self.client_secret)
+        token = session.refresh_token(OAUTH2_TOKEN_URL, auth=auth, 
+                                      headers=self.headers)
+        self._init_oauth(token)
+        return token
+
+    def get_tenants(self):
+        """Get the list of tenants (Xero Organisations) to which this token grants access."""
+        connection_url = self.base_url + OAUTH2_CONNECTIONS_URL
+
+        response = requests.get(connection_url, auth=self.oauth,
+                                headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            self._handle_error_response(response)
+
+    def set_default_tenant(self):
+        """A quick way to set the tenant to the first in the list of available
+        connections.
+        """
+        try:
+            self.tenant_id = self.get_tenants()[0]['tenantId']
+        except KeyError:
+            raise XeroException(None, "This xero client is not authorised for "
+                                      "any organisations.")
+
+    @staticmethod
+    def _handle_error_response(response):
+        if response.status_code == 400:
+            raise XeroBadRequest(response)
+
+        elif response.status_code == 401:
+            raise XeroUnauthorized(response)
+
+        elif response.status_code == 403:
+            raise XeroForbidden(response)
+
+        elif response.status_code == 404:
+            raise XeroNotFound(response)
+
+        elif response.status_code == 500:
+            raise XeroInternalError(response)
+
+        elif response.status_code == 501:
+            raise XeroNotImplemented(response)
+
+        elif response.status_code == 503:
+            # Two 503 responses are possible. Rate limit errors
+            # return encoded content; offline errors don't.
+            # If you parse the response text and there's nothing
+            # encoded, it must be a not-available error.
+            payload = parse_qs(response.text)
+            if payload:
+                raise XeroRateLimitExceeded(response, payload)
+            else:
+                raise XeroNotAvailable(response)
+        else:
+            raise XeroExceptionUnknown(response)

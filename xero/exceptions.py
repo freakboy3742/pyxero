@@ -15,6 +15,16 @@ class XeroNotVerified(Exception):
     pass
 
 
+class XeroAccessDenied(Exception):
+    # Access was denied
+    pass
+
+
+class XeroTenantIdNotSet(Exception):
+    # Tenant Id must be set for OAuth2 credentials
+    pass
+
+
 class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
