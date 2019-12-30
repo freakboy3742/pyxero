@@ -411,7 +411,7 @@ class OAuth2CredentialsTest(unittest.TestCase):
         self.assertTrue(r_post.called)
         self.assertFalse(credentials.expired())
         # Test that the headers were set correctly
-        auth = r_post.call_args.kwargs['auth']
+        auth = r_post.call_args[1]['auth']
         self.assertEqual(auth.username, 'client_id')
         self.assertEqual(auth.password, 'client_secret')
 
@@ -454,7 +454,7 @@ class OAuth2CredentialsTest(unittest.TestCase):
             xero.contacts.all()
         except:
             pass
-        self.assertEqual(r_get.call_args.kwargs['headers']['Xero-tenant-id'], '12345')
+        self.assertEqual(r_get.call_args[1]['headers']['Xero-tenant-id'], '12345')
 
     def test_tenant_id_not_set_raises_error(self):
         credentials = OAuth2Credentials('client_id', 'client_secret',
