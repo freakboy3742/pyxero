@@ -310,11 +310,14 @@ class OAuth2CredentialsTest(unittest.TestCase):
         url = credentials.generate_url()
         self.assertTrue(url.startswith(OAUTH2_AUTHORIZE_URL))
         qs = parse_qs(urlparse(url).query)
-        self.assertEqual(qs['client_id'][0], credentials.client_id)
-        self.assertEqual(qs['redirect_uri'][0], credentials.callback_uri)
+        # Test that the credentials object can be dumped by state
+        cred_state = credentials.state
+        # Then test that the relevant attributes are in the querystring
+        self.assertEqual(qs['client_id'][0], cred_state['client_id'])
+        self.assertEqual(qs['redirect_uri'][0], cred_state['callback_uri'])
         self.assertEqual(qs['response_type'][0], 'code')
-        self.assertEqual(qs['scope'][0], " ".join(credentials.scope))
-        self.assertEqual(qs['state'][0], credentials.auth_state)
+        self.assertEqual(qs['scope'][0], " ".join(cred_state['scope']))
+        self.assertEqual(qs['state'][0], cred_state['auth_state'])
 
     def test_authorisation_url_using_initial_state(self):
         credentials = OAuth2Credentials('client_id', 'client_secret',

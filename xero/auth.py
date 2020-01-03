@@ -493,6 +493,7 @@ class OAuth2Credentials(object):
         self.client_secret = client_secret
         self.callback_uri = callback_uri
         self.auth_state = auth_state
+        self.token = None
         self.tenant_id = tenant_id  # Used by BaseManager
         self._oauth = None
         self.scope = scope or DEFAULT_SCOPE[:]
