@@ -9,7 +9,7 @@ from six.moves.urllib.parse import urlparse, parse_qs
 from xero.auth import PublicCredentials, PartnerCredentials, OAuth2Credentials
 from xero.exceptions import (XeroException, XeroNotVerified, XeroUnauthorized,
                              XeroAccessDenied, XeroTenantIdNotSet)
-from xero.constants import OAUTH2_AUTHORIZE_URL
+from xero.constants import XERO_OAUTH2_AUTHORIZE_URL
 from xero.api import Xero
 
 
@@ -308,7 +308,7 @@ class OAuth2CredentialsTest(unittest.TestCase):
         credentials = OAuth2Credentials('client_id', 'client_secret',
                                         callback_uri=self.callback_uri)
         url = credentials.generate_url()
-        self.assertTrue(url.startswith(OAUTH2_AUTHORIZE_URL))
+        self.assertTrue(url.startswith(XERO_OAUTH2_AUTHORIZE_URL))
         qs = parse_qs(urlparse(url).query)
         # Test that the credentials object can be dumped by state
         cred_state = credentials.state
@@ -465,6 +465,14 @@ class OAuth2CredentialsTest(unittest.TestCase):
         xero = Xero(credentials)
         with self.assertRaises(XeroTenantIdNotSet):
             xero.contacts.all()
+
+    @patch.object(OAuth2Credentials, 'get_tenants', Mock(return_value=[]))
+    def test_set_default_tenant_raises_exception(self):
+        credentials = OAuth2Credentials('client_id', 'client_secret',
+                                        token=self.expired_token)
+        with self.assertRaises(XeroException):
+            credentials.set_default_tenant()
+
 
 
 

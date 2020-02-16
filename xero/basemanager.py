@@ -14,6 +14,7 @@ from .exceptions import (
     XeroUnauthorized, XeroTenantIdNotSet
 )
 from .utils import singular, isplural, json_load_object_hook
+from .auth import OAuth2Credentials
 
 
 class BaseManager(object):
@@ -176,7 +177,7 @@ class BaseManager(object):
             if headers is None:
                 headers = {}
 
-            if hasattr(self.credentials, 'tenant_id'):
+            if isinstance(self.credentials, OAuth2Credentials):
                 if self.credentials.tenant_id:
                     headers['Xero-tenant-id'] = self.credentials.tenant_id
                 else:

@@ -11,7 +11,7 @@ from six.moves.urllib.parse import urlencode, parse_qs
 
 from .constants import (
     XERO_BASE_URL, REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL,
-    OAUTH2_AUTHORIZE_URL, OAUTH2_TOKEN_URL, OAUTH2_CONNECTIONS_URL
+    XERO_OAUTH2_AUTHORIZE_URL, XERO_OAUTH2_TOKEN_URL, XERO_OAUTH2_CONNECTIONS_URL
 )
 from .exceptions import (
     XeroBadRequest, XeroException, XeroExceptionUnknown, XeroForbidden,
@@ -492,7 +492,7 @@ class OAuth2Credentials(object):
                                 scope=self.scope,
                                 redirect_uri=self.callback_uri)
         try:
-            token = session.fetch_token(OAUTH2_TOKEN_URL,
+            token = session.fetch_token(XERO_OAUTH2_TOKEN_URL,
                                         client_secret=self.client_secret,
                                         authorization_response=auth_secret,
                                         headers=self.headers)
@@ -508,7 +508,7 @@ class OAuth2Credentials(object):
         """
         session = OAuth2Session(self.client_id, scope=self.scope,
                                 redirect_uri=self.callback_uri)
-        url, self.auth_state = session.authorization_url(OAUTH2_AUTHORIZE_URL,
+        url, self.auth_state = session.authorization_url(XERO_OAUTH2_AUTHORIZE_URL,
                                                          state=self.auth_state)
         return url
 
@@ -527,6 +527,7 @@ class OAuth2Credentials(object):
                 "User-Agent": self.user_agent,
         }
 
+    @property
     def expires_at(self):
         """Return the expires_at value from the token as a UTC datetime."""
         return datetime.datetime.utcfromtimestamp(self.token['expires_at'])
@@ -539,8 +540,8 @@ class OAuth2Credentials(object):
             now = datetime.datetime.utcnow()
         # Allow a bit of time for clock differences and round trip times
         # to prevent false negatives. If users want the precise expiry,
-        # they can use self.expires_at().
-        return (self.expires_at() - now) < datetime.timedelta(seconds=seconds)
+        # they can use self.expires_at.
+        return (self.expires_at - now) < datetime.timedelta(seconds=seconds)
 
     def refresh(self):
         """Obtain a refreshed token. Note that `offline_access` must be
@@ -559,14 +560,14 @@ class OAuth2Credentials(object):
         session = OAuth2Session(client_id=self.client_id,
                                 scope=self.scope, token=self.token)
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.client_secret)
-        token = session.refresh_token(OAUTH2_TOKEN_URL, auth=auth, 
+        token = session.refresh_token(XERO_OAUTH2_TOKEN_URL, auth=auth,
                                       headers=self.headers)
         self._init_oauth(token)
         return token
 
     def get_tenants(self):
         """Get the list of tenants (Xero Organisations) to which this token grants access."""
-        connection_url = self.base_url + OAUTH2_CONNECTIONS_URL
+        connection_url = self.base_url + XERO_OAUTH2_CONNECTIONS_URL
 
         response = requests.get(connection_url, auth=self.oauth,
                                 headers=self.headers)
@@ -581,7 +582,7 @@ class OAuth2Credentials(object):
         """
         try:
             self.tenant_id = self.get_tenants()[0]['tenantId']
-        except KeyError:
+        except IndexError:
             raise XeroException(None, "This xero client is not authorised for "
                                       "any organisations.")
 
