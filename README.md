@@ -172,6 +172,45 @@ when they expire.
 **Important**: ``credentials.state`` changes after a token swap. Be sure to persist
 the new state.
 
+### OAuth2 Applications
+This is an implementation for Xero's OAuth2 flow,
+it is documented in detail here: 
+https://developer.xero.com/documentation/oauth2/overview
+
+First, start the flow by sending the user to xero for auth.
+
+```
+callback = 'https://myapp.com/auth/callback/xero'
+flow = Flow(client_id, client_secret, scopes=scopes, redirect_uri=callback)
+authorization_url, state = flow.start()
+```
+
+The `state` returned is an anti-forgery mechanisim,
+keep this for when the user returns from xero.com
+*not* somewhere a user can access.
+
+Redirect the user to `authorization_url`.
+
+When the user returns, 
+you'll need to grab the url the user was redirected back to.
+This should include all parameters since these contain the token you need.
+
+```
+raw_url = "https://the.entire/uri/the/user/was/redirected/to#including?all=parameters
+flow = Flow(client_id, client_secret, scopes=scopes, redirect_uri=callback)
+token = flow.complete(state, raw_uri)
+```
+
+Once you have a token you can use it to get a client.
+
+You'll have to create two clients, an initial one to retrieve the list of clients, 
+the second for a specific client
+
+```
+client = Client(settings.XERO_ID, token=token)
+connections = client.load_connections()
+tenant_client = Client(settings.XERO_ID, token=token, tenant_id=connections[0])
+```
 
 ## Using the Xero API
 

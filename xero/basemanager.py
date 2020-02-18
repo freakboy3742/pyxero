@@ -176,6 +176,9 @@ class BaseManager(object):
             if headers is None:
                 headers = {}
 
+            if self.credentials.tenant_id:
+                headers['Xero-tenant-id'] = self.credentials.tenant_id
+
             # Use the JSON API by default, but remember we might request a PDF (application/pdf)
             # so don't force the Accept header.
             if 'Accept' not in headers:
@@ -184,7 +187,7 @@ class BaseManager(object):
             # Set a user-agent so Xero knows the traffic is coming from pyxero
             # or individual user/partner
             headers['User-Agent'] = self.user_agent
-
+            
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, timeout=timeout)

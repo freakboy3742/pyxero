@@ -60,6 +60,17 @@ class FilesManager(object):
         def wrapper(*args, **kwargs):
             uri, params, method, body, headers, singleobject, files = func(*args, **kwargs)
 
+            if headers is None:
+                headers = {}
+
+            if self.credentials.tenant_id:
+                headers['Xero-tenant-id'] = self.credentials.tenant_id
+
+            # Use the JSON API by default, but remember we might request a PDF (application/pdf)
+            # so don't force the Accept header.
+            if 'Accept' not in headers:
+                headers['Accept'] = 'application/json'
+            
             response = getattr(requests, method)(
                     uri, data=body, headers=headers, auth=self.credentials.oauth,
                     params=params, files=files)
