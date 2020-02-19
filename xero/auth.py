@@ -11,7 +11,8 @@ from six.moves.urllib.parse import urlencode, parse_qs
 
 from .constants import (
     XERO_BASE_URL, REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL,
-    XERO_OAUTH2_AUTHORIZE_URL, XERO_OAUTH2_TOKEN_URL, XERO_OAUTH2_CONNECTIONS_URL
+    XERO_OAUTH2_AUTHORIZE_URL, XERO_OAUTH2_TOKEN_URL, XERO_OAUTH2_CONNECTIONS_URL,
+    XeroScopes,
 )
 from .exceptions import (
     XeroBadRequest, XeroException, XeroExceptionUnknown, XeroForbidden,
@@ -21,7 +22,12 @@ from .exceptions import (
 
 
 OAUTH_EXPIRY_SECONDS = 3600 # Default unless a response reports differently
-DEFAULT_SCOPE = ['openid', 'profile', 'email']
+DEFAULT_SCOPE = [
+    XeroScopes.OFFLINE_ACCESS,
+    XeroScopes.ACCOUNTING_TRANSACTIONS_READ,
+    XeroScopes.ACCOUNTING_CONTACTS_READ,
+]
+
 
 class PrivateCredentials(object):
     """An object wrapping the 2-step OAuth process for Private Xero API access.
@@ -566,7 +572,9 @@ class OAuth2Credentials(object):
         return token
 
     def get_tenants(self):
-        """Get the list of tenants (Xero Organisations) to which this token grants access."""
+        """
+        Get the list of tenants (Xero Organisations) to which this token grants access.
+        """
         connection_url = self.base_url + XERO_OAUTH2_CONNECTIONS_URL
 
         response = requests.get(connection_url, auth=self.oauth,
@@ -583,8 +591,12 @@ class OAuth2Credentials(object):
         try:
             self.tenant_id = self.get_tenants()[0]['tenantId']
         except IndexError:
-            raise XeroException(None, "This xero client is not authorised for "
-                                      "any organisations.")
+            raise XeroException(
+                None,
+                "This app is not authorised to access any Xero Organisations. Did the "
+                "scopes requested include access to organisation data, or has access "
+                "to the organisation(s) been removed?"
+            )
 
     @staticmethod
     def _handle_error_response(response):

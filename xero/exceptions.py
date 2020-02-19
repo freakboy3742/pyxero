@@ -21,7 +21,7 @@ class XeroAccessDenied(Exception):
 
 
 class XeroTenantIdNotSet(Exception):
-    # Tenant Id must be set for OAuth2 credentials
+    # Tenant Id must be set when using API with OAuth2 credentials
     pass
 
 
