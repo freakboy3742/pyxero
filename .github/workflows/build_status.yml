@@ -7,7 +7,6 @@ on:
 jobs:
   smoke:
     name: Smoke test (3.5)
-    needs: precheck
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
