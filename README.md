@@ -256,7 +256,7 @@ Django example at the end)*:
     ```
 
  5) Now the credentials may be used to authorize a Xero session. As OAuth2
-    allows authentication for mulitple Xero Organisations, it is necessary to
+    allows authentication for multiple Xero Organisations, it is necessary to
     set the tenant_id against which the xero client's queries will run.
     ```python
     >>> from xero import Xero
