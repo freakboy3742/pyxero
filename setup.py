@@ -21,6 +21,7 @@ setup(
     version=version,
     description='Python API for accessing the REST API of the Xero accounting tool.',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Russell Keith-Magee',
     author_email='russell@keith-magee.com',
     url='http://github.com/freakboy3742/pyxero',
