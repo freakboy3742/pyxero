@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 import datetime
 import re
+import requests
 import six
-
 
 DATE = re.compile(
     r'^(\/Date\((?P<timestamp>-?\d+)((?P<offset_h>[-+]\d\d)(?P<offset_m>\d\d))?\)\/)'
@@ -124,3 +124,8 @@ def json_load_object_hook(dct):
                 dct[key] = value
 
     return dct
+
+
+def resolve_user_agent(user_agent, default_override=None):
+    from xero import __version__ as VERSION
+    return user_agent or default_override or 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()

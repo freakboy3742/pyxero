@@ -11,9 +11,10 @@ from xml.etree.ElementTree import tostring, SubElement, Element
 from .exceptions import (
     XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
     XeroNotAvailable, XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded,
-    XeroUnauthorized
+    XeroUnauthorized, XeroTenantIdNotSet
 )
 from .utils import singular, isplural, json_load_object_hook
+from .auth import OAuth2Credentials
 
 
 class BaseManager(object):
@@ -30,6 +31,12 @@ class BaseManager(object):
         'get_attachment_data',
         'put_attachment_data',
     )
+    OBJECT_DECORATED_METHODS = {
+        'Invoices': [
+            'email',
+            'online_invoice',
+        ],
+    }
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
         'Updated',
@@ -159,8 +166,9 @@ class BaseManager(object):
 
     def _parse_api_response(self, response, resource_name):
         data = json.loads(response.text, object_hook=json_load_object_hook)
-        assert data[
-            'Status'] == 'OK', "Expected the API to say OK but received %s" % data['Status']
+        assert data['Status'] == 'OK', \
+            "Expected the API to say OK but received %s" % data['Status']
+
         try:
             return data[resource_name]
         except KeyError:
@@ -179,6 +187,12 @@ class BaseManager(object):
 
             if headers is None:
                 headers = {}
+
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers['Xero-tenant-id'] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
 
             # Use the JSON API by default, but remember we might request a PDF (application/pdf)
             # so don't force the Accept header.
@@ -269,6 +283,14 @@ class BaseManager(object):
         file.write(data)
         return len(data)
 
+    def _email(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'Email'])
+        return uri, {}, 'post', None, None, True
+
+    def _online_invoice(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'OnlineInvoice'])
+        return uri, {}, 'get', None, None, True
+
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
@@ -353,6 +375,9 @@ class BaseManager(object):
                     if parts[1] in ["contains", "startswith", "endswith"]:
                         field = parts[0]
                         fmt = ''.join(['%s.', parts[1], '(%s)'])
+                    elif parts[1] in ["tolower", "toupper"]:
+                        field = parts[0]
+                        fmt = ''.join(['%s.', parts[1], '()==%s'])
                     elif parts[1] in self.OPERATOR_MAPPINGS:
                         field = parts[0]
                         key = field
@@ -381,8 +406,10 @@ class BaseManager(object):
             # Treat any remaining arguments as filter predicates
             # Xero will break if you search without a check for null in the first position:
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
-            sortedkwargs = sorted(six.iteritems(kwargs),
-                                  key=lambda item: -1 if 'isnull' in item[0] else 0)
+            sortedkwargs = sorted(
+                six.iteritems(kwargs),
+                key=lambda item: -1 if 'isnull' in item[0] else 0
+            )
             for key, value in sortedkwargs:
                 filter_params.append(generate_param(key, value))
 
