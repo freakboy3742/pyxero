@@ -42,7 +42,8 @@ class BaseManager(object):
         'Updated',
         'FullyPaidOnDate',
         'DateTimeUTC',
-        'CreatedDateUTC'
+        'CreatedDateUTC',
+        'JournalDate'
     )
     DATE_FIELDS = (
         'DueDate',
