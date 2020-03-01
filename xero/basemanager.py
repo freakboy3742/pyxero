@@ -11,9 +11,10 @@ from xml.etree.ElementTree import tostring, SubElement, Element
 from .exceptions import (
     XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
     XeroNotAvailable, XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded,
-    XeroUnauthorized
+    XeroUnauthorized, XeroTenantIdNotSet
 )
 from .utils import singular, isplural, json_load_object_hook
+from .auth import OAuth2Credentials
 
 
 class BaseManager(object):
@@ -175,6 +176,12 @@ class BaseManager(object):
 
             if headers is None:
                 headers = {}
+
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers['Xero-tenant-id'] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
 
             # Use the JSON API by default, but remember we might request a PDF (application/pdf)
             # so don't force the Accept header.
