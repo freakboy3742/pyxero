@@ -25,6 +25,7 @@ class BaseManager(object):
         'all',
         'put',
         'delete',
+        'get_history',
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
@@ -244,6 +245,10 @@ class BaseManager(object):
         uri_params = self.extra_params.copy()
         uri_params.update(params if params else {})
         return uri, uri_params, 'get', None, headers, True
+
+    def _get_history(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'history']) + '/'
+        return uri, {}, 'get', None, None, False
 
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
