@@ -8,7 +8,8 @@ from mock import Mock, patch
 from xero import Xero
 from xero.exceptions import (
     XeroBadRequest, XeroForbidden, XeroInternalError, XeroNotAvailable,
-    XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded, XeroUnauthorized
+    XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded, XeroUnauthorized,
+    XeroExceptionUnknown
 )
 
 from . import mock_data
@@ -62,6 +63,40 @@ class ExceptionsTest(unittest.TestCase):
             self.assertTrue(e.response.text.startswith('<ApiException'))
         except Exception as e:
             self.fail("Should raise a XeroBadRequest, not %s" % e)
+
+    @patch('requests.put')
+    def test_bad_request_invalid_response(self, r_put):
+        "If the error response from the backend is malformed (or truncated), raise a XeroExceptionUnknown"
+        head = {'content-type': 'text/xml; charset=utf-8'}
+
+        # Same error as before, but the response got cut off prematurely
+        bad_response = mock_data.bad_request_text[:1000]
+
+        r_put.return_value = Mock(
+            status_code=400,
+            encoding='utf-8',
+            text=bad_response,
+            headers=head
+        )
+
+        credentials = Mock(base_url="")
+        xero = Xero(credentials)
+
+        with self.assertRaises(
+                XeroExceptionUnknown, msg='Should raise a XeroExceptionUnknown'):
+            xero.invoices.put({
+                'Type': 'ACCREC',
+                'LineAmountTypes': 'Exclusive',
+                'Date': date(2013, 4, 29),
+                'DueDate': date(2013, 4, 29),
+                'Reference': 'Order # 123456',
+                'Status': 'PAID',
+                'AmountPaid': '19.05',
+                'TotalTax': '1.05',
+                'AmountDue': '0.00',
+                'Total': '19.05',
+                'SubTotal': '18.00',
+            })
 
     @patch('requests.get')
     def test_unregistered_app(self, r_get):
