@@ -147,5 +147,5 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     httpd = SocketServer.TCPServer(("", PORT), PartnerCredentialsHandler)
 
-    print "serving at port", PORT
+    print("serving at port", PORT)
     httpd.serve_forever()
