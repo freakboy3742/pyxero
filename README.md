@@ -1,7 +1,7 @@
 PyXero
 ======
 
-[![Build Status](https://travis-ci.org/freakboy3742/pyxero.svg?branch=master)](https://travis-ci.org/freakboy3742/pyxero)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE) [![Build Status](https://github.com/freakboy3742/pyxero/workflows/Build%20status/badge.svg)](https://github.com/freakboy3742/pyxero/actions)
 
 PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
@@ -175,30 +175,30 @@ the new state.
 ### Using OAuth2 Credentials
 
 OAuth2 Credentials work similarly to the 3-step OAuth used by
-Partner Applications. OAuth2 tokens have a 30 minute expiry, 
+Partner Applications. OAuth2 tokens have a 30 minute expiry,
 but can be swapped for a new token at any time. Xero documentation on the OAuth2
-process can be found [here](https://developer.xero.com/documentation/oauth2/). 
-The procedure for creating and authenticating credentials is as follows *(with a 
+process can be found [here](https://developer.xero.com/documentation/oauth2/).
+The procedure for creating and authenticating credentials is as follows *(with a
 Django example at the end)*:
 
- 1) [Register your app](https://developer.xero.com/myapps) with Xero, using a 
-    redirect URI which will be served by your app in order to complete the 
-    authorisation e.g. `https://mysite.com/oauth/xero/callback/`. See step 3 for 
-    an example of what your app should do. Generate a Client Secret, then store 
-    it and the Client Id somewhere that your app can access them, such as a 
-    config file.  
+ 1) [Register your app](https://developer.xero.com/myapps) with Xero, using a
+    redirect URI which will be served by your app in order to complete the
+    authorisation e.g. `https://mysite.com/oauth/xero/callback/`. See step 3 for
+    an example of what your app should do. Generate a Client Secret, then store
+    it and the Client Id somewhere that your app can access them, such as a
+    config file.
 
- 2) Construct an `OAuth2Credentials` instance using the details from the first 
-    step. 
+ 2) Construct an `OAuth2Credentials` instance using the details from the first
+    step.
     ```python
     >>> from xero.auth import OAuth2Credentials
     >>>
     >>> credentials = OAuth2Credentials(client_id, client_secret,
     >>>                                 callback_uri=callback_uri)
     ```
-    If neccessary pass in a list of scopes to define the scopes required by your 
+    If neccessary pass in a list of scopes to define the scopes required by your
     app. E.g. if write access is required to transactions and payroll employees:
-    
+
     ```python
     >>> from xero.constants import XeroScopes
     >>>
@@ -207,28 +207,28 @@ Django example at the end)*:
     >>> credentials = OAuth2Credentials(client_id, client_secret, scope=my_scope
     >>>                                 callback_uri=callback_uri)
     ```
-    The default scopes are `['offline_access', 'accounting.transactions.read', 
-    'accounting.contacts.read']`. `offline_access` is required in order for 
-    tokens to be refreshable. For more details on scopes see Xero's 
+    The default scopes are `['offline_access', 'accounting.transactions.read',
+    'accounting.contacts.read']`. `offline_access` is required in order for
+    tokens to be refreshable. For more details on scopes see Xero's
     [documentation]( https://developer.xero.com/documentation/oauth2/scopes).
-    
- 3) Generate a Xero authorisation url which the user can visit to complete 
-    authorisation. Then store the state of the credentials object and redirect 
+
+ 3) Generate a Xero authorisation url which the user can visit to complete
+    authorisation. Then store the state of the credentials object and redirect
     the user to the url in their browser.
     ```python
     >>> authorisation_url = credentials.generate_url()
-    >>> 
+    >>>
     >>> # Now store credentials.state somewhere accessible, e.g a cache
     >>> mycache['xero_creds'] = credentials.state
     >>>
     >>> # then redirect the user to authorisation_url
     ...
     ```
-    The callback URI should be the redirect URI you used in step 1. 
-  
- 4) After authorization the user will be redirected from Xero to the 
-    callback URI provided in step 1, along with a querystring containing the 
-    authentication secret. When your app processes this request, it should pass 
+    The callback URI should be the redirect URI you used in step 1.
+
+ 4) After authorization the user will be redirected from Xero to the
+    callback URI provided in step 1, along with a querystring containing the
+    authentication secret. When your app processes this request, it should pass
     the full URI including querystring to `verify()`:
     ```python
     >>> # Recreate the credentials object
@@ -239,15 +239,15 @@ Django example at the end)*:
     >>>
     >>> credentials.verify(request_uri)
     ```
-    A token will be fetched from Xero and saved as `credentials.token`. If the 
-    credentials object needs to be created again either dump the whole object 
+    A token will be fetched from Xero and saved as `credentials.token`. If the
+    credentials object needs to be created again either dump the whole object
     using:
     ```python
     >>> cred_state = credentials.state
     >>> ...
     >>> new_creds = OAuth2Credentials(**cred_state)
     ```
-    or just use the client_id, client_secret and token (and optionally scopes 
+    or just use the client_id, client_secret and token (and optionally scopes
     and tenant_id):
     ```python
     >>> token = credentials.token
@@ -255,8 +255,8 @@ Django example at the end)*:
     >>> new_creds = OAuth2Credentials(client_id, client_secret, token=token)
     ```
 
- 5) Now the credentials may be used to authorize a Xero session. As OAuth2 
-    allows authentication for mulitple Xero Organisations, it is necessary to 
+ 5) Now the credentials may be used to authorize a Xero session. As OAuth2
+    allows authentication for mulitple Xero Organisations, it is necessary to
     set the tenant_id against which the xero client's queries will run.
     ```python
     >>> from xero import Xero
@@ -266,11 +266,11 @@ Django example at the end)*:
     >>> xero.contacts.all()
     >>> ...
     ```
-    If the scopes supplied in Step 2 did not require access to organisations 
-    (e.g. when only requesting scopes for single sign) it will not be 
-    possible to make requests with the Xero API and `set_default_tenant()` will 
+    If the scopes supplied in Step 2 did not require access to organisations
+    (e.g. when only requesting scopes for single sign) it will not be
+    possible to make requests with the Xero API and `set_default_tenant()` will
     raise an exception.
-    
+
     To pick from multiple possible Xero organisations the `tenant_id` may be set
     explicitly:
     ```python
@@ -290,11 +290,11 @@ Django example at the end)*:
     >>>     new_token = credentials.token
     ```
  #### Django OAuth2 App Example
- This example shows authorisation, automatic token refreshing and API use in 
- a Django app which has read/write access to contacts and transactions. If the 
- cache used is cleared on server restart, the token will be lost and 
+ This example shows authorisation, automatic token refreshing and API use in
+ a Django app which has read/write access to contacts and transactions. If the
+ cache used is cleared on server restart, the token will be lost and
  verification will have to take place again.
- 
+
  ```python
     from django.http import HttpResponseRedirect
     from django.core.cache import caches
@@ -302,18 +302,18 @@ Django example at the end)*:
     from xero import Xero
     from xero.auth import OAuth2Credentials
     from xero.constants import XeroScopes
-    
+
     def start_xero_auth_view(request):
         # Get client_id, client_secret from config file or settings then
         credentials = OAuth2Credentials(
-            client_id, client_secret, callback_uri=callback_uri, 
-            scope=[XeroScopes.OFFLINE_ACCESS, XeroScopes.ACCOUNTING_CONTACTS, 
+            client_id, client_secret, callback_uri=callback_uri,
+            scope=[XeroScopes.OFFLINE_ACCESS, XeroScopes.ACCOUNTING_CONTACTS,
                    XeroScopes.ACCOUNTING_TRANSACTIONS]
         )
         authorization_url = credentials.generate_url()
         caches['mycache'].set('xero_creds', credentials.state)
         return HttpResponseRedirect(authorization_url)
-    
+
     def process_callback_view(request):
         cred_state = caches['mycache'].get('xero_creds')
         credentials = OAuth2Credentials(**cred_state)
@@ -333,7 +333,7 @@ Django example at the end)*:
         contacts = xero.contacts.all()
         ...
  ```
-    
+
 ## Using the Xero API
 
 *This API is a work in progress. At present, there is no wrapper layer

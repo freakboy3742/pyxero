@@ -1,12 +1,12 @@
 import os
-from io import BytesIO
-from http.server import SimpleHTTPRequestHandler
 import socketserver
-from urllib.parse import urlparse, parse_qsl
+from http.server import SimpleHTTPRequestHandler
+from io import BytesIO
+from urllib.parse import parse_qsl, urlparse
 
+from xero import Xero
 from xero.auth import PublicCredentials
 from xero.exceptions import XeroException
-from xero import Xero
 
 PORT = 8000
 

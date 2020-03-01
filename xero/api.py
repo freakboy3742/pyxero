@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 from .filesmanager import FilesManager
+from .manager import Manager
 from .payrollmanager import PayrollManager
 from .projectmanager import ProjectManager
-from .manager import Manager
 
 
 class Xero(object):
@@ -46,13 +46,16 @@ class Xero(object):
         # the lowercase name of the object and attach it to an
         # instance of a Manager object to operate on it
         for name in self.OBJECT_LIST:
-            setattr(self, name.lower(), Manager(name, credentials, unit_price_4dps,
-                                                user_agent))
+            setattr(
+                self,
+                name.lower(),
+                Manager(name, credentials, unit_price_4dps, user_agent),
+            )
 
         setattr(self, "filesAPI", Files(credentials))
-        setattr(self, "payrollAPI", Payroll(credentials, unit_price_4dps,
-                                            user_agent))
+        setattr(self, "payrollAPI", Payroll(credentials, unit_price_4dps, user_agent))
         setattr(self, "projectsAPI", Project(credentials))
+
 
 class Files(object):
     """An ORM-like interface to the Xero Files API"""
@@ -89,8 +92,12 @@ class Payroll(object):
 
     def __init__(self, credentials, unit_price_4dps=False, user_agent=None):
         for name in self.OBJECT_LIST:
-            setattr(self, name.lower(), PayrollManager(name, credentials, unit_price_4dps,
-                                                       user_agent))
+            setattr(
+                self,
+                name.lower(),
+                PayrollManager(name, credentials, unit_price_4dps, user_agent),
+            )
+
 
 class Project(object):
     """An ORM-like interface to the Xero Projects API"""
