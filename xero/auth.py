@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import datetime
 import requests
+from six.moves.urllib.parse import parse_qs, urlencode
 
 from oauthlib.oauth1 import (
     SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_HMAC
@@ -15,13 +16,23 @@ from .constants import (
     XeroScopes,
 )
 from .exceptions import (
-    XeroBadRequest, XeroException, XeroExceptionUnknown, XeroForbidden,
-    XeroInternalError, XeroNotAvailable, XeroNotFound, XeroNotImplemented,
-    XeroNotVerified, XeroRateLimitExceeded, XeroUnauthorized, XeroAccessDenied
+    XeroBadRequest, 
+    XeroException, 
+    XeroExceptionUnknown, 
+    XeroForbidden,
+    XeroInternalError, 
+    XeroNotAvailable, 
+    XeroNotFound, 
+    XeroNotImplemented,
+    XeroNotVerified, 
+    XeroRateLimitExceeded, 
+    XeroUnauthorized, 
+    XeroAccessDenied,
 )
+from .utils import resolve_user_agent
 
+OAUTH_EXPIRY_SECONDS = 3600  # Default unless a response reports differently
 
-OAUTH_EXPIRY_SECONDS = 3600 # Default unless a response reports differently
 DEFAULT_SCOPE = [
     XeroScopes.OFFLINE_ACCESS,
     XeroScopes.ACCOUNTING_TRANSACTIONS_READ,
@@ -29,7 +40,7 @@ DEFAULT_SCOPE = [
 ]
 
 
-class PrivateCredentials(object):
+class PrivateCredentials:
     """An object wrapping the 2-step OAuth process for Private Xero API access.
 
     Usage:
@@ -68,7 +79,7 @@ class PrivateCredentials(object):
         )
 
 
-class PublicCredentials(object):
+class PublicCredentials:
     """An object wrapping the 3-step OAuth process for Public Xero API access.
 
     Usage:
@@ -114,7 +125,6 @@ class PublicCredentials(object):
         Xero verification process will redirect to that URL when
 
         """
-        from xero import __version__ as VERSION
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.callback_uri = callback_uri
@@ -123,11 +133,7 @@ class PublicCredentials(object):
         self.oauth_expires_at = oauth_expires_at
         self.oauth_authorization_expires_at = oauth_authorization_expires_at
         self.scope = scope
-
-        if user_agent is None:
-            self.user_agent = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
-        else:
-            self.user_agent = user_agent
+        self.user_agent = resolve_user_agent(user_agent)
 
         self.base_url = XERO_BASE_URL
         self._signature_method = SIGNATURE_HMAC
@@ -323,6 +329,7 @@ class PublicCredentials(object):
         return self.oauth_expires_at <= \
                (now + datetime.timedelta(seconds=CONSERVATIVE_SECONDS))
 
+
 class PartnerCredentials(PublicCredentials):
     """An object wrapping the 3-step OAuth process for Partner Xero API access.
 
@@ -358,7 +365,6 @@ class PartnerCredentials(PublicCredentials):
         Xero verification process will redirect to that URL when
 
         """
-        from xero import __version__ as VERSION
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.callback_uri = callback_uri
@@ -367,10 +373,7 @@ class PartnerCredentials(PublicCredentials):
         self.oauth_expires_at = oauth_expires_at
         self.oauth_authorization_expires_at = oauth_authorization_expires_at
         self.scope = scope
-        if user_agent is None:
-            self.user_agent = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()
-        else:
-            self.user_agent = user_agent
+        self.user_agent = resolve_user_agent(user_agent)
 
         self._signature_method = SIGNATURE_RSA
         self.base_url = XERO_BASE_URL

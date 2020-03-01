@@ -4,7 +4,6 @@ import datetime
 import re
 import six
 import unittest
-
 from collections import defaultdict
 from mock import Mock
 from xml.dom.minidom import parseString
@@ -19,7 +18,7 @@ class ManagerTest(unittest.TestCase):
 
         def clean_xml(xml):
             xml = '<root>%s</root>' % to_str(xml)
-            return str(re.sub('>\n *<','><', parseString(xml).toxml()))
+            return str(re.sub('>\n *<', '><', parseString(xml).toxml()))
 
         def xml_to_dict(xml):
             nodes = re.findall('(<([^>]*)>(.*?)</\\2>)', xml)
@@ -34,7 +33,6 @@ class ManagerTest(unittest.TestCase):
         d1, d2 = tuple(map(xml_to_dict, cleaned))
 
         self.assertEqual(d1, d2, message)
-
 
     def test_serializer(self):
         credentials = Mock(base_url="")
@@ -106,7 +104,6 @@ class ManagerTest(unittest.TestCase):
             resultant_xml,
             expected_xml,
         )
-
 
     def test_serializer_phones_addresses(self):
         credentials = Mock(base_url="")
@@ -185,7 +182,6 @@ class ManagerTest(unittest.TestCase):
             "Resultant XML does not match expected."
         )
 
-
     def test_serializer_nested_singular(self):
         credentials = Mock(base_url="")
         manager = Manager('contacts', credentials)
@@ -223,7 +219,6 @@ class ManagerTest(unittest.TestCase):
             resultant_xml,
             expected_xml,
         )
-
 
     def test_filter(self):
         """The filter function should correctly handle various arguments"""
@@ -363,3 +358,22 @@ class ManagerTest(unittest.TestCase):
             "toDate": "2015-01-15",
             "unitdp": 4,
         }, "test params respects existing values")
+
+    def test_user_agent_inheritance(self):
+        """The user_agent should be inherited from the provided credentials when not set explicitly.
+        """
+
+        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("reports", credentials)
+        self.assertTrue(manager.user_agent.startswith('pyxero/'))
+
+        # Taken from credentials when no user_agent set on manager.
+        credentials = Mock(base_url="", user_agent='MY_COMPANY-MY_CONSUMER_KEY')
+        manager = Manager("reports", credentials)
+        self.assertEqual(manager.user_agent, 'MY_COMPANY-MY_CONSUMER_KEY')
+
+        # Manager's user_agent used when explicitly set.
+        credentials = Mock(base_url="", user_agent='MY_COMPANY-MY_CONSUMER_KEY')
+        manager = Manager("reports", credentials, user_agent='DemoCompany-1234567890')
+        self.assertEqual(manager.user_agent, 'DemoCompany-1234567890')
