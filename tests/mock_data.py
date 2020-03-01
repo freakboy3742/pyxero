@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-
 # exceptions.py
 
 bad_request_text = """<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -59,7 +58,7 @@ not_implemented_text = """<ApiException xmlns:xsd="http://www.w3.org/2001/XMLSch
 
 # manager.py
 
-unicode_content_text = u"""<Response xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+unicode_content_text = """<Response xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Id>dbb54b2b-8fdb-4277-ad03-2df50ce760fa</Id>
   <Status>OK</Status>
   <ProviderName>TradesCloud</ProviderName>
