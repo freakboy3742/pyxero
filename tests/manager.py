@@ -262,6 +262,14 @@ class ManagerTest(unittest.TestCase):
             {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'}
         )
 
+        uri, params, method, body, headers, singleobject = manager._filter(
+                **{'AmountPaid': 0.0})
+
+        self.assertEqual(
+            params,
+            {'where': 'AmountPaid=="0.0"'}
+        )
+
     def test_rawfilter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
