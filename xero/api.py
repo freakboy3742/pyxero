@@ -36,6 +36,7 @@ class Xero(object):
         "TaxRates",
         "TrackingCategories",
         "Users",
+        "Quotes",
     )
 
     def __init__(self, credentials, unit_price_4dps=False, user_agent=None):

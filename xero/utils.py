@@ -66,6 +66,7 @@ OBJECT_NAMES = {
     "LineItems": "LineItem",
     "JournalLines": "JournalLine",
     "PurchaseOrders": "PurchaseOrder",
+    "Quotes": "Quote",
 }
 
 
