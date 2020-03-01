@@ -11,9 +11,10 @@ from xml.etree.ElementTree import tostring, SubElement, Element
 from .exceptions import (
     XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
     XeroNotAvailable, XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded,
-    XeroUnauthorized
+    XeroUnauthorized, XeroTenantIdNotSet
 )
 from .utils import singular, isplural, json_load_object_hook
+from .auth import OAuth2Credentials
 
 
 class BaseManager(object):
@@ -24,6 +25,7 @@ class BaseManager(object):
         'all',
         'put',
         'delete',
+        'get_history',
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
@@ -72,7 +74,8 @@ class BaseManager(object):
         'CanApplyToRevenue',
         'IsReconciled',
         'EnablePaymentsToAccount',
-        'ShowInExpenseClaims'
+        'ShowInExpenseClaims',
+        'DiscountEnteredAsPercent',
     )
     DECIMAL_FIELDS = (
         'Hours',
@@ -175,6 +178,12 @@ class BaseManager(object):
             if headers is None:
                 headers = {}
 
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers['Xero-tenant-id'] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
+
             # Use the JSON API by default, but remember we might request a PDF (application/pdf)
             # so don't force the Accept header.
             if 'Accept' not in headers:
@@ -236,6 +245,10 @@ class BaseManager(object):
         uri_params = self.extra_params.copy()
         uri_params.update(params if params else {})
         return uri, uri_params, 'get', None, headers, True
+
+    def _get_history(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'history']) + '/'
+        return uri, {}, 'get', None, None, False
 
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""

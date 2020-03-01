@@ -14,6 +14,7 @@ class Xero(object):
         "BankTransactions",
         "BankTransfers",
         "BrandingThemes",
+        "BatchPayments",
         "ContactGroups",
         "Contacts",
         "CreditNotes",
@@ -75,6 +76,7 @@ class Payroll(object):
 
     OBJECT_LIST = (
         "Employees",
+        "SuperFunds",
         "Timesheets",
         "PayItems",
         "PayRuns",
