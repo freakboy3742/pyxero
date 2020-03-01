@@ -11,9 +11,10 @@ from xml.etree.ElementTree import tostring, SubElement, Element
 from .exceptions import (
     XeroBadRequest, XeroExceptionUnknown, XeroForbidden, XeroInternalError,
     XeroNotAvailable, XeroNotFound, XeroNotImplemented, XeroRateLimitExceeded,
-    XeroUnauthorized
+    XeroUnauthorized, XeroTenantIdNotSet
 )
 from .utils import singular, isplural, json_load_object_hook
+from .auth import OAuth2Credentials
 
 
 class BaseManager(object):
@@ -24,10 +25,18 @@ class BaseManager(object):
         'all',
         'put',
         'delete',
+        'get_history',
+        'put_history',
         'get_attachments',
         'get_attachment_data',
         'put_attachment_data',
     )
+    OBJECT_DECORATED_METHODS = {
+        'Invoices': [
+            'email',
+            'online_invoice',
+        ],
+    }
     DATETIME_FIELDS = (
         'UpdatedDateUTC',
         'Updated',
@@ -74,6 +83,9 @@ class BaseManager(object):
         'EnablePaymentsToAccount',
         'ShowInExpenseClaims',
         'DiscountEnteredAsPercent',
+        'IsPurchased',
+        'IsSold',
+        'IsTrackedAsInventory',
     )
     DECIMAL_FIELDS = (
         'Hours',
@@ -96,7 +108,7 @@ class BaseManager(object):
         'lt': '<',
         'lte': '<=',
         'gte': '>=',
-        'ne': '!='
+        'ne': '!=',
     }
 
     def __init__(self):
@@ -157,7 +169,9 @@ class BaseManager(object):
 
     def _parse_api_response(self, response, resource_name):
         data = json.loads(response.text, object_hook=json_load_object_hook)
-        assert data['Status'] == 'OK', "Expected the API to say OK but received %s" % data['Status']
+        assert data['Status'] == 'OK', \
+            "Expected the API to say OK but received %s" % data['Status']
+
         try:
             return data[resource_name]
         except KeyError:
@@ -171,10 +185,17 @@ class BaseManager(object):
         def wrapper(*args, **kwargs):
             timeout = kwargs.pop('timeout', None)
 
-            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
+            uri, params, method, body, headers, singleobject = func(
+                *args, **kwargs)
 
             if headers is None:
                 headers = {}
+
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers['Xero-tenant-id'] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
 
             # Use the JSON API by default, but remember we might request a PDF (application/pdf)
             # so don't force the Accept header.
@@ -186,11 +207,12 @@ class BaseManager(object):
             headers['User-Agent'] = self.user_agent
 
             response = getattr(requests, method)(
-                    uri, data=body, headers=headers, auth=self.credentials.oauth,
-                    params=params, timeout=timeout)
+                uri, data=body, headers=headers, auth=self.credentials.oauth,
+                params=params, timeout=timeout)
 
             if response.status_code == 200:
-                # If we haven't got XML or JSON, assume we're being returned a binary file
+                # If we haven't got XML or JSON, assume we're being returned a
+                # binary file
                 if not response.headers['content-type'].startswith('application/json'):
                     return response.content
 
@@ -238,6 +260,10 @@ class BaseManager(object):
         uri_params.update(params if params else {})
         return uri, uri_params, 'get', None, headers, True
 
+    def _get_history(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'history']) + '/'
+        return uri, {}, 'get', None, None, False
+
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments']) + '/'
@@ -260,6 +286,14 @@ class BaseManager(object):
         file.write(data)
         return len(data)
 
+    def _email(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'Email'])
+        return uri, {}, 'post', None, None, True
+
+    def _online_invoice(self, id):
+        uri = '/'.join([self.base_url, self.name, id, 'OnlineInvoice'])
+        return uri, {}, 'get', None, None, True
+
     def save_or_put(self, data, method='post', headers=None, summarize_errors=True):
         uri = '/'.join([self.base_url, self.name])
         body = {'xml': self._prepare_data_for_save(data)}
@@ -278,11 +312,25 @@ class BaseManager(object):
         uri = '/'.join([self.base_url, self.name, id])
         return uri, {}, 'delete', None, None, False
 
+    def _put_history_data(self, id, details):
+        """Add a history note to the Xero object."""
+        uri = '/'.join([self.base_url, self.name, id, 'history'])
+        details_data = {'Details': details}
+        root_elm = Element('HistoryRecord')
+        self.dict_to_xml(root_elm, details_data)
+        data = six.u(tostring(root_elm))
+        return uri, {}, 'put', data, None, False
+
+    def _put_history(self, id, details):
+        """Upload a history note to the Xero object."""
+        return self._put_history_data(id, details)
+
     def _put_attachment_data(self, id, filename, data, content_type, include_online=False):
         """Upload an attachment to the Xero object."""
         uri = '/'.join([self.base_url, self.name, id, 'Attachments', filename])
         params = {'IncludeOnline': 'true'} if include_online else {}
-        headers = {'Content-Type': content_type, 'Content-Length': str(len(data))}
+        headers = {'Content-Type': content_type,
+                   'Content-Length': str(len(data))}
         return uri, params, 'put', data, headers, False
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
@@ -330,6 +378,9 @@ class BaseManager(object):
                     if parts[1] in ["contains", "startswith", "endswith"]:
                         field = parts[0]
                         fmt = ''.join(['%s.', parts[1], '(%s)'])
+                    elif parts[1] in ["tolower", "toupper"]:
+                        field = parts[0]
+                        fmt = ''.join(['%s.', parts[1], '()==%s'])
                     elif parts[1] in self.OPERATOR_MAPPINGS:
                         field = parts[0]
                         key = field
@@ -358,8 +409,10 @@ class BaseManager(object):
             # Treat any remaining arguments as filter predicates
             # Xero will break if you search without a check for null in the first position:
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
-            sortedkwargs = sorted(six.iteritems(kwargs),
-                key=lambda item: -1 if 'isnull' in item[0] else 0)
+            sortedkwargs = sorted(
+                six.iteritems(kwargs),
+                key=lambda item: -1 if 'isnull' in item[0] else 0
+            )
             for key, value in sortedkwargs:
                 filter_params.append(generate_param(key, value))
 
