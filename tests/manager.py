@@ -5,6 +5,7 @@ import unittest
 from mock import Mock
 
 from xero.manager import Manager
+
 from .helpers import assertXMLEqual
 
 

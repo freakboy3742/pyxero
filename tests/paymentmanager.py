@@ -4,6 +4,7 @@ import unittest
 from mock import Mock
 
 from xero.paymentmanager import PaymentManager
+
 from .helpers import assertXMLEqual
 
 

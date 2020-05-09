@@ -2,9 +2,9 @@ from __future__ import unicode_literals
 
 from .filesmanager import FilesManager
 from .manager import Manager
+from .paymentmanager import PaymentManager
 from .payrollmanager import PayrollManager
 from .projectmanager import ProjectManager
-from .paymentmanager import PaymentManager
 
 
 class Xero(object):
