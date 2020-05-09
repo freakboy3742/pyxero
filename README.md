@@ -390,9 +390,6 @@ For example, to deal with contacts::
 
 # Save multiple objects
 >>> xero.contacts.save([c1, c2])
-
-# Delete an existing payment
->>> xero.payments.save({'Status': 'DELETED'}, id='b05466c8-dc54-4ff8-8f17-9d7008a2e44b')
 ```
 
 Complex filters can be constructed in the Django-way, for example retrieving invoices for a contact:

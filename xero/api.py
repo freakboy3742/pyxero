@@ -4,6 +4,7 @@ from .filesmanager import FilesManager
 from .manager import Manager
 from .payrollmanager import PayrollManager
 from .projectmanager import ProjectManager
+from .paymentmanager import PaymentManager
 
 
 class Xero(object):
@@ -46,10 +47,16 @@ class Xero(object):
         # the lowercase name of the object and attach it to an
         # instance of a Manager object to operate on it
         for name in self.OBJECT_LIST:
+
+            manager_class = Manager
+
+            if name == 'Payments':
+                manager_class = PaymentManager
+
             setattr(
                 self,
                 name.lower(),
-                Manager(name, credentials, unit_price_4dps, user_agent),
+                manager_class(name, credentials, unit_price_4dps, user_agent),
             )
 
         setattr(self, "filesAPI", Files(credentials))
