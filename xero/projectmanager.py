@@ -4,7 +4,7 @@ import os
 import requests
 from six.moves.urllib.parse import parse_qs
 
-from .constants import XERO_FILES_URL
+from .constants import XERO_PROJECTS_URL
 from .exceptions import (
     XeroBadRequest,
     XeroExceptionUnknown,
@@ -19,26 +19,21 @@ from .exceptions import (
 )
 
 
-class FilesManager(object):
+class ProjectManager(object):
     DECORATED_METHODS = (
         "get",
         "all",
         "create",
-        "save",
         "delete",
-        "get_files",
-        "upload_file",
-        "get_association",
-        "get_associations",
-        "make_association",
-        "delete_association",
-        "get_content",
+        "get_tasks",
+        "get_time",
+        "set_status",
     )
 
     def __init__(self, name, credentials):
         self.credentials = credentials
         self.name = name
-        self.base_url = credentials.base_url + XERO_FILES_URL
+        self.base_url = credentials.base_url + XERO_PROJECTS_URL
 
         for method_name in self.DECORATED_METHODS:
             method = getattr(self, "_%s" % method_name)
@@ -130,22 +125,20 @@ class FilesManager(object):
         uri = "/".join([self.base_url, self.name, id])
         return uri, {}, "get", None, headers, True, None
 
-    def _get_files(self, folderId):
-        """Retrieve the list of files contained in a folder"""
-        uri = "/".join([self.base_url, self.name, folderId, "Files"])
+    def _get_tasks(self, projectId):
+        """Retrieve the list of tasks contained in a project"""
+        uri = "/".join([self.base_url, self.name, projectId, "Tasks"])
         return uri, {}, "get", None, None, False, None
 
-    def _get_associations(self, id):
-        uri = "/".join([self.base_url, self.name, id, "Associations"]) + "/"
+    def _get_time(self, projectId):
+        """Retrieve the list of times contained in a project"""
+        uri = "/".join([self.base_url, self.name, projectId, "Time"])
         return uri, {}, "get", None, None, False, None
 
-    def _get_association(self, fileId, objectId):
-        uri = "/".join([self.base_url, self.name, fileId, "Associations", objectId])
-        return uri, {}, "get", None, None, False, None
-
-    def _delete_association(self, fileId, objectId):
-        uri = "/".join([self.base_url, self.name, fileId, "Associations", objectId])
-        return uri, {}, "delete", None, None, False, None
+    def _set_status(self, projectId, data):
+        uri = "/".join([self.base_url, self.name, projectId])
+        body = data
+        return uri, {}, "patch", body, None, False, None
 
     def create_or_save(self, data, method="post", headers=None, summarize_errors=True):
         if "Id" not in data:
@@ -162,35 +155,9 @@ class FilesManager(object):
     def _create(self, data):
         return self.create_or_save(data, method="post")
 
-    def _save(self, data, summarize_errors=True):
-        return self.create_or_save(
-            data, method="put", summarize_errors=summarize_errors
-        )
-
     def _delete(self, id):
         uri = "/".join([self.base_url, self.name, id])
         return uri, {}, "delete", None, None, False, None
-
-    def _upload_file(self, path, folderId=None):
-        if folderId is not None:
-            uri = "/".join([self.base_url, self.name, folderId])
-        else:
-            uri = "/".join([self.base_url, self.name])
-        filename = self.filename(path)
-
-        files = dict()
-        files[filename] = open(path, mode="rb")
-
-        return uri, {}, "post", None, None, False, files
-
-    def _get_content(self, fileId):
-        uri = "/".join([self.base_url, self.name, fileId, "Content"])
-        return uri, {}, "get", None, None, False, None
-
-    def _make_association(self, id, data):
-        uri = "/".join([self.base_url, self.name, id, "Associations"])
-        body = data
-        return uri, {}, "post", body, None, False, None
 
     def _all(self):
         uri = "/".join([self.base_url, self.name])

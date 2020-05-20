@@ -1,14 +1,13 @@
-import sys
 import os
 import SimpleHTTPServer
 import SocketServer
-from urlparse import urlparse, parse_qsl
-
+import sys
 from StringIO import StringIO
+from urlparse import parse_qsl, urlparse
 
+from xero import Xero
 from xero.auth import PartnerCredentials
 from xero.exceptions import XeroException
-from xero import Xero
 
 PORT = 8000
 
@@ -58,7 +57,7 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         consumer_key = os.environ.get('XERO_CONSUMER_KEY')
         consumer_secret = os.environ.get('XERO_CONSUMER_SECRET')
         private_key_path = os.environ.get('XERO_RSA_CERT_KEY_PATH')
-        
+
         if consumer_key is None or consumer_secret is None:
             raise ValueError(
                 'Please define both XERO_CONSUMER_KEY and XERO_CONSUMER_SECRET environment variables')
@@ -148,5 +147,5 @@ class PartnerCredentialsHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     httpd = SocketServer.TCPServer(("", PORT), PartnerCredentialsHandler)
 
-    print "serving at port", PORT
+    print("serving at port", PORT)
     httpd.serve_forever()
