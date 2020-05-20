@@ -375,4 +375,4 @@ class ManagerTest(unittest.TestCase):
              u'<AppliedAmount>100</AppliedAmount>'
              u'</Allocation></Allocations>')
         )
-        assert singleobject == False
+        assert not singleobject

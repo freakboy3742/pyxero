@@ -8,7 +8,6 @@ from .allocationsmanager import (
 from .optionsmanager import TrackingCategoryOptionsManager
 from .payrollmanager import PayrollManager
 from .manager import Manager
-from .payrollmanager import PayrollManager
 from .projectmanager import ProjectManager
 
 
