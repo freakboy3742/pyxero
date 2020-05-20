@@ -6,13 +6,13 @@ from .basemanager import BaseManager
 from .constants import XERO_API_URL
 
 
-class OptionsManager(BaseManager):
+class TrackingCategoryOptionsManager(BaseManager):
 
     def __init__(self, credentials, user_agent=None):
         from xero import __version__ as VERSION
         self.credentials = credentials
         self.singular = 'Option'
-        self.name = 'Options'
+        self.name = 'TrackingCategoryOptions'
         self.base_url = credentials.base_url + XERO_API_URL
         if user_agent is None:
             self.user_agent = 'pyxero/%s ' % VERSION + requests.utils.default_user_agent()

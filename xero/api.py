@@ -5,7 +5,7 @@ from .allocationsmanager import (
     PrepaymentAllocationsManager,
     CreditNoteAllocationsManager,
 )
-from .optionsmanager import OptionsManager
+from .optionsmanager import TrackingCategoryOptionsManager
 from .payrollmanager import PayrollManager
 from .manager import Manager
 from .payrollmanager import PayrollManager
@@ -61,7 +61,7 @@ class Xero(object):
         setattr(self, "filesAPI", Files(credentials))
         setattr(self, "prepaymentallocations", PrepaymentAllocationsManager(credentials))
         setattr(self, "creditnoteallocations", CreditNoteAllocationsManager(credentials))
-        setattr(self, "trackingcategoryoptions", OptionsManager(credentials))
+        setattr(self, "trackingcategoryoptions", TrackingCategoryOptionsManager(credentials))
         setattr(self, "payrollAPI", Payroll(credentials, unit_price_4dps, user_agent))
         setattr(self, "projectsAPI", Project(credentials))
 
