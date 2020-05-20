@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 
-from .filesmanager import FilesManager
 from .allocationsmanager import (
-    PrepaymentAllocationsManager,
     CreditNoteAllocationsManager,
+    PrepaymentAllocationsManager,
 )
+from .filesmanager import FilesManager
+from .manager import Manager
 from .optionsmanager import TrackingCategoryOptionsManager
 from .payrollmanager import PayrollManager
-from .manager import Manager
 from .projectmanager import ProjectManager
 
 
