@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
+from .bankfeedsmanager import BankFeedsManager
 from .filesmanager import FilesManager
 from .manager import Manager
 from .payrollmanager import PayrollManager
 from .projectmanager import ProjectManager
-from .bankfeedsmanager import BankFeedsManager
 
 
 class Xero(object):
