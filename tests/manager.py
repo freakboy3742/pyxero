@@ -4,7 +4,6 @@ import datetime
 import re
 import six
 import unittest
-
 from collections import defaultdict
 from mock import Mock
 from xml.dom.minidom import parseString
@@ -13,16 +12,16 @@ from xero.manager import Manager
 
 
 class ManagerTest(unittest.TestCase):
-    def assertXMLEqual(self, xml1, xml2, message=''):
+    def assertXMLEqual(self, xml1, xml2, message=""):
         def to_str(s):
-            return s.decode('utf-8') if six.PY3 and isinstance(s, bytes) else str(s)
+            return s.decode("utf-8") if six.PY3 and isinstance(s, bytes) else str(s)
 
         def clean_xml(xml):
-            xml = '<root>%s</root>' % to_str(xml)
-            return str(re.sub('>\n *<','><', parseString(xml).toxml()))
+            xml = "<root>%s</root>" % to_str(xml)
+            return str(re.sub(">\n *<", "><", parseString(xml).toxml()))
 
         def xml_to_dict(xml):
-            nodes = re.findall('(<([^>]*)>(.*?)</\\2>)', xml)
+            nodes = re.findall("(<([^>]*)>(.*?)</\\2>)", xml)
             if len(nodes) == 0:
                 return xml
             d = defaultdict(list)
@@ -35,39 +34,38 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(d1, d2, message)
 
-
     def test_serializer(self):
         credentials = Mock(base_url="")
-        manager = Manager('contacts', credentials)
+        manager = Manager("contacts", credentials)
 
         example_invoice_input = {
-            'Date': datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
-            'Reference': 'ABAS 123',
-            'LineItems': [
-                {'Description': 'Example description only'},
+            "Date": datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
+            "Reference": "ABAS 123",
+            "LineItems": [
+                {"Description": "Example description only"},
                 {
-                    'UnitAmount': '0.0000',
-                    'Quantity': 1,
-                    'AccountCode': '200',
-                    'Description': 'Example line item 2',
-                    'TaxType': 'OUTPUT'
+                    "UnitAmount": "0.0000",
+                    "Quantity": 1,
+                    "AccountCode": "200",
+                    "Description": "Example line item 2",
+                    "TaxType": "OUTPUT",
                 },
                 {
-                    'UnitAmount': '231.0000',
-                    'Quantity': 1,
-                    'AccountCode': '200',
-                    'Description': 'Example line item 3',
-                    'TaxType': 'OUTPUT'
+                    "UnitAmount": "231.0000",
+                    "Quantity": 1,
+                    "AccountCode": "200",
+                    "Description": "Example line item 3",
+                    "TaxType": "OUTPUT",
                 },
             ],
-            'Status': 'DRAFT',
-            'Type': 'ACCREC',
-            'DueDate': datetime.datetime(2015, 7, 6, 16, 25, 2, 711136),
-            'LineAmountTypes': 'Exclusive',
-            'Contact': {'Name': 'Basket Case'}
+            "Status": "DRAFT",
+            "Type": "ACCREC",
+            "DueDate": datetime.datetime(2015, 7, 6, 16, 25, 2, 711136),
+            "LineAmountTypes": "Exclusive",
+            "Contact": {"Name": "Basket Case"},
         }
         resultant_xml = manager._prepare_data_for_save(example_invoice_input)
-        resultant_xml = '<Invoice>%s</Invoice>' % resultant_xml
+        resultant_xml = "<Invoice>%s</Invoice>" % resultant_xml
 
         expected_xml = """
         <Invoice>
@@ -103,48 +101,31 @@ class ManagerTest(unittest.TestCase):
         """
 
         self.assertXMLEqual(
-            resultant_xml,
-            expected_xml,
+            resultant_xml, expected_xml,
         )
-
 
     def test_serializer_phones_addresses(self):
         credentials = Mock(base_url="")
-        manager = Manager('contacts', credentials)
+        manager = Manager("contacts", credentials)
 
         example_contact_input = {
-            'ContactID': '565acaa9-e7f3-4fbf-80c3-16b081ddae10',
-            'ContactStatus': 'ACTIVE',
-            'Name': 'Southside Office Supplies',
-            'Addresses': [
-                {
-                    'AddressType': 'POBOX',
-                },
-                {
-                    'AddressType': 'STREET',
-                },
+            "ContactID": "565acaa9-e7f3-4fbf-80c3-16b081ddae10",
+            "ContactStatus": "ACTIVE",
+            "Name": "Southside Office Supplies",
+            "Addresses": [{"AddressType": "POBOX"}, {"AddressType": "STREET"}],
+            "Phones": [
+                {"PhoneType": "DDI"},
+                {"PhoneType": "DEFAULT"},
+                {"PhoneType": "FAX"},
+                {"PhoneType": "MOBILE"},
             ],
-            'Phones': [
-                {
-                    'PhoneType': 'DDI',
-                },
-                {
-                    'PhoneType': 'DEFAULT',
-                },
-                {
-                    'PhoneType': 'FAX',
-                },
-                {
-                    'PhoneType': 'MOBILE',
-                },
-            ],
-            'UpdatedDateUTC': datetime.datetime(2015, 9, 18, 5, 6, 56, 893),
-            'IsSupplier': False,
-            'IsCustomer': False,
-            'HasAttachments': False,
+            "UpdatedDateUTC": datetime.datetime(2015, 9, 18, 5, 6, 56, 893),
+            "IsSupplier": False,
+            "IsCustomer": False,
+            "HasAttachments": False,
         }
         resultant_xml = manager._prepare_data_for_save(example_contact_input)
-        resultant_xml = '<Contact>%s</Contact>' % resultant_xml
+        resultant_xml = "<Contact>%s</Contact>" % resultant_xml
 
         expected_xml = """
         <Contact>
@@ -180,27 +161,22 @@ class ManagerTest(unittest.TestCase):
         """
 
         self.assertXMLEqual(
-            resultant_xml,
-            expected_xml,
-            "Resultant XML does not match expected."
+            resultant_xml, expected_xml, "Resultant XML does not match expected."
         )
-
 
     def test_serializer_nested_singular(self):
         credentials = Mock(base_url="")
-        manager = Manager('contacts', credentials)
+        manager = Manager("contacts", credentials)
 
         example_invoice_input = {
-            'Date': datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
-            'Reference': 'ABAS 123',
-            'LineItems': [
-                {'Description': 'Example description only'},
-            ],
-            'Status': 'DRAFT',
-            'Type': 'ACCREC',
-            'DueDate': datetime.datetime(2015, 7, 6, 16, 25, 2, 711136),
-            'LineAmountTypes': 'Exclusive',
-            'Contact': {'Name': 'Basket Case'}
+            "Date": datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
+            "Reference": "ABAS 123",
+            "LineItems": [{"Description": "Example description only"}],
+            "Status": "DRAFT",
+            "Type": "ACCREC",
+            "DueDate": datetime.datetime(2015, 7, 6, 16, 25, 2, 711136),
+            "LineAmountTypes": "Exclusive",
+            "Contact": {"Name": "Basket Case"},
         }
         resultant_xml = manager._prepare_data_for_save(example_invoice_input)
 
@@ -220,37 +196,34 @@ class ManagerTest(unittest.TestCase):
         """
 
         self.assertXMLEqual(
-            resultant_xml,
-            expected_xml,
+            resultant_xml, expected_xml,
         )
-
 
     def test_filter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager('contacts', credentials)
+        manager = Manager("contacts", credentials)
 
         uri, params, method, body, headers, singleobject = manager._filter(
-                order="LastName",
-                page=2,
-                offset=5,
-                since=datetime.datetime(2014, 8, 10, 15, 14, 46),
-                Name="John")
+            order="LastName",
+            page=2,
+            offset=5,
+            since=datetime.datetime(2014, 8, 10, 15, 14, 46),
+            Name="John",
+        )
 
-        self.assertEqual(method, 'get')
+        self.assertEqual(method, "get")
         self.assertFalse(singleobject)
 
         expected_params = {
-                "order": "LastName",
-                "page": 2,
-                "offset": 5,
-                "where": 'Name=="John"'
+            "order": "LastName",
+            "page": 2,
+            "offset": 5,
+            "where": 'Name=="John"',
         }
         self.assertEqual(params, expected_params)
 
-        expected_headers = {
-            "If-Modified-Since": "Sun, 10 Aug 2014 15:14:46 GMT"
-        }
+        expected_headers = {"If-Modified-Since": "Sun, 10 Aug 2014 15:14:46 GMT"}
         self.assertEqual(headers, expected_headers)
 
         # Also make sure an empty call runs ok
@@ -258,59 +231,61 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, {})
         self.assertIsNone(headers)
 
-        manager = Manager('invoices', credentials)
+        manager = Manager("invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
-                **{'Contact.ContactID': '3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f'})
+            **{"Contact.ContactID": "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f"}
+        )
 
         self.assertEqual(
             params,
-            {'where': 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'}
+            {
+                "where": 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'
+            },
         )
+
+        (uri, params, method, body, headers, singleobject) = manager._filter(
+            **{"AmountPaid": 0.0}
+        )
+
+        self.assertEqual(params, {"where": 'AmountPaid=="0.0"'})
 
     def test_rawfilter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager('invoices', credentials)
+        manager = Manager("invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
-            Status="VOIDED",
-            raw='Name.ToLower()=="test contact"'
+            Status="VOIDED", raw='Name.ToLower()=="test contact"'
         )
         self.assertEqual(
-            params,
-            {'where': 'Name.ToLower()=="test contact"&&Status=="VOIDED"'}
+            params, {"where": 'Name.ToLower()=="test contact"&&Status=="VOIDED"'}
         )
 
     def test_boolean_filter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager('invoices', credentials)
+        manager = Manager("invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
             CanApplyToRevenue=True
         )
-        self.assertEqual(
-            params,
-            {'where': 'CanApplyToRevenue==true'}
-        )
+        self.assertEqual(params, {"where": "CanApplyToRevenue==true"})
 
     def test_magnitude_filters(self):
         """The filter function should correctlu handle date arguments and gt, lt operators"""
         credentials = Mock(base_url="")
 
-        manager = Manager('invoices', credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(**{'Date__gt': datetime.datetime(2007, 12, 6)})
-
-        self.assertEqual(
-            params,
-            {u'where': u'Date>DateTime(2007,12,6)'}
+        manager = Manager("invoices", credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+            **{"Date__gt": datetime.datetime(2007, 12, 6)}
         )
 
-        manager = Manager('invoices', credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(**{'Date__lte': datetime.datetime(2007, 12, 6)})
+        self.assertEqual(params, {"where": "Date>DateTime(2007,12,6)"})
 
-        self.assertEqual(
-            params,
-            {u'where': u'Date<=DateTime(2007,12,6)'}
+        manager = Manager("invoices", credentials)
+        uri, params, method, body, headers, singleobject = manager._filter(
+            **{"Date__lte": datetime.datetime(2007, 12, 6)}
         )
+
+        self.assertEqual(params, {"where": "Date<=DateTime(2007,12,6)"})
 
     def test_unit4dps(self):
         """The manager should add a query param of unitdp iff enabled"""
@@ -318,17 +293,17 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock(base_url="")
 
         # test 4dps is disabled by default
-        manager = Manager('contacts', credentials)
+        manager = Manager("contacts", credentials)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps not enabled by default")
 
         # test 4dps is enabled by default
-        manager = Manager('contacts', credentials, unit_price_4dps=True)
+        manager = Manager("contacts", credentials, unit_price_4dps=True)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {"unitdp": 4}, "test 4dps can be enabled explicitly")
 
         # test 4dps can be disable explicitly
-        manager = Manager('contacts', credentials, unit_price_4dps=False)
+        manager = Manager("contacts", credentials, unit_price_4dps=False)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps can be disabled explicitly")
 
@@ -358,8 +333,27 @@ class ManagerTest(unittest.TestCase):
         uri, params, method, body, headers, singleobject = manager._get(
             "ProfitAndLoss", params=passed_params
         )
-        self.assertEqual(params, {
-            "fromDate": "2015-01-01",
-            "toDate": "2015-01-15",
-            "unitdp": 4,
-        }, "test params respects existing values")
+        self.assertEqual(
+            params,
+            {"fromDate": "2015-01-01", "toDate": "2015-01-15", "unitdp": 4},
+            "test params respects existing values",
+        )
+
+    def test_user_agent_inheritance(self):
+        """The user_agent should be inherited from the provided credentials when not set explicitly.
+        """
+
+        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("reports", credentials)
+        self.assertTrue(manager.user_agent.startswith("pyxero/"))
+
+        # Taken from credentials when no user_agent set on manager.
+        credentials = Mock(base_url="", user_agent="MY_COMPANY-MY_CONSUMER_KEY")
+        manager = Manager("reports", credentials)
+        self.assertEqual(manager.user_agent, "MY_COMPANY-MY_CONSUMER_KEY")
+
+        # Manager's user_agent used when explicitly set.
+        credentials = Mock(base_url="", user_agent="MY_COMPANY-MY_CONSUMER_KEY")
+        manager = Manager("reports", credentials, user_agent="DemoCompany-1234567890")
+        self.assertEqual(manager.user_agent, "DemoCompany-1234567890")

@@ -1,7 +1,6 @@
 import json
-from xml.dom.minidom import parseString
-
 from six.moves.urllib.parse import parse_qs
+from xml.dom.minidom import parseString
 
 
 class XeroException(Exception):
@@ -15,43 +14,56 @@ class XeroNotVerified(Exception):
     pass
 
 
+class XeroAccessDenied(Exception):
+    # Access was denied
+    pass
+
+
+class XeroTenantIdNotSet(Exception):
+    # Tenant Id must be set when using API with OAuth2 credentials
+    pass
+
+
 class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
-        if response.headers['content-type'].startswith('application/json'):
+        if response.headers["content-type"].startswith("application/json"):
             data = json.loads(response.text)
-            msg = "%s: %s" % (data['Type'], data['Message'])
-            self.errors = [err['Message']
-                for elem in data.get('Elements', [])
-                for err in elem.get('ValidationErrors', [])
+            msg = "%s: %s" % (data["Type"], data["Message"])
+            self.errors = [
+                err["Message"]
+                for elem in data.get("Elements", [])
+                for err in elem.get("ValidationErrors", [])
             ]
             if len(self.errors) > 0:
                 self.problem = self.errors[0]
                 if len(self.errors) > 1:
-                    msg += ' (%s, and %s other issues)' % (
-                            self.problem, len(self.errors))
+                    msg += " (%s, and %s other issues)" % (
+                        self.problem,
+                        len(self.errors),
+                    )
                 else:
-                    msg += ' (%s)' % self.problem
+                    msg += " (%s)" % self.problem
             else:
                 self.problem = None
             super(XeroBadRequest, self).__init__(response, msg=msg)
 
-        elif response.headers['content-type'].startswith('text/html'):
+        elif response.headers["content-type"].startswith("text/html"):
             payload = parse_qs(response.text)
-            self.errors = [payload['oauth_problem'][0]]
+            self.errors = [payload["oauth_problem"][0]]
             self.problem = self.errors[0]
-            super(XeroBadRequest, self).__init__(response, payload['oauth_problem_advice'][0])
+            super(XeroBadRequest, self).__init__(
+                response, payload["oauth_problem_advice"][0]
+            )
 
         else:
             # Extract the messages from the text.
             # parseString takes byte content, not unicode.
             dom = parseString(response.text.encode(response.encoding))
-            messages = dom.getElementsByTagName('Message')
+            messages = dom.getElementsByTagName("Message")
 
             msg = messages[0].childNodes[0].data
-            self.errors = [
-                m.childNodes[0].data for m in messages[1:]
-            ]
+            self.errors = [m.childNodes[0].data for m in messages[1:]]
             self.problem = self.errors[0]
             super(XeroBadRequest, self).__init__(response, msg)
 
@@ -60,9 +72,11 @@ class XeroUnauthorized(XeroException):
     # HTTP 401: Unauthorized
     def __init__(self, response):
         payload = parse_qs(response.text)
-        self.errors = [payload['oauth_problem'][0]]
+        self.errors = [payload["oauth_problem"][0]]
         self.problem = self.errors[0]
-        super(XeroUnauthorized, self).__init__(response, payload['oauth_problem_advice'][0])
+        super(XeroUnauthorized, self).__init__(
+            response, payload["oauth_problem_advice"][0]
+        )
 
 
 class XeroForbidden(XeroException):
@@ -76,10 +90,12 @@ class XeroNotFound(XeroException):
     def __init__(self, response):
         super(XeroNotFound, self).__init__(response, response.text)
 
+
 class XeroUnsupportedMediaType(XeroException):
     # HTTP 415: UnsupportedMediaType
     def __init__(self, response):
         super(XeroUnsupportedMediaType, self).__init__(response, response.text)
+
 
 class XeroInternalError(XeroException):
     # HTTP 500: Internal Error
@@ -93,7 +109,7 @@ class XeroNotImplemented(XeroException):
         # Extract the useful error message from the text.
         # parseString takes byte content, not unicode.
         dom = parseString(response.text.encode(response.encoding))
-        messages = dom.getElementsByTagName('Message')
+        messages = dom.getElementsByTagName("Message")
 
         msg = messages[0].childNodes[0].data
         super(XeroNotImplemented, self).__init__(response, msg)
@@ -103,11 +119,13 @@ class XeroRateLimitExceeded(XeroException):
     # HTTP 503 - Rate limit exceeded
     def __init__(self, response, payload):
         try:
-            self.errors = [payload['oauth_problem'][0]]
+            self.errors = [payload["oauth_problem"][0]]
         except KeyError:
             return super(XeroRateLimitExceeded, self).__init__(response, response.text)
         self.problem = self.errors[0]
-        super(XeroRateLimitExceeded, self).__init__(response, payload['oauth_problem_advice'][0])
+        super(XeroRateLimitExceeded, self).__init__(
+            response, payload["oauth_problem_advice"][0]
+        )
 
 
 class XeroNotAvailable(XeroException):

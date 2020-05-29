@@ -11,5 +11,7 @@ dist
 build
 _build
 distribute-*
+venv
 .venv
 .idea
+.vscode

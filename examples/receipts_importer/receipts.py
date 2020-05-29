@@ -11,17 +11,17 @@ import csv
 import os.path
 import pickle
 import sys
-
 import webbrowser
 
-#from config import xero_config
+from xero import Xero
+from xero.auth import PublicCredentials
+
+# from config import xero_config
 xero_config = {
     "consumer_key": "XXX",
     "consumer_secret": "XXX",
 }
 
-from xero import Xero
-from xero.auth import PublicCredentials
 
 argp = argparse.ArgumentParser(description=__doc__)
 argp.add_argument('-i', '--input-file', dest='input_file', default='-', help='input file name')
@@ -36,9 +36,9 @@ if os.path.isfile(args.credentials_file):
         credentials = PublicCredentials(**credentials_state)
 else:
     credentials = PublicCredentials(xero_config['consumer_key'], xero_config['consumer_secret'])
-    print credentials.url
+    print(credentials.url)
     webbrowser.open(credentials.url)
-    verifier = raw_input('Enter auth code: ')
+    verifier = input('Enter auth code: ')
     credentials.verify(verifier)
     with open(args.credentials_file, 'w') as credentials_fh:
         pickle.dump(credentials.state, credentials_fh)
@@ -47,7 +47,7 @@ xero = Xero(credentials)
 # Get userids matching user email
 userids = {}
 users = xero.users.all()
-#print users
+# print(users)
 for user in users:
     userids[user['EmailAddress']] = user['UserID']
 
@@ -61,11 +61,11 @@ else:
 reader = csv.DictReader(in_fh, delimiter=',')
 receipts = []
 for i in reader:
-    #print i
+    # print(i)
 
     user_email = i['UserEmail']
     if user_email not in userids:
-        print "Unknown user: %s" % (user_email,)
+        print("Unknown user: %s" % (user_email,))
         continue
     userid = userids[i['UserEmail']],
 
@@ -80,15 +80,15 @@ for i in reader:
         ],
         'User': {'UserID': userids[i['UserEmail']]},
     }
-    #print data
-    #xml = xero.receipts._prepare_data_for_save(data)
-    #print xml
+    # print(data)
+    # xml = xero.receipts._prepare_data_for_save(data)
+    # print(xml)
     receipts.append(data)
 
-#print receipts
+# print(receipts)
 
 if receipts:
     results = xero.receipts.put(receipts)
     # import pprint
-    #pp = pprint.PrettyPrinter(depth=6)
-    #pp.pprint(results)
+    # pp = pprint.PrettyPrinter(depth=6)
+    # pp.pprint(results)
