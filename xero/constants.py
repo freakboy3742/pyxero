@@ -7,6 +7,7 @@ XERO_API_URL = "/api.xro/2.0"
 XERO_FILES_URL = "/files.xro/1.0"
 XERO_PAYROLL_URL = "/payroll.xro/1.0"
 XERO_PROJECTS_URL = "/projects.xro/2.0"
+XERO_BANK_FEEDS_URL = "/bankfeeds.xro/1.0"
 
 XERO_OAUTH2_AUTHORIZE_URL = "https://login.xero.com/identity/connect/authorize"
 XERO_OAUTH2_TOKEN_URL = "https://identity.xero.com/connect/token"
