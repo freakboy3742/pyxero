@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import requests
+import json
 from six.moves.urllib.parse import parse_qs
 
 from .constants import XERO_BANK_FEEDS_URL
@@ -39,6 +40,18 @@ class BankFeedsManager(object):
         def wrapper(*args, **kwargs):
             uri, params, method, body, headers, singleobject = func(*args, **kwargs)
 
+            if headers is None:
+                headers = {}
+
+            if "Accept" not in headers:
+                headers["Accept"] = "application/json"
+
+            if method.lower() == "post" and "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+
+            if "Content-Type" in headers and headers["Content-Type"] == "application/json" and isinstance(body, dict):
+                body = json.dumps(body)
+
             response = getattr(requests, method)(
                 uri,
                 data=body,
@@ -47,7 +60,7 @@ class BankFeedsManager(object):
                 params=params,
             )
 
-            if response.status_code == 200 or response.status_code == 201:
+            if response.status_code == 200 or response.status_code == 201 or response.status_code == 202:
                 if response.headers["content-type"].startswith("application/json"):
                     return response.json()
                 else:
@@ -96,21 +109,23 @@ class BankFeedsManager(object):
 
     def _get(self, id, headers=None):
         uri = "/".join([self.base_url, self.name, id])
-        return uri, {}, "get", None, headers, True, None
+        return uri, {}, "get", None, headers, True
 
     def _create(self, data, method="post", headers=None, summarize_errors=True):
         uri = "/".join([self.base_url, self.name])
-        body = data
         if summarize_errors:
             params = {}
         else:
             params = {"summarizeErrors": "false"}
-        return uri, params, method, body, headers, False, None
+        return uri, params, method, data, headers, False
 
     def _all(self):
         uri = "/".join([self.base_url, self.name])
         return uri, {}, "get", None, None, False
 
     def _delete_requests(self, data):
+        headers = {
+            "Content-Type": "application/json"
+        }
         uri = "/".join([self.base_url, self.name, "DeleteRequests"])
-        return uri, {}, "post", data, None, False
+        return uri, {}, "post", data, headers, False
