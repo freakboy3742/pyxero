@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-import requests
 import json
+import requests
 from six.moves.urllib.parse import parse_qs
 
 from .constants import XERO_BANK_FEEDS_URL
