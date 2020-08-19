@@ -374,6 +374,11 @@ class BaseManager(object):
                 headers = self.prepare_filtering_date(val)
                 del kwargs["since"]
 
+            # Accept IDs parameter for Invoices and Contacts endpoints
+            if "IDs" in kwargs:
+                params["IDs"] = kwargs["IDs"]
+                del kwargs["IDs"]
+
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]
                 if last_key.endswith("ID"):
