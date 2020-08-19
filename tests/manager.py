@@ -249,7 +249,7 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(params, {"where": 'AmountPaid=="0.0"'})
 
-    def test_filter(self):
+    def test_filter_ids(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
         manager = Manager("contacts", credentials)
