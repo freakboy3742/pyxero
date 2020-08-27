@@ -255,7 +255,7 @@ class ManagerTest(unittest.TestCase):
         manager = Manager("contacts", credentials)
 
         uri, params, method, body, headers, singleobject = manager._filter(
-            IDs=["1","2","3","4","5"]
+            IDs=["1", "2", "3", "4", "5"]
         )
 
         self.assertEqual(method, "get")
