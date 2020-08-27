@@ -376,7 +376,7 @@ class BaseManager(object):
 
             # Accept IDs parameter for Invoices and Contacts endpoints
             if "IDs" in kwargs:
-                params["IDs"] = kwargs["IDs"]
+                params["IDs"] = ",".join(kwargs["IDs"])
                 del kwargs["IDs"]
 
             def get_filter_params(key, value):
