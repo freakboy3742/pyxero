@@ -372,7 +372,7 @@ class ManagerTest(unittest.TestCase):
         except XeroExceptionUnknown:
             pass
 
-        call = request.mock_calls[0]  
+        call = request.mock_calls[0]
         self.assertTrue(call.kwargs["headers"]["Content-Type"], "application/xml")
 
     def test_request_body_format(self):
@@ -382,7 +382,7 @@ class ManagerTest(unittest.TestCase):
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("reports", credentials)
-        
-        body = manager.save_or_put({"bing": "bong"})[3] 
+
+        body = manager.save_or_put({"bing": "bong"})[3]
 
         self.assertTrue(body, "<Invoice><bing>bong</bing></Invoice>")
