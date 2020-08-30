@@ -5,9 +5,10 @@ import re
 import six
 import unittest
 from collections import defaultdict
-from mock import Mock
+from mock import Mock, patch
 from xml.dom.minidom import parseString
 
+from xero.exceptions import XeroExceptionUnknown
 from xero.manager import Manager
 
 
@@ -374,3 +375,31 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock(base_url="", user_agent="MY_COMPANY-MY_CONSUMER_KEY")
         manager = Manager("reports", credentials, user_agent="DemoCompany-1234567890")
         self.assertEqual(manager.user_agent, "DemoCompany-1234567890")
+
+    @patch("xero.basemanager.requests.post")
+    def test_request_content_type(self, request):
+        """The Content-Type should be application/xml
+        """
+
+        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("reports", credentials)
+        try:
+            manager._get_data(lambda: ("_", {}, "post", {}, {}, True))()
+        except XeroExceptionUnknown:
+            pass
+
+        call = request.mock_calls[0]
+        self.assertTrue(call.kwargs["headers"]["Content-Type"], "application/xml")
+
+    def test_request_body_format(self):
+        """The body content should be in valid XML format
+        """
+
+        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("reports", credentials)
+
+        body = manager.save_or_put({"bing": "bong"})[3]
+
+        self.assertTrue(body, "<Invoice><bing>bong</bing></Invoice>")
