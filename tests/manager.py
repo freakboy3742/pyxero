@@ -8,8 +8,8 @@ from collections import defaultdict
 from mock import Mock, patch
 from xml.dom.minidom import parseString
 
-from xero.manager import Manager
 from xero.exceptions import XeroExceptionUnknown
+from xero.manager import Manager
 
 
 class ManagerTest(unittest.TestCase):
