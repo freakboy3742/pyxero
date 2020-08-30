@@ -249,6 +249,23 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(params, {"where": 'AmountPaid=="0.0"'})
 
+    def test_filter_ids(self):
+        """The filter function should correctly handle various arguments"""
+        credentials = Mock(base_url="")
+        manager = Manager("contacts", credentials)
+
+        uri, params, method, body, headers, singleobject = manager._filter(
+            IDs=["1", "2", "3", "4", "5"]
+        )
+
+        self.assertEqual(method, "get")
+        self.assertFalse(singleobject)
+
+        expected_params = {
+            "IDs": "1,2,3,4,5"
+        }
+        self.assertEqual(params, expected_params)
+
     def test_rawfilter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
