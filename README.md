@@ -99,6 +99,8 @@ to reconstruct an instance of the credentials::
 
 ### Private Applications
 
+*Private Applications are deprecated by Xero*. An alternative is to use the machine-to-machine method. This is fundamentally an OAuth2 flow, but Xero provides a helper executable to get tokens from a local machine without needing a server to host a callback. See [Xero Machine to Machine authentication](https://developer.xero.com/documentation/api-guides/machine-2-machine)
+
 If using a Private application, you will need to install `PyCrypto`, a pure
 Python cryptographic module. You'll also need to generate an signed RSA
 certificate, and submit that certificate as part of registering your
