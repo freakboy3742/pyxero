@@ -28,6 +28,7 @@ class Xero(object):
         "ManualJournals",
         "Organisations",
         "Overpayments",
+        "PaymentServices",
         "Payments",
         "Prepayments",
         "PurchaseOrders",
