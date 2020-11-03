@@ -358,7 +358,7 @@ class BaseManager(object):
 
     def prepare_filtering_date(self, val):
         if isinstance(val, datetime):
-            val = val.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            val = val.strftime("%Y-%m-%dT%H:%M:%S")
         else:
             val = '"%s"' % val
         return {"If-Modified-Since": val}
