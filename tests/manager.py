@@ -223,7 +223,7 @@ class ManagerTest(unittest.TestCase):
         }
         self.assertEqual(params, expected_params)
 
-        expected_headers = {"If-Modified-Since": "Sun, 10 Aug 2014 15:14:46 GMT"}
+        expected_headers = {"If-Modified-Since": "2014-08-10T15:14:46"}
         self.assertEqual(headers, expected_headers)
 
         # Also make sure an empty call runs ok
