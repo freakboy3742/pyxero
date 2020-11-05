@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from .bankfeedsmanager import BankFeedsManager
 from .filesmanager import FilesManager
 from .manager import Manager
 from .payrollmanager import PayrollManager
@@ -55,6 +56,7 @@ class Xero(object):
         setattr(self, "filesAPI", Files(credentials))
         setattr(self, "payrollAPI", Payroll(credentials, unit_price_4dps, user_agent))
         setattr(self, "projectsAPI", Project(credentials))
+        setattr(self, "bankFeedsAPI", BankFeed(credentials))
 
 
 class Files(object):
@@ -116,3 +118,20 @@ class Project(object):
         # instance of a Manager object to operate on it
         for name in self.OBJECT_LIST:
             setattr(self, name.lower(), ProjectManager(name, credentials))
+
+
+class BankFeed(object):
+    """An ORM-like interface to the Xero Bank Feeds API"""
+
+    OBJECT_LIST = (
+        "FeedConnections",
+        "Statements",
+    )
+
+    def __init__(self, credentials):
+        # Iterate through the list of objects we support, for
+        # each of them create an attribute on our self that is
+        # the lowercase name of the object and attach it to an
+        # instance of a Manager object to operate on it
+        for name in self.OBJECT_LIST:
+            setattr(self, name.lower(), BankFeedsManager(name, credentials))
