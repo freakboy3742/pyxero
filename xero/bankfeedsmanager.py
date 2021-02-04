@@ -4,6 +4,7 @@ import json
 import requests
 from six.moves.urllib.parse import parse_qs
 
+from xero.auth import OAuth2Credentials
 from .constants import XERO_BANK_FEEDS_URL
 from .exceptions import (
     XeroBadRequest,
@@ -16,7 +17,7 @@ from .exceptions import (
     XeroRateLimitExceeded,
     XeroUnauthorized,
     XeroUnsupportedMediaType,
-)
+    XeroTenantIdNotSet)
 
 
 class BankFeedsManager(object):
@@ -42,6 +43,12 @@ class BankFeedsManager(object):
 
             if headers is None:
                 headers = {}
+
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers["Xero-tenant-id"] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
 
             if "Accept" not in headers:
                 headers["Accept"] = "application/json"
