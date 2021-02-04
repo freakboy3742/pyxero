@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
 
+import json
 import requests
 from six.moves.urllib.parse import parse_qs
-
-import json
 
 from xero.auth import OAuth2Credentials
 
