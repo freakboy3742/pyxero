@@ -15,9 +15,10 @@ from .exceptions import (
     XeroNotFound,
     XeroNotImplemented,
     XeroRateLimitExceeded,
+    XeroTenantIdNotSet,
     XeroUnauthorized,
     XeroUnsupportedMediaType,
-    XeroTenantIdNotSet)
+)
 
 
 class BankFeedsManager(object):
