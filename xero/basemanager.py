@@ -84,6 +84,10 @@ class BaseManager(object):
         "IncludeInEmails",
         "SentToContact",
         "CanApplyToRevenue",
+        "CanApplyToLiabilities",
+        "CanApplyToExpenses",
+        "CanApplyToEquity",
+        "CanApplyToAssets",
         "IsReconciled",
         "EnablePaymentsToAccount",
         "ShowInExpenseClaims",
@@ -107,6 +111,7 @@ class BaseManager(object):
         "DateString",
         "HasErrors",
         "DueDateString",
+        "HasAccount",
     )
     OPERATOR_MAPPINGS = {
         "gt": ">",
@@ -196,6 +201,8 @@ class BaseManager(object):
 
             if headers is None:
                 headers = {}
+
+            headers["Content-Type"] = "application/xml"
 
             if isinstance(self.credentials, OAuth2Credentials):
                 if self.credentials.tenant_id:
@@ -312,7 +319,7 @@ class BaseManager(object):
 
     def save_or_put(self, data, method="post", headers=None, summarize_errors=True):
         uri = "/".join([self.base_url, self.name])
-        body = {"xml": self._prepare_data_for_save(data)}
+        body = self._prepare_data_for_save(data)
         params = self.extra_params.copy()
         if not summarize_errors:
             params["summarizeErrors"] = "false"
@@ -373,6 +380,11 @@ class BaseManager(object):
                 val = kwargs["since"]
                 headers = self.prepare_filtering_date(val)
                 del kwargs["since"]
+
+            # Accept IDs parameter for Invoices and Contacts endpoints
+            if "IDs" in kwargs:
+                params["IDs"] = ",".join(kwargs["IDs"])
+                del kwargs["IDs"]
 
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]
