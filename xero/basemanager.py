@@ -257,7 +257,8 @@ class BaseManager(object):
                 raise XeroNotFound(response)
 
             elif response.status_code == 429:
-                payload = "Reason: " + response.headers.get("X-Rate-Limit-Problem")
+                limit_reason = response.headers.get("X-Rate-Limit-Problem") or ""
+                payload = {"oauth_problem": ["rate limit exceeded: " + limit_reason],"oauth_problem_advice":["please wait before retrying the xero api", "The limit exceeded is: " + limit_reason]}
                 raise XeroRateLimitExceeded(response, payload)
 
             elif response.status_code == 500:
