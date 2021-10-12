@@ -14,174 +14,18 @@ Install this library using the python package manager:
 pip install pyxero
 ```
 
-You'll need to follow the [Xero Developer documentation](https://developer.xero.com/documentation/) to register your application. Do that as follows:
-
-### Public Applications
-
-Public applications use a 3-step OAuth process.
-
-When you [register your public application with Xero](https://developer.xero.com/documentation/auth-and-limits/public-applications/), you'll be given a
-**Consumer Key** and a **Consumer secret**. These are both strings.
-
-To access the Xero API you must first create some credentials:
-
-```python
->>> from xero.auth import PublicCredentials
->>> credentials = PublicCredentials(<consumer_key>, <consumer_secret>)
->>> print credentials.url
-'http://my.xero.com/.....'
-```
-
-You now direct the user to visit the URL described by `credentials.url`. They
-will be asked to log into their Xero account, and then shown a request to
-authenticate your request to access the user's account. When the allow access,
-they will be directed to a page that gives them a 6-digit verification number.
-Put this verifier number into a string, and call `verify()` on the credentials
-object::
-
-```python
->>> credentials.verify(<verifier string>)
-```
-
-This will verify your credentials, and retrieve an access token. You can
-then use your credentials to instantiate an instance of the Xero API::
-
-```python
->>> from xero import Xero
->>> xero = Xero(credentials)
-```
-
-### Public Applications with verification by callback
-
-Public applications can also be validated using a callback URI. If this
-approach is used, the user won't be given a verification number. Instead,
-when they authorize the OAuth request, their browser will be redirected to
-a pre-configured callback URI, which will deliver the validation token
-directly to your application.
-
-To use a callback, you must provide a domain as part of your Xero application
-registration; then, you provide a URL under that domain as the third argument
-when creating the credentials::
-
-```python
->>> credentials = PublicCredentials(<consumer_key>, <consumer_secret>, <callback_uri>)
->>> print credentials.url
-'http://my.xero.com/.....'
-```
-
-When the user authorizes access to their Xero account, the `callback_url`
-will be called with three GET arguments:
-
-* `oauth_token`: The oauth_token that this request belongs to
-* `oauth_verifier`: The verifier string
-* `org`: An identifier for the organization that is allowing access.
-
-The verifier can then be used to verify the credentials, as with the manual
-process.
-
-### Reconstructing Public credentials
-
-Public Applications use a 3-step OAuth process, and if you're doing this in a
-web application, you will usually lose the credentials object over the
-verification step. This means you need to be able to restore the credentials
-object when verification has been provided.
-
-The `state` attribute of a credentials object contains all the details needed
-to reconstruct an instance of the credentials::
-
-```python
->>> saved_state = credentials.state
->>> print saved_state
-{'consumer_key': '...', 'consumer_secret': '...', ...}
-
->>> new_credentials = PublicCredentials(**saved_state)
-```
-
-### Private Applications
-
-*Private Applications are deprecated by Xero*. An alternative is to use the machine-to-machine method. This is fundamentally an OAuth2 flow, but Xero provides a helper executable to get tokens from a local machine without needing a server to host a callback. See [Xero Machine to Machine authentication](https://developer.xero.com/documentation/api-guides/machine-2-machine)
-
-If using a Private application, you will need to install `PyCrypto`, a pure
-Python cryptographic module. You'll also need to generate an signed RSA
-certificate, and submit that certificate as part of registering your
-application with Xero. See the [Xero Developer documentation](https://developer.xero.com/) for more
-details.
-
-When you [register your private application with Xero](https://developer.xero.com/documentation/auth-and-limits/private-applications/), you'll be given a
-**Consumer Key**. You'll also be given a **Consumer secret** - this can be
-ignored.
-
-Using the Private credentials is much simpler than the Public credentials,
-because there's no verification step -- verification is managed using RSA
-signed API requests::
-
-```python
->>> from xero import Xero
->>> from xero.auth import PrivateCredentials
->>> with open(<path to rsa key file>) as keyfile:
-...     rsa_key = keyfile.read()
->>> credentials = PrivateCredentials(<consumer_key>, rsa_key)
->>> xero = Xero(credentials)
-```
-
-[Follow these steps](https://developer.xero.com/documentation/api-guides/create-publicprivate-key/) to generate a public/private key pair to sign your requests.  You'll upload your public key when you create your Xero Private app at https://app.xero.com.  You'll use the private key (aka RSA key) to generate your oAuth signature.
-
-The RSA key is a multi-line string that will look something like::
-
-    -----BEGIN RSA PRIVATE KEY-----
-    MIICXgIBAAKBgQDWJbmxJjQLGM76sZkk2EhsdpV0Gxtrhzh/wiNBGffa5JHV/Ex4
-    ....
-    mtXGQjKqsOpuCw7HwgnRQUWKYbaJ3a+yTCFjVwa9keQhDQ==
-    -----END RSA PRIVATE KEY-----
-
-You can get this string by either reading the contents of your private key
-file into a variable, or storing the key value as a constant. If you choose to
-store the key value as a constant, remember two things:
-
-* **DO NOT UNDER ANY CIRCUMSTANCES** check this file into a public
-  repository. It is your identity, and anyone with access to this file
-  could masquerade as you.
-
-* Make sure there is no leading space before
-  the ``-----BEGIN PRIVATE KEY-----`` portion of the string.
-
-
-### Partner Applications
-
-Partner Application authentication works similarly to the 3-step OAuth used by
-Public Applications, but with RSA signed requests. Partner OAuth tokens still
-have a 30 minute expiry, but can be swapped for a new token at any time.
-
-When you [register your partner application with Xero](https://developer.xero.com/documentation/auth-and-limits/partner-applications/), you'll have a **Consumer Key**, **Consumer Secret** and **RSA Key**. All three elements are required.
-
-
-```python
->>> from xero import Xero
->>> from xero.auth import PartnerCredentials
->>> credentials = PartnerCredentials(<consumer_key>, <consumer_secret>,
-...                                  <rsa_key>)
->>> xero = Xero(credentials)
-```
-
-When using the API over an extended period, you will need to exchange tokens
-when they expire.
-
-```python
->>> if credentials.expired():
-...     credentials.refresh()
-```
-
-**Important**: ``credentials.state`` changes after a token swap. Be sure to persist
-the new state.
-
 ### Using OAuth2 Credentials
 
-OAuth2 Credentials work similarly to the 3-step OAuth used by
-Partner Applications. OAuth2 tokens have a 30 minute expiry,
-but can be swapped for a new token at any time. Xero documentation on the OAuth2
-process can be found [here](https://developer.xero.com/documentation/oauth2/).
-The procedure for creating and authenticating credentials is as follows *(with a
-Django example at the end)*:
+OAuth2 is an open standard authorization protocol that allows users to
+provide specific permissions to apps that want to use their account. OAuth2 
+authentication is performed using *tokens* that are obtained using an API;
+these tokens are then provided with each subsequent request.
+
+OAuth2 tokens have a 30 minute expiry, but can be swapped for a new token at any
+time. Xero documentation on the OAuth2 process can be found
+[here](https://developer.xero.com/documentation/oauth2/overview/). The procedure
+for creating and authenticating credentials is as follows *(with a Django
+example at the end)*:
 
  1) [Register your app](https://developer.xero.com/myapps) with Xero, using a
     redirect URI which will be served by your app in order to complete the
@@ -282,7 +126,9 @@ Django example at the end)*:
     ```
     `OAuth2Credentials.__init__()` accepts `tenant_id` as a keyword argument.
 
- 6) If a refresh token is available, it can be used to generate a new token:
+ 6) When using the API over an extended period, you will need to exchange tokens
+    when they expire. If a refresh token is available, it can be used to
+    generate a new token:
     ```python
     >>> if credentials.expired():
     >>>     credentials.refresh()
@@ -290,6 +136,10 @@ Django example at the end)*:
     >>>     cred_state = credentials.state
     >>>     # or
     >>>     new_token = credentials.token
+
+    **Important**: ``credentials.state`` changes after a token swap. Be sure to
+    persist the new state.
+
     ```
  #### Django OAuth2 App Example
  This example shows authorisation, automatic token refreshing and API use in
@@ -335,6 +185,16 @@ Django example at the end)*:
         contacts = xero.contacts.all()
         ...
  ```
+
+### Older authentication methods ###
+
+In the past, Xero had the concept of "Public", "Private", and "Partner" 
+applications, which each had their own authentication procedures. However,
+they removed access for Public applications on 31 March 2021; Private 
+applications were removed on 30 September 2021. Partner applications 
+still exist, but the only supported authentication method is OAuth2; these
+are now referred to as "OAuth2 apps". As Xero no longer supports these older
+authentication methods, neither does PyXero.
 
 ## Using the Xero API
 
