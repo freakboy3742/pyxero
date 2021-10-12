@@ -16,10 +16,10 @@ pip install pyxero
 
 ### Using OAuth2 Credentials
 
-*Xero have removed API access for "Public applications" and "Private
-applications" as of 31st March 2021 and 30th September 2021 respectively. From
-30th September 2021, "Partner applications" only support OAuth2 and are referred
-to as simply "OAuth2 apps".*
+OAuth2 is an open standard authorization protocol that allows users to
+provide specific permissions to apps that want to use their account. OAuth2 
+authentication is performed using *tokens* that are obtained using an API;
+these tokens are then provided with each subsequent request.
 
 OAuth2 tokens have a 30 minute expiry, but can be swapped for a new token at any
 time. Xero documentation on the OAuth2 process can be found
@@ -185,6 +185,16 @@ example at the end)*:
         contacts = xero.contacts.all()
         ...
  ```
+
+### Older authentication methods ###
+
+In the past, Xero had the concept of "Public", "Private", and "Partner" 
+applications, which each had their own authentication procedures. However,
+they removed access for Public applications on 31 March 2021; Private 
+applications were removed on 30 September 2021. Partner applications 
+still exist, but the only supported authentication method is OAuth2; these
+are now referred to as "OAuth2 apps". As Xero no longer supports these older
+authentication methods, neither does PyXero.
 
 ## Using the Xero API
 
