@@ -202,7 +202,9 @@ class BaseManager(object):
             if headers is None:
                 headers = {}
 
-            headers["Content-Type"] = "application/xml"
+            # Send xml by default, but remember we might upload a binary attachment with a custom mime-type
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/xml"
 
             if isinstance(self.credentials, OAuth2Credentials):
                 if self.credentials.tenant_id:
