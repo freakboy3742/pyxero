@@ -52,8 +52,8 @@ class BaseManager(object):
         # "LinkedTransactions": [
         #     "ContactID", "LinkedTransactionID", "SourceTransactionID",
         #     "Status", "TargetTransactionID"],
-        # "PurchaseOrders": [
-        #     "DateFrom", "DateTo", "Status"],
+        "PurchaseOrders": [
+            "DateFrom", "DateTo", "Status"],
         "Quotes": [
             "ContactID", "DateFrom", "DateTo", "ExpiryDateFrom",
             "ExpiryDateTo", "QuoteNumber", "Status"],
