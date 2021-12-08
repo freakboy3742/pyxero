@@ -41,6 +41,25 @@ class BaseManager(object):
     OBJECT_DECORATED_METHODS = {
         "Invoices": ["email", "online_invoice"],
     }
+
+    KNOWN_PARAMETERS = {
+        # "Budgets": ["DateFrom", "DateTo", "IDs"],
+        # "Contacts": ["IDs"],
+        # "Invoices": [
+        #     "ContactIDs", "createdByMyApp", "IDs", "InvoiceNumbers",
+        #     "Statuses", "summaryOnly"],
+        # "Journals": ["paymentsOnly"],
+        # "LinkedTransactions": [
+        #     "ContactID", "LinkedTransactionID", "SourceTransactionID",
+        #     "Status", "TargetTransactionID"],
+        # "PurchaseOrders": [
+        #     "DateFrom", "DateTo", "Status"],
+        "Quotes": [
+            "ContactID", "DateFrom", "DateTo", "ExpiryDateFrom",
+            "ExpiryDateTo", "QuoteNumber", "Status"],
+        # "TaxRates": ["TaxType"],
+    }
+
     DATETIME_FIELDS = (
         "UpdatedDateUTC",
         "Updated",
@@ -197,7 +216,8 @@ class BaseManager(object):
         def wrapper(*args, **kwargs):
             timeout = kwargs.pop("timeout", None)
 
-            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
+            uri, params, method, body, headers, singleobject = func(
+                *args, **kwargs)
 
             if headers is None:
                 headers = {}
@@ -257,7 +277,8 @@ class BaseManager(object):
                 raise XeroNotFound(response)
 
             elif response.status_code == 429:
-                limit_reason = response.headers.get("X-Rate-Limit-Problem") or "unknown"
+                limit_reason = response.headers.get(
+                    "X-Rate-Limit-Problem") or "unknown"
                 payload = {"oauth_problem": ["rate limit exceeded: " + limit_reason],
                            "oauth_problem_advice": ["please wait before retrying the xero api",
                                                     "The limit exceeded is: " + limit_reason]}
@@ -361,7 +382,8 @@ class BaseManager(object):
         """Upload an attachment to the Xero object."""
         uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
         params = {"IncludeOnline": "true"} if include_online else {}
-        headers = {"Content-Type": content_type, "Content-Length": str(len(data))}
+        headers = {"Content-Type": content_type,
+                   "Content-Length": str(len(data))}
         return uri, params, "put", data, headers, False
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
