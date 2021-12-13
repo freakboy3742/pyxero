@@ -276,7 +276,7 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroRateLimitExceeded as e:
             # Error messages have been extracted
-            self.assertEqual(str(e), "please wait before retrying the xero api")
+            self.assertEqual(str(e), "please wait before retrying the xero api, the limit exceeded is: day")
             self.assertIn("rate limit exceeded", e.errors[0])
 
             # The response has also been stored
