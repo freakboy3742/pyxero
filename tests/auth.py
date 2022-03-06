@@ -5,12 +5,16 @@ from datetime import datetime, timedelta
 from mock import Mock, patch
 from six.moves.urllib.parse import parse_qs, urlparse
 
+import requests
+
 from xero.api import Xero
 from xero.auth import (
     OAuth2Credentials,
     PartnerCredentials,
     PrivateCredentials,
     PublicCredentials,
+    OAuth2PKCECredentials,
+    PKCEAuthReceiver
 )
 from xero.constants import XERO_OAUTH2_AUTHORIZE_URL
 from xero.exceptions import (
@@ -25,7 +29,7 @@ from xero.exceptions import (
 class PublicCredentialsTest(unittest.TestCase):
     @patch("requests.post")
     def test_initial_constructor(self, r_post):
-        "Initial construction causes a requst to get a request token"
+        "Initial construction causes a request to get a request token"
         r_post.return_value = Mock(
             status_code=200, text="oauth_token=token&oauth_token_secret=token_secret"
         )
@@ -570,3 +574,180 @@ class OAuth2CredentialsTest(unittest.TestCase):
         )
         with self.assertRaises(XeroException):
             credentials.set_default_tenant()
+
+
+class PKCERequestHandlerDummy:
+    def __init__(self,):
+        self.error = None
+        self.is_shutdown = False
+        self.success = False
+
+    def send_error_page(self, error):
+        self.error = error
+
+    def send_access_ok(self, ):
+        self.success = True
+
+    def shutdown(self,):
+        self.is_shutdown = True
+
+class PKCECredentialsTest(unittest.TestCase):
+    # Mostly the same in principle as the Oauth2 ones,
+    # but oine include one where behavior is difeereny
+    callback_uri = "http://localhost:8123/callback"
+
+    def setUp(self):
+        super().setUp()
+        # Create an expired token to be used by tests
+        self.expired_token = {
+            "access_token": "1234567890",
+            "expires_in": 1800,
+            "token_type": "Bearer",
+            "refresh_token": "0987654321",
+            # 'expires_at': datetime.utcnow().timestamp()}
+            "expires_at": time.time(),
+        }
+
+    def test_verification_using_bad_auth_uri(self,):
+        credentials = OAuth2PKCECredentials(
+            "client_id", "client_secret", auth_state="test_state"
+        )
+        bad_auth_params = {'error': 'access_denied', 'state': credentials.auth_state}
+
+        rhandler = PKCERequestHandlerDummy()
+        credentials.verify_url(bad_auth_params, rhandler)
+        self.assertEqual(rhandler.error, 'access_denied')
+        self.assertTrue(rhandler.is_shutdown, )
+
+    def test_verification_using_bad_state(self,):
+        credentials = OAuth2PKCECredentials(
+            "client_id", "client_secret", auth_state="test_state"
+        )
+        bad_auth_params = {'code': '213456789', 'state': "wrong_state"}
+        rhandler = PKCERequestHandlerDummy()
+        credentials.verify_url(bad_auth_params, rhandler)
+        self.assertEqual(rhandler.error, 'State Mismatch')
+        self.assertTrue(rhandler.is_shutdown, )
+
+    @patch("requests_oauthlib.OAuth2Session.request")
+    def test_verification_success(self, r_request):
+        credentials = OAuth2PKCECredentials(
+            "client_id", "client_secret", auth_state="test_state",
+            port=8123,
+        )
+        params = {
+            'code': ['0123456789'],
+            'scope': credentials.scope,
+            'state': [ credentials.auth_state ]
+        }
+        now = datetime.now().timestamp()
+        with patch.object(requests,'post', return_value=Mock(
+            status_code=200,
+            request=Mock(headers={}, body=""),
+            headers={},
+            json = lambda :{
+                "access_token":"1234567890",
+                "expires_at": now + 1800,
+                "token_type":"Bearer",
+                "refresh_token":"0987654321"}
+        )) as r_request:
+            rhandler = PKCERequestHandlerDummy()
+            credentials.verify_url(params, rhandler)
+        self.assertIs(rhandler.error, None)
+        self.assertTrue(r_request.called)
+        self.assertTrue(credentials.token)
+        self.assertTrue(credentials.oauth)
+        self.assertFalse(credentials.expired())
+
+        # Finally test the state
+        self.assertEqual(
+            credentials.state,
+            {
+                "client_id": credentials.client_id,
+                "client_secret": credentials.client_secret,
+                "auth_state": credentials.auth_state,
+                "scope": credentials.scope,
+                "user_agent": credentials.user_agent,
+                "token": credentials.token,
+                "callback_uri": self.callback_uri
+            },
+        )
+
+    def test_verification_failure(self,):
+        credentials = OAuth2PKCECredentials(
+            "client_id", "client_secret", auth_state="test_state"
+        )
+        params = {
+            'code': ['0123456789'],
+            'scope': credentials.scope,
+            'state': [ credentials.auth_state ]
+        }
+        now = datetime.now().timestamp()
+        with patch.object(requests,'post', return_value=Mock(
+            status_code=400,
+            request=Mock(headers={}, body=""),
+            headers={},
+            json = lambda :{"error":"invalid_grant"}
+        )):
+            rhandler = PKCERequestHandlerDummy()
+            credentials.verify_url(params, rhandler)
+
+        self.assertIsInstance(credentials.error, XeroAccessDenied)
+
+    def test_logon_opens_a_webbrowser(self,):
+        credentials = OAuth2PKCECredentials(
+            "client_id", "client_secret", auth_state="test_state",
+            request_handler= PKCERequestHandlerDummy,
+            port = 8123
+        )
+        server = Mock()
+        with patch('http.server.HTTPServer', return_value=server) as hs, \
+             patch('webbrowser.open') as wb:
+            credentials.logon()
+
+        self.assertTrue(wb.called)
+        server.serve_forerver.has_been_called()
+        portdata = hs.call_args[0][0]
+        partial = hs.call_args[0][1]
+        self.assertEqual(portdata, ('', 8123))
+        self.assertEqual(partial.func, PKCERequestHandlerDummy )
+        self.assertEqual(partial.args, (credentials, ) )
+
+
+
+class PKCECallbackHandlerTests(unittest.TestCase):
+    def setUp(self,):
+        # PKCEAuthReciever's base class has a non-trivial
+        # handle method which is called by it's constructor.
+        # For tests we need to bypass this, so we can probe
+        # the do_GET behaviour - hence this subclass.
+        class TestRx(PKCEAuthReceiver):
+            def handle(self,*args):
+                pass
+
+        import http.server
+        self.pkce_manager = Mock()
+        self.handler = TestRx(self.pkce_manager,
+                         request=Mock(),
+                         client_address=None,
+                         server=Mock())
+
+
+    def test_going_somewhere_other_than_callback_errors(self,):
+        self.handler.path="/foo/bar/baz.html"
+        self.handler.send_error_page=Mock()
+        self.handler.do_GET()
+        self.handler.send_error_page.assert_called_with("Unknown endpoint")
+
+    def test_going_somewhere_other_than_callback_errors(self,):
+        self.handler.path="/callback?value=123&something=foo&different=bar"
+        self.handler.send_error_page=Mock()
+        self.handler.do_GET()
+        self.pkce_manager.verify_url.assert_called_with({
+                'value': ['123'],
+                'something': ['foo'],
+                'different': ['bar'],
+            },
+                self.handler
+        )
+

@@ -2,10 +2,19 @@ from __future__ import unicode_literals
 
 import datetime
 import requests
-from six.moves.urllib.parse import parse_qs, urlencode
+import http.server
+import threading
+import webbrowser
+import secrets
+import hashlib
+import base64
+from functools import partial
+
+from six.moves.urllib.parse import parse_qs, urlencode, urlparse
 
 from oauthlib.oauth1 import SIGNATURE_HMAC, SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER
 from requests_oauthlib import OAuth1, OAuth2, OAuth2Session
+
 
 from .constants import (
     ACCESS_TOKEN_URL,
@@ -701,3 +710,106 @@ class OAuth2Credentials(object):
                 raise XeroNotAvailable(response)
         else:
             raise XeroExceptionUnknown(response)
+
+
+
+class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
+    def __init__(self, credmanager , *args,**kwargs):
+        self.credmanager = credmanager
+        super().__init__(*args,**kwargs)
+
+    @staticmethod
+    def close_server(s):
+        s.shutdown()
+
+    def do_GET(self,*args):
+        request = urlparse(self.path)
+        params = parse_qs(request.query)
+
+        if request.path == "/callback":
+            self.credmanager.verify_url(params,self)
+        else:
+            self.send_error_page("Unknown endpoint")
+
+    def send_error_page(self,error):
+        print("Error:",error)
+
+    def send_access_ok(self,):
+        print("LOGIN SUCCESS")
+        self.shutdown()
+
+    def shutdown(self):
+        # Launch a thread to close our socket cleanly.
+        threading.Thread(target=self.__class__.close_server, args=(self.server,)).start()
+
+
+class OAuth2PKCECredentials(OAuth2Credentials):
+    def __init__(self,*args,**kwargs):
+        self.port = kwargs.pop('port',8080)
+        self.runserver = kwargs.pop('handle_flow',True)
+        # Xero requires between 43 adn 128 bytes, it fails
+        # with invlaid grant if this is not long enough
+        self.verifier = kwargs.pop('verifier',secrets.token_urlsafe(64))
+        self.handler_kls = kwargs.pop('request_handler', PKCEAuthReceiver )
+        self.error = None
+        if isinstance(self.verifier,str):
+            self.verifier = self.verifier.encode('ascii')
+        kwargs.setdefault('callback_uri',f"http://localhost:{self.port}/callback")
+        super().__init__(*args,**kwargs)
+
+    def logon(self,):
+        challenge = str(base64.urlsafe_b64encode(hashlib.sha256(self.verifier).digest())[:-1],'ascii')
+        url_base = super().generate_url()
+        webbrowser.open(url_base +f"&code_challenge={challenge}&code_challenge_method=S256")
+        self.wait_for_callback()
+
+    def wait_for_callback(self,):
+        listen_to = ('',self.port)
+        s = http.server.HTTPServer(listen_to, partial(self.handler_kls, self) )
+        s.serve_forever()
+        if self.error:
+            raise self.error
+
+    def verify_url(self,params,reqhandler):
+        error = params.get('error',None)
+        if error:
+            self.handle_error(error,reqhandler)
+            return
+
+        if params['state'][0] != self.state['auth_state']:
+            self.handle_error("State Mismatch",reqhandler)
+            return
+
+        code = params.get('code',None)
+        if code:
+            try:
+                self.get_token(code[0])
+            except Exception as e:
+                self.error = e
+                reqhandler.send_error_page(str(e))
+                reqhandler.shutdown()
+
+            reqhandler.send_access_ok()
+
+    def get_token(self,code):
+        resp = requests.post(
+             url=XERO_OAUTH2_TOKEN_URL,
+             data={
+                 'grant_type': 'authorization_code',
+                 'client_id': self.client_id,
+                 'redirect_uri': self.callback_uri,
+                 'code': code,
+                 'code_verifier': self.verifier
+             }
+         )
+        respdata = resp.json()
+        error = respdata.get('error',None)
+        if error:
+            raise XeroAccessDenied(error)
+
+        self._init_oauth(respdata)
+
+    def handle_error(self,msg,handler):
+        self.error = RuntimeError(msg)
+        handler.send_error_page(msg)
+        handler.shutdown()
