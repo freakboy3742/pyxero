@@ -714,6 +714,15 @@ class OAuth2Credentials(object):
 
 
 class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
+    """ This is an http request processsor for server running on localhost,
+    used by the PKCE auth system.
+    Xero will redirect the browser after auth, from which we
+    can collect the toke Xero provides.
+
+    You can subclass this and override the `send_error_page` and
+    `send_access_ok` methods to customise the sucess and failure
+    pages displayed in the browser.
+    """
     def __init__(self, credmanager , *args,**kwargs):
         self.credmanager = credmanager
         super().__init__(*args,**kwargs)
@@ -732,18 +741,79 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
             self.send_error_page("Unknown endpoint")
 
     def send_error_page(self,error):
+        """Display an Error page.
+        Override this for a custom page.
+        """
         print("Error:",error)
 
     def send_access_ok(self,):
+        """Display a success page"
+        Override this to provide a custom page.
+        """
         print("LOGIN SUCCESS")
         self.shutdown()
 
     def shutdown(self):
+        """Start shutdowning our server and return immediately"""
         # Launch a thread to close our socket cleanly.
         threading.Thread(target=self.__class__.close_server, args=(self.server,)).start()
 
 
 class OAuth2PKCECredentials(OAuth2Credentials):
+    """An object wrapping the PKCE credential flow for Xero access.
+
+    Usage:
+      1) Construct an `OAuth2Credentials` instance:
+
+        >>> from xero.auth import OAuth2PKCECredentials
+        >>> credentials = OAuth2Credentials(client_id,None, port=8080,
+                                            scope=scope)
+
+        A webserver will be setup to listen on the provded port 
+        number which is used for the Auth callback.
+
+      2) Send the login request.
+        >>> credentials.logon()
+
+        This will open a browser window which will naviage to a Xero
+        login page. The Use should grant your application access (or not),
+        and will be redirected to a locally running webserver to capture
+        the auth tokens.
+
+
+      3) Use the credentials. It is usually necessary to set the tenant_id (Xero
+         organisation id) to specify the organisation against which the queries should
+         run:
+         >>> from xero import Xero
+         >>> credentials.set_default_tenant()
+         >>> xero = Xero(credentials)
+         >>> xero.contacts.all()
+        ...
+
+         To use a different organisation, set credentials.tenant_id:
+         >>> tenants = credentials.get_tenants()
+         >>> credentials.tenant_id = tenants[1]['tenantId']
+
+      4) If a refresh token is available, it can be used to generate a new token:
+         >>> if credentials.expired():
+         >>>     credentials.refresh()
+
+        Note that in order for tokens to be refreshable, Xero API requires
+        `offline_access` to be included in the scope.
+
+    :param port: the port the local webserver will listen ro
+    :param verifier: (optional) a string verifier token if not 
+                     provided the module will generate it's own.
+    :param request_handler: An HTTP request handler class. This will
+                            be used to handler the callback request. If
+                            you wish to customise your error page, this is 
+                            where you pass in you custom class.
+    :param callback_uri: Allow customisation of the callback uri. Only
+                         useful if you've customised the request_handler
+                         to match.
+
+    :param scope: Inhereited from Oath2Credentials.. 
+    """
     def __init__(self,*args,**kwargs):
         self.port = kwargs.pop('port',8080)
         # Xero requires between 43 adn 128 bytes, it fails
@@ -753,10 +823,12 @@ class OAuth2PKCECredentials(OAuth2Credentials):
         self.error = None
         if isinstance(self.verifier,str):
             self.verifier = self.verifier.encode('ascii')
+
         kwargs.setdefault('callback_uri',f"http://localhost:{self.port}/callback")
         super().__init__(*args,**kwargs)
 
     def logon(self,):
+        """Launch PKCE auth process and wait for completion"""
         challenge = str(base64.urlsafe_b64encode(hashlib.sha256(self.verifier).digest())[:-1],'ascii')
         url_base = super().generate_url()
         webbrowser.open(url_base +f"&code_challenge={challenge}&code_challenge_method=S256")
@@ -770,6 +842,8 @@ class OAuth2PKCECredentials(OAuth2Credentials):
             raise self.error
 
     def verify_url(self,params,reqhandler):
+        """Used to verify the parameters xero returns in the
+        redirect callback"""
         error = params.get('error',None)
         if error:
             self.handle_error(error,reqhandler)
@@ -791,6 +865,8 @@ class OAuth2PKCECredentials(OAuth2Credentials):
             reqhandler.send_access_ok()
 
     def get_token(self,code):
+        # Does the third leg, to get the actual auth token from Xero,
+        # once the authentication has been 'approved' by the user
         resp = requests.post(
              url=XERO_OAUTH2_TOKEN_URL,
              data={
