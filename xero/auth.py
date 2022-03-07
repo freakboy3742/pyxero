@@ -746,7 +746,6 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
 class OAuth2PKCECredentials(OAuth2Credentials):
     def __init__(self,*args,**kwargs):
         self.port = kwargs.pop('port',8080)
-        self.runserver = kwargs.pop('handle_flow',True)
         # Xero requires between 43 adn 128 bytes, it fails
         # with invlaid grant if this is not long enough
         self.verifier = kwargs.pop('verifier',secrets.token_urlsafe(64))
