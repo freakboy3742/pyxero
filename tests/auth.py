@@ -591,6 +591,7 @@ class PKCERequestHandlerDummy:
     def shutdown(self,):
         self.is_shutdown = True
 
+
 class PKCECredentialsTest(unittest.TestCase):
     # Mostly the same in principle as the Oauth2 ones,
     # but oine include one where behavior is difeereny
@@ -638,18 +639,18 @@ class PKCECredentialsTest(unittest.TestCase):
         params = {
             'code': ['0123456789'],
             'scope': credentials.scope,
-            'state': [ credentials.auth_state ]
+            'state': [credentials.auth_state]
         }
         now = datetime.now().timestamp()
-        with patch.object(requests,'post', return_value=Mock(
+        with patch.object(requests, 'post', return_value=Mock(
             status_code=200,
             request=Mock(headers={}, body=""),
             headers={},
-            json = lambda :{
-                "access_token":"1234567890",
+            json=lambda: {
+                "access_token": "1234567890",
                 "expires_at": now + 1800,
-                "token_type":"Bearer",
-                "refresh_token":"0987654321"}
+                "token_type": "Bearer",
+                "refresh_token": "0987654321"}
         )) as r_request:
             rhandler = PKCERequestHandlerDummy()
             credentials.verify_url(params, rhandler)
@@ -680,14 +681,13 @@ class PKCECredentialsTest(unittest.TestCase):
         params = {
             'code': ['0123456789'],
             'scope': credentials.scope,
-            'state': [ credentials.auth_state ]
+            'state': [credentials.auth_state]
         }
-        now = datetime.now().timestamp()
-        with patch.object(requests,'post', return_value=Mock(
+        with patch.object(requests, 'post', return_value=Mock(
             status_code=400,
             request=Mock(headers={}, body=""),
             headers={},
-            json = lambda :{"error":"invalid_grant"}
+            json=lambda: {"error": "invalid_grant"}
         )):
             rhandler = PKCERequestHandlerDummy()
             credentials.verify_url(params, rhandler)
@@ -697,8 +697,8 @@ class PKCECredentialsTest(unittest.TestCase):
     def test_logon_opens_a_webbrowser(self,):
         credentials = OAuth2PKCECredentials(
             "client_id", "client_secret", auth_state="test_state",
-            request_handler= PKCERequestHandlerDummy,
-            port = 8123
+            request_handler=PKCERequestHandlerDummy,
+            port=8123
         )
         server = Mock()
         with patch('http.server.HTTPServer', return_value=server) as hs, \
@@ -710,9 +710,8 @@ class PKCECredentialsTest(unittest.TestCase):
         portdata = hs.call_args[0][0]
         partial = hs.call_args[0][1]
         self.assertEqual(portdata, ('', 8123))
-        self.assertEqual(partial.func, PKCERequestHandlerDummy )
-        self.assertEqual(partial.args, (credentials, ) )
-
+        self.assertEqual(partial.func, PKCERequestHandlerDummy)
+        self.assertEqual(partial.args, (credentials,))
 
 
 class PKCECallbackHandlerTests(unittest.TestCase):
@@ -722,32 +721,27 @@ class PKCECallbackHandlerTests(unittest.TestCase):
         # For tests we need to bypass this, so we can probe
         # the do_GET behaviour - hence this subclass.
         class TestRx(PKCEAuthReceiver):
-            def handle(self,*args):
+            def handle(self, *args):
                 pass
 
-        import http.server
         self.pkce_manager = Mock()
         self.handler = TestRx(self.pkce_manager,
-                         request=Mock(),
-                         client_address=None,
-                         server=Mock())
-
+                              request=Mock(),
+                              client_address=None,
+                              server=Mock())
 
     def test_going_somewhere_other_than_callback_errors(self,):
-        self.handler.path="/foo/bar/baz.html"
-        self.handler.send_error_page=Mock()
+        self.handler.path = "/foo/bar/baz.html"
+        self.handler.send_error_page = Mock()
         self.handler.do_GET()
         self.handler.send_error_page.assert_called_with("Unknown endpoint")
 
-    def test_going_somewhere_other_than_callback_errors(self,):
-        self.handler.path="/callback?value=123&something=foo&different=bar"
-        self.handler.send_error_page=Mock()
+    def test_revieving_callback_decodes_parms_and_sends_to_verifyurl(self,):
+        self.handler.path = "/callback?value=123&something=foo&different=bar"
+        self.handler.send_error_page = Mock()
         self.handler.do_GET()
         self.pkce_manager.verify_url.assert_called_with({
-                'value': ['123'],
-                'something': ['foo'],
-                'different': ['bar'],
-            },
-                self.handler
-        )
-
+            'value': ['123'],
+            'something': ['foo'],
+            'different': ['bar'],
+        }, self.handler)

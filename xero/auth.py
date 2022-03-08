@@ -712,7 +712,6 @@ class OAuth2Credentials(object):
             raise XeroExceptionUnknown(response)
 
 
-
 class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
     """ This is an http request processsor for server running on localhost,
     used by the PKCE auth system.
@@ -723,30 +722,30 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
     `send_access_ok` methods to customise the sucess and failure
     pages displayed in the browser.
     """
-    def __init__(self, credmanager , *args,**kwargs):
+    def __init__(self, credmanager, *args, **kwargs):
         self.credmanager = credmanager
-        super().__init__(*args,**kwargs)
+        super().__init__(*args, **kwargs)
 
     @staticmethod
     def close_server(s):
         s.shutdown()
 
-    def do_GET(self,*args):
+    def do_GET(self, *args):
         request = urlparse(self.path)
         params = parse_qs(request.query)
 
         if request.path == "/callback":
-            self.credmanager.verify_url(params,self)
+            self.credmanager.verify_url(params, self)
         else:
             self.send_error_page("Unknown endpoint")
 
-    def send_error_page(self,error):
+    def send_error_page(self, error):
         """Display an Error page.
         Override this for a custom page.
         """
-        print("Error:",error)
+        print("Error:", error)
 
-    def send_access_ok(self,):
+    def send_access_ok(self):
         """Display a success page"
         Override this to provide a custom page.
         """
@@ -769,7 +768,7 @@ class OAuth2PKCECredentials(OAuth2Credentials):
         >>> credentials = OAuth2Credentials(client_id,None, port=8080,
                                             scope=scope)
 
-        A webserver will be setup to listen on the provded port 
+        A webserver will be setup to listen on the provded port
         number which is used for the Auth callback.
 
       2) Send the login request.
@@ -802,58 +801,70 @@ class OAuth2PKCECredentials(OAuth2Credentials):
         `offline_access` to be included in the scope.
 
     :param port: the port the local webserver will listen ro
-    :param verifier: (optional) a string verifier token if not 
-                     provided the module will generate it's own.
+    :param verifier: (optional) a string verifier token if not
+                     provided the module will generate it's own
     :param request_handler: An HTTP request handler class. This will
                             be used to handler the callback request. If
-                            you wish to customise your error page, this is 
+                            you wish to customise your error page, this is
                             where you pass in you custom class.
     :param callback_uri: Allow customisation of the callback uri. Only
                          useful if you've customised the request_handler
                          to match.
 
-    :param scope: Inhereited from Oath2Credentials.. 
+    :param scope: Inhereited from Oath2Credentials.
     """
-    def __init__(self,*args,**kwargs):
-        self.port = kwargs.pop('port',8080)
+    def __init__(self, *args, **kwargs):
+        self.port = kwargs.pop('port', 8080)
         # Xero requires between 43 adn 128 bytes, it fails
         # with invlaid grant if this is not long enough
-        self.verifier = kwargs.pop('verifier',secrets.token_urlsafe(64))
-        self.handler_kls = kwargs.pop('request_handler', PKCEAuthReceiver )
+        self.verifier = kwargs.pop('verifier', secrets.token_urlsafe(64))
+        self.handler_kls = kwargs.pop('request_handler', PKCEAuthReceiver)
         self.error = None
-        if isinstance(self.verifier,str):
+        if isinstance(self.verifier, str):
             self.verifier = self.verifier.encode('ascii')
 
-        kwargs.setdefault('callback_uri',f"http://localhost:{self.port}/callback")
-        super().__init__(*args,**kwargs)
+        kwargs.setdefault('callback_uri', f"http://localhost:{self.port}/callback")
+        super().__init__(*args, **kwargs)
 
-    def logon(self,):
+    def logon(self):
         """Launch PKCE auth process and wait for completion"""
-        challenge = str(base64.urlsafe_b64encode(hashlib.sha256(self.verifier).digest())[:-1],'ascii')
+        challenge = str(
+            base64.urlsafe_b64encode(
+                hashlib.sha256(
+                    self.verifier
+                ).digest()
+            )[:-1], 'ascii'
+        )
         url_base = super().generate_url()
-        webbrowser.open(url_base +f"&code_challenge={challenge}&code_challenge_method=S256")
+        webbrowser.open(
+            f"{url_base}&code_challenge={challenge}&"
+            "code_challenge_method=S256"
+        )
         self.wait_for_callback()
 
-    def wait_for_callback(self,):
-        listen_to = ('',self.port)
-        s = http.server.HTTPServer(listen_to, partial(self.handler_kls, self) )
+    def wait_for_callback(self):
+        listen_to = ('', self.port)
+        s = http.server.HTTPServer(
+            listen_to,
+            partial(self.handler_kls, self)
+        )
         s.serve_forever()
         if self.error:
             raise self.error
 
-    def verify_url(self,params,reqhandler):
+    def verify_url(self, params, reqhandler):
         """Used to verify the parameters xero returns in the
         redirect callback"""
-        error = params.get('error',None)
+        error = params.get('error', None)
         if error:
-            self.handle_error(error,reqhandler)
+            self.handle_error(error, reqhandler)
             return
 
         if params['state'][0] != self.state['auth_state']:
-            self.handle_error("State Mismatch",reqhandler)
+            self.handle_error("State Mismatch", reqhandler)
             return
 
-        code = params.get('code',None)
+        code = params.get('code', None)
         if code:
             try:
                 self.get_token(code[0])
@@ -864,27 +875,27 @@ class OAuth2PKCECredentials(OAuth2Credentials):
 
             reqhandler.send_access_ok()
 
-    def get_token(self,code):
+    def get_token(self, code):
         # Does the third leg, to get the actual auth token from Xero,
         # once the authentication has been 'approved' by the user
         resp = requests.post(
-             url=XERO_OAUTH2_TOKEN_URL,
-             data={
-                 'grant_type': 'authorization_code',
-                 'client_id': self.client_id,
-                 'redirect_uri': self.callback_uri,
-                 'code': code,
-                 'code_verifier': self.verifier
-             }
-         )
+            url=XERO_OAUTH2_TOKEN_URL,
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': self.client_id,
+                'redirect_uri': self.callback_uri,
+                'code': code,
+                'code_verifier': self.verifier
+            }
+        )
         respdata = resp.json()
-        error = respdata.get('error',None)
+        error = respdata.get('error', None)
         if error:
             raise XeroAccessDenied(error)
 
         self._init_oauth(respdata)
 
-    def handle_error(self,msg,handler):
+    def handle_error(self, msg, handler):
         self.error = RuntimeError(msg)
         handler.send_error_page(msg)
         handler.shutdown()
