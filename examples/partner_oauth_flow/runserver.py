@@ -1,7 +1,8 @@
 import os
+import sys
+
 import SimpleHTTPServer
 import SocketServer
-import sys
 from StringIO import StringIO
 from urlparse import parse_qsl, urlparse
 
