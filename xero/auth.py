@@ -1,20 +1,18 @@
 from __future__ import unicode_literals
 
+import base64
 import datetime
-import requests
+import hashlib
 import http.server
+import requests
+import secrets
 import threading
 import webbrowser
-import secrets
-import hashlib
-import base64
 from functools import partial
-
 from six.moves.urllib.parse import parse_qs, urlencode, urlparse
 
 from oauthlib.oauth1 import SIGNATURE_HMAC, SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER
 from requests_oauthlib import OAuth1, OAuth2, OAuth2Session
-
 
 from .constants import (
     ACCESS_TOKEN_URL,

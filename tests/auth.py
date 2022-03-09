@@ -1,20 +1,19 @@
 import json
+import requests
 import time
 import unittest
 from datetime import datetime, timedelta
 from mock import Mock, patch
 from six.moves.urllib.parse import parse_qs, urlparse
 
-import requests
-
 from xero.api import Xero
 from xero.auth import (
     OAuth2Credentials,
+    OAuth2PKCECredentials,
     PartnerCredentials,
+    PKCEAuthReceiver,
     PrivateCredentials,
     PublicCredentials,
-    OAuth2PKCECredentials,
-    PKCEAuthReceiver
 )
 from xero.constants import XERO_OAUTH2_AUTHORIZE_URL
 from xero.exceptions import (
