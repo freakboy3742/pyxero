@@ -22,7 +22,7 @@ jobs:
         flake8
     - name: isort
       run: |
-        isort -c
+        isort -c .
 
   smoke:
     name: Smoke test (3.6)
