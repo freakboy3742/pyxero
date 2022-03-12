@@ -593,7 +593,7 @@ class PKCERequestHandlerDummy:
 
 class PKCECredentialsTest(unittest.TestCase):
     # Mostly the same in principle as the Oauth2 ones,
-    # but oine include one where behavior is difeereny
+    # but just include tests where behavior is different.
     callback_uri = "http://localhost:8123/callback"
 
     def setUp(self):
