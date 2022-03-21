@@ -148,42 +148,42 @@ example at the end)*:
  verification will have to take place again.
 
  ```python
-    from django.http import HttpResponseRedirect
-    from django.core.cache import caches
+from django.http import HttpResponseRedirect
+from django.core.cache import caches
 
-    from xero import Xero
-    from xero.auth import OAuth2Credentials
-    from xero.constants import XeroScopes
+from xero import Xero
+from xero.auth import OAuth2Credentials
+from xero.constants import XeroScopes
 
-    def start_xero_auth_view(request):
-        # Get client_id, client_secret from config file or settings then
-        credentials = OAuth2Credentials(
-            client_id, client_secret, callback_uri=callback_uri,
-            scope=[XeroScopes.OFFLINE_ACCESS, XeroScopes.ACCOUNTING_CONTACTS,
-                   XeroScopes.ACCOUNTING_TRANSACTIONS]
-        )
-        authorization_url = credentials.generate_url()
+def start_xero_auth_view(request):
+    # Get client_id, client_secret from config file or settings then
+    credentials = OAuth2Credentials(
+        client_id, client_secret, callback_uri=callback_uri,
+        scope=[XeroScopes.OFFLINE_ACCESS, XeroScopes.ACCOUNTING_CONTACTS,
+               XeroScopes.ACCOUNTING_TRANSACTIONS]
+    )
+    authorization_url = credentials.generate_url()
+    caches['mycache'].set('xero_creds', credentials.state)
+    return HttpResponseRedirect(authorization_url)
+
+def process_callback_view(request):
+    cred_state = caches['mycache'].get('xero_creds')
+    credentials = OAuth2Credentials(**cred_state)
+    auth_secret = request.get_raw_uri()
+    credentials.verify(auth_secret)
+    credentials.set_default_tenant()
+    caches['mycache'].set('xero_creds', credentials.state)
+
+def some_view_which_calls_xero(request):
+    cred_state = caches['mycache'].get('xero_creds')
+    credentials = OAuth2Credentials(**cred_state)
+    if credentials.expired():
+        credentials.refresh()
         caches['mycache'].set('xero_creds', credentials.state)
-        return HttpResponseRedirect(authorization_url)
+    xero = Xero(credentials)
 
-    def process_callback_view(request):
-        cred_state = caches['mycache'].get('xero_creds')
-        credentials = OAuth2Credentials(**cred_state)
-        auth_secret = request.get_raw_uri()
-        credentials.verify(auth_secret)
-        credentials.set_default_tenant()
-        caches['mycache'].set('xero_creds', credentials.state)
-
-    def some_view_which_calls_xero(request):
-        cred_state = caches['mycache'].get('xero_creds')
-        credentials = OAuth2Credentials(**cred_state)
-        if credentials.expired():
-            credentials.refresh()
-            caches['mycache'].set('xero_creds', credentials.state)
-        xero = Xero(credentials)
-
-        contacts = xero.contacts.all()
-        ...
+    contacts = xero.contacts.all()
+    ...
  ```
 
 ### Older authentication methods ###
