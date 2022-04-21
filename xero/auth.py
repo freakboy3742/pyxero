@@ -637,11 +637,17 @@ class OAuth2Credentials(object):
         self._init_oauth(token)
         return token
 
-    def get_tenants(self):
+    def get_tenants(self, auth_event_id=None):
         """
         Get the list of tenants (Xero Organisations) to which this token grants access.
+
+        Optionally, you may pass a UUID as auth_event_id that will be used to limit to
+        only those tenants that were authorised in that authorisation event.
         """
         connection_url = self.base_url + XERO_OAUTH2_CONNECTIONS_URL
+
+        if auth_event_id:
+            connection_url += '?authEventId=' + auth_event_id
 
         response = requests.get(connection_url, auth=self.oauth, headers=self.headers)
         if response.status_code == 200:

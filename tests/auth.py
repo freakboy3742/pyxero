@@ -527,6 +527,8 @@ class OAuth2CredentialsTest(unittest.TestCase):
         self.assertEqual(
             tenants, [{"id": "1", "tenantId": "12345", "tenantType": "ORGANISATION"}]
         )
+        tenants = credentials.get_tenants(auth_event_id="b71db552-68ff-4d80-a824-7544e5ccad28")
+        self.assertEqual(r_get.mock_calls[-1].args[0].split('?authEventId=')[1], "b71db552-68ff-4d80-a824-7544e5ccad28")
 
     @patch("xero.auth.OAuth2Credentials.get_tenants")
     def test_set_default_tenant(self, get_tenants):
