@@ -1,6 +1,7 @@
 import json
 import time
 import unittest
+import uuid
 from datetime import datetime, timedelta
 from mock import Mock, patch
 from six.moves.urllib.parse import parse_qs, urlparse
@@ -12,7 +13,7 @@ from xero.auth import (
     PrivateCredentials,
     PublicCredentials,
 )
-from xero.constants import XERO_OAUTH2_AUTHORIZE_URL
+from xero.constants import XERO_OAUTH2_AUTHORIZE_URL, XERO_OAUTH2_CONNECTIONS_URL
 from xero.exceptions import (
     XeroAccessDenied,
     XeroException,
@@ -527,8 +528,13 @@ class OAuth2CredentialsTest(unittest.TestCase):
         self.assertEqual(
             tenants, [{"id": "1", "tenantId": "12345", "tenantType": "ORGANISATION"}]
         )
-        tenants = credentials.get_tenants(auth_event_id="b71db552-68ff-4d80-a824-7544e5ccad28")
-        self.assertEqual(r_get.mock_calls[-1].args[0].split('?authEventId=')[1], "b71db552-68ff-4d80-a824-7544e5ccad28")
+        tenants = credentials.get_tenants(
+            auth_event_id="b71db552-68ff-4d80-a824-7544e5ccad28"
+        )
+        self.assertEqual(
+            r_get.mock_calls[-1].args[0].split("?authEventId=")[1],
+            "b71db552-68ff-4d80-a824-7544e5ccad28",
+        )
 
     @patch("xero.auth.OAuth2Credentials.get_tenants")
     def test_set_default_tenant(self, get_tenants):
@@ -570,3 +576,19 @@ class OAuth2CredentialsTest(unittest.TestCase):
         )
         with self.assertRaises(XeroException):
             credentials.set_default_tenant()
+
+    @patch("requests.delete")
+    def test_delete_connection(self, r_delete):
+        credentials = OAuth2Credentials(
+            "client_id", "client_secret", token=self.expired_token
+        )
+        r_delete.return_value = Mock(status_code=200)
+
+        connection_id = str(uuid.uuid4())
+
+        credentials.delete_connection(connection_id)
+        self.assertTrue(r_delete.called)
+        self.assertEqual(
+            r_delete.mock_calls[-1].args[0],
+            self.base_url + XERO_OAUTH2_CONNECTIONS_URL + f"/{connection_id}",
+        )
