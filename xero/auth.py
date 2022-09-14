@@ -387,7 +387,7 @@ class PartnerCredentials(PublicCredentials):
         scope=None,
         user_agent=None,
         api_url=XERO_BASE_URL,
-        **kwargs
+        **kwargs,
     ):
         """Construct the auth instance.
 
@@ -647,7 +647,7 @@ class OAuth2Credentials(object):
         connection_url = self.base_url + XERO_OAUTH2_CONNECTIONS_URL
 
         if auth_event_id:
-            connection_url += '?authEventId=' + auth_event_id
+            connection_url += "?authEventId=" + auth_event_id
 
         response = requests.get(connection_url, auth=self.oauth, headers=self.headers)
         if response.status_code == 200:
@@ -668,6 +668,16 @@ class OAuth2Credentials(object):
                 "scopes requested include access to organisation data, or has access "
                 "to the organisation(s) been removed?",
             )
+
+    def delete_connection(self, connection_id):
+        connection_url = (
+            self.base_url + XERO_OAUTH2_CONNECTIONS_URL + f"/{connection_id}"
+        )
+        response = requests.delete(
+            connection_url, auth=self.oauth, headers=self.headers
+        )
+        if not response.status_code == 204:
+            self._handle_error_response(response)
 
     @staticmethod
     def _handle_error_response(response):
