@@ -582,7 +582,7 @@ class OAuth2CredentialsTest(unittest.TestCase):
         credentials = OAuth2Credentials(
             "client_id", "client_secret", token=self.expired_token
         )
-        r_delete.return_value = Mock(status_code=200)
+        r_delete.return_value = Mock(status_code=204)
 
         connection_id = str(uuid.uuid4())
 
@@ -590,5 +590,5 @@ class OAuth2CredentialsTest(unittest.TestCase):
         self.assertTrue(r_delete.called)
         self.assertEqual(
             r_delete.mock_calls[-1].args[0],
-            self.base_url + XERO_OAUTH2_CONNECTIONS_URL + f"/{connection_id}",
+            credentials.base_url + XERO_OAUTH2_CONNECTIONS_URL + f"/{connection_id}",
         )
