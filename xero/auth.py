@@ -491,6 +491,7 @@ class OAuth2Credentials(object):
         scope=None,
         tenant_id=None,
         user_agent=None,
+        relax_token_scope=False,
     ):
         from xero import __version__ as VERSION
 
@@ -566,7 +567,12 @@ class OAuth2Credentials(object):
         # Various different exceptions may be raised, so pass the exception
         # through as XeroAccessDenied
         except Exception as e:
-            raise XeroAccessDenied(e)
+            # oauthlib raises a warning when returned token scope
+            # is different from the client scope
+            if self.relax_token_scope && isinstance(e, Warning):
+                session.token = e.token
+            else:
+                raise XeroAccessDenied(e)
         self._init_oauth(token)
 
     def generate_url(self):
