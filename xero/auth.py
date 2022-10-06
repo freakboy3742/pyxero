@@ -503,6 +503,7 @@ class OAuth2Credentials(object):
         self.tenant_id = tenant_id  # Used by BaseManager
         self._oauth = None
         self.scope = scope or DEFAULT_SCOPE[:]
+        self.relax_token_scope = relax_token_scope
 
         if user_agent is None:
             self.user_agent = (
