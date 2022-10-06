@@ -569,7 +569,7 @@ class OAuth2Credentials(object):
         except Exception as e:
             # oauthlib raises a warning when returned token scope
             # is different from the client scope
-            if self.relax_token_scope && isinstance(e, Warning):
+            if self.relax_token_scope and isinstance(e, Warning):
                 session.token = e.token
             else:
                 raise XeroAccessDenied(e)
