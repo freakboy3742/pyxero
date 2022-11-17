@@ -89,7 +89,7 @@ class ExceptionsTest(unittest.TestCase):
         xero = Xero(credentials)
 
         with self.assertRaises(
-                XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
+            XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
         ):
             xero.invoices.put(
                 {
@@ -207,10 +207,7 @@ class ExceptionsTest(unittest.TestCase):
     def test_unauthorized_with_blank_text(self, r_get):
         "A session with an expired token raises an unauthorized exception"
         # Verified response from the live API
-        r_get.return_value = Mock(
-            status_code=401,
-            text="",
-        )
+        r_get.return_value = Mock(status_code=401, text="",)
 
         credentials = Mock(base_url="")
         xero = Xero(credentials)
@@ -221,7 +218,6 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroUnauthorized as e:
             # Error messages have been extracted
-            self.assertIsNone(str(e))
             self.assertEqual(e.errors, [])
 
             # The response has also been stored
@@ -302,7 +298,10 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroRateLimitExceeded as e:
             # Error messages have been extracted
-            self.assertEqual(str(e), "please wait before retrying the xero api, the limit exceeded is: day")
+            self.assertEqual(
+                str(e),
+                "please wait before retrying the xero api, the limit exceeded is: day",
+            )
             self.assertIn("rate limit exceeded", e.errors[0])
 
             # The response has also been stored
