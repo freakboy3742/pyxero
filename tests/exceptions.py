@@ -89,7 +89,7 @@ class ExceptionsTest(unittest.TestCase):
         xero = Xero(credentials)
 
         with self.assertRaises(
-                XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
+            XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
         ):
             xero.invoices.put(
                 {
@@ -204,6 +204,28 @@ class ExceptionsTest(unittest.TestCase):
             self.fail("Should raise a XeroUnauthorized, not %s" % e)
 
     @patch("requests.get")
+    def test_unauthorized_with_blank_text(self, r_get):
+        "A session with an expired token raises an unauthorized exception"
+        # Verified response from the live API
+        r_get.return_value = Mock(status_code=401, text="",)
+
+        credentials = Mock(base_url="")
+        xero = Xero(credentials)
+
+        try:
+            xero.contacts.all()
+            self.fail("Should raise a XeroUnauthorized.")
+
+        except XeroUnauthorized as e:
+            # Error messages have been extracted
+            self.assertEqual(e.errors, [])
+
+            # The response has also been stored
+            self.assertEqual(e.response.status_code, 401)
+        except Exception as e:
+            self.fail("Should raise a XeroUnauthorized, not %s" % e)
+
+    @patch("requests.get")
     def test_forbidden(self, r_get):
         "In case of an SSL failure, a Forbidden exception is raised"
         # This is unconfirmed; haven't been able to verify this response from API.
@@ -276,7 +298,10 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroRateLimitExceeded as e:
             # Error messages have been extracted
-            self.assertEqual(str(e), "please wait before retrying the xero api, the limit exceeded is: day")
+            self.assertEqual(
+                str(e),
+                "please wait before retrying the xero api, the limit exceeded is: day",
+            )
             self.assertIn("rate limit exceeded", e.errors[0])
 
             # The response has also been stored
