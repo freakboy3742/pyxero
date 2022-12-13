@@ -70,6 +70,12 @@ class FilesManager(object):
                 *args, **kwargs
             )
 
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers["Xero-tenant-id"] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
+
             response = getattr(requests, method)(
                 uri,
                 data=body,
