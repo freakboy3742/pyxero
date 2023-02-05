@@ -491,6 +491,7 @@ class OAuth2Credentials(object):
         scope=None,
         tenant_id=None,
         user_agent=None,
+        relax_token_scope=False,
     ):
         from xero import __version__ as VERSION
 
@@ -502,6 +503,7 @@ class OAuth2Credentials(object):
         self.tenant_id = tenant_id  # Used by BaseManager
         self._oauth = None
         self.scope = scope or DEFAULT_SCOPE[:]
+        self.relax_token_scope = relax_token_scope
 
         if user_agent is None:
             self.user_agent = (
@@ -566,7 +568,12 @@ class OAuth2Credentials(object):
         # Various different exceptions may be raised, so pass the exception
         # through as XeroAccessDenied
         except Exception as e:
-            raise XeroAccessDenied(e)
+            # oauthlib raises a warning when returned token scope
+            # is different from the client scope
+            if self.relax_token_scope and isinstance(e, Warning):
+                session.token = e.token
+            else:
+                raise XeroAccessDenied(e)
         self._init_oauth(token)
 
     def generate_url(self):
@@ -637,11 +644,17 @@ class OAuth2Credentials(object):
         self._init_oauth(token)
         return token
 
-    def get_tenants(self):
+    def get_tenants(self, auth_event_id=None):
         """
         Get the list of tenants (Xero Organisations) to which this token grants access.
+
+        Optionally, you may pass a UUID as auth_event_id that will be used to limit to
+        only those tenants that were authorised in that authorisation event.
         """
         connection_url = self.base_url + XERO_OAUTH2_CONNECTIONS_URL
+
+        if auth_event_id:
+            connection_url += '?authEventId=' + auth_event_id
 
         response = requests.get(connection_url, auth=self.oauth, headers=self.headers)
         if response.status_code == 200:
