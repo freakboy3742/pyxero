@@ -40,6 +40,7 @@ class BaseManager(object):
     )
     OBJECT_DECORATED_METHODS = {
         "Invoices": ["email", "online_invoice"],
+        "Organisations": ["actions"],
     }
     DATETIME_FIELDS = (
         "UpdatedDateUTC",
@@ -323,6 +324,10 @@ class BaseManager(object):
     def _online_invoice(self, id):
         uri = "/".join([self.base_url, self.name, id, "OnlineInvoice"])
         return uri, {}, "get", None, None, True
+
+    def _actions(self):
+        uri = "/".join([self.base_url, self.name, "Actions"])
+        return uri, {}, "get", None, None, False
 
     def save_or_put(self, data, method="post", headers=None, summarize_errors=True):
         uri = "/".join([self.base_url, self.name])
