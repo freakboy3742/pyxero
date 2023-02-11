@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import base64
 import datetime
 import hashlib
@@ -9,7 +7,7 @@ import secrets
 import threading
 import webbrowser
 from functools import partial
-from six.moves.urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from oauthlib.oauth1 import SIGNATURE_HMAC, SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER
 from requests_oauthlib import OAuth1, OAuth2, OAuth2Session
@@ -237,8 +235,9 @@ class PublicCredentials:
             self.oauth_expires_at = datetime.datetime.now() + datetime.timedelta(
                 seconds=int(oauth_expires_in)
             )
-            self.oauth_authorization_expires_at = datetime.datetime.now() + datetime.timedelta(
-                seconds=int(oauth_authorisation_expires_in)
+            self.oauth_authorization_expires_at = (
+                datetime.datetime.now()
+                + datetime.timedelta(seconds=int(oauth_authorisation_expires_in))
             )
         else:
             self._handle_error_response(response)
@@ -280,8 +279,8 @@ class PublicCredentials:
         """Obtain the useful state of this credentials object so that
         we can reconstruct it independently.
         """
-        return dict(
-            (attr, getattr(self, attr))
+        return {
+            attr: getattr(self, attr)
             for attr in (
                 "consumer_key",
                 "consumer_secret",
@@ -295,7 +294,7 @@ class PublicCredentials:
                 "scope",
             )
             if getattr(self, attr) is not None
-        )
+        }
 
     def verify(self, verifier):
         "Verify an OAuth token"
@@ -394,7 +393,7 @@ class PartnerCredentials(PublicCredentials):
         scope=None,
         user_agent=None,
         api_url=XERO_BASE_URL,
-        **kwargs
+        **kwargs,
     ):
         """Construct the auth instance.
 
@@ -446,7 +445,7 @@ class PartnerCredentials(PublicCredentials):
         self._process_oauth_response(response)
 
 
-class OAuth2Credentials(object):
+class OAuth2Credentials:
     """An object wrapping the 3-step OAuth2.0 process for Xero API access.
 
         For detailed documentation see README.md.
@@ -542,8 +541,8 @@ class OAuth2Credentials(object):
         """Obtain the useful state of this credentials object so that
         we can reconstruct it independently.
         """
-        return dict(
-            (attr, getattr(self, attr))
+        return {
+            attr: getattr(self, attr)
             for attr in (
                 "client_id",
                 "client_secret",
@@ -555,7 +554,7 @@ class OAuth2Credentials(object):
                 "user_agent",
             )
             if getattr(self, attr) is not None
-        )
+        }
 
     def verify(self, auth_secret):
         """Verify and return OAuth2 token."""
@@ -661,7 +660,7 @@ class OAuth2Credentials(object):
         connection_url = self.base_url + XERO_OAUTH2_CONNECTIONS_URL
 
         if auth_event_id:
-            connection_url += '?authEventId=' + auth_event_id
+            connection_url += "?authEventId=" + auth_event_id
 
         response = requests.get(connection_url, auth=self.oauth, headers=self.headers)
         if response.status_code == 200:
@@ -718,7 +717,7 @@ class OAuth2Credentials(object):
 
 
 class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
-    """ This is an http request processsor for server running on localhost,
+    """This is an http request processsor for server running on localhost,
     used by the PKCE auth system.
     Xero will redirect the browser after auth, from which we
     can collect the toke Xero provides.
@@ -727,6 +726,7 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
     `send_access_ok` methods to customise the sucess and failure
     pages displayed in the browser.
     """
+
     def __init__(self, credmanager, *args, **kwargs):
         self.credmanager = credmanager
         super().__init__(*args, **kwargs)
@@ -760,7 +760,9 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
     def shutdown(self):
         """Start shutdowning our server and return immediately"""
         # Launch a thread to close our socket cleanly.
-        threading.Thread(target=self.__class__.close_server, args=(self.server,)).start()
+        threading.Thread(
+            target=self.__class__.close_server, args=(self.server,)
+        ).start()
 
 
 class OAuth2PKCECredentials(OAuth2Credentials):
@@ -818,41 +820,35 @@ class OAuth2PKCECredentials(OAuth2Credentials):
 
     :param scope: Inhereited from Oath2Credentials.
     """
+
     def __init__(self, *args, **kwargs):
-        self.port = kwargs.pop('port', 8080)
+        self.port = kwargs.pop("port", 8080)
         # Xero requires between 43 adn 128 bytes, it fails
         # with invlaid grant if this is not long enough
-        self.verifier = kwargs.pop('verifier', secrets.token_urlsafe(64))
-        self.handler_kls = kwargs.pop('request_handler', PKCEAuthReceiver)
+        self.verifier = kwargs.pop("verifier", secrets.token_urlsafe(64))
+        self.handler_kls = kwargs.pop("request_handler", PKCEAuthReceiver)
         self.error = None
         if isinstance(self.verifier, str):
-            self.verifier = self.verifier.encode('ascii')
+            self.verifier = self.verifier.encode("ascii")
 
-        kwargs.setdefault('callback_uri', f"http://localhost:{self.port}/callback")
+        kwargs.setdefault("callback_uri", f"http://localhost:{self.port}/callback")
         super().__init__(*args, **kwargs)
 
     def logon(self):
         """Launch PKCE auth process and wait for completion"""
         challenge = str(
-            base64.urlsafe_b64encode(
-                hashlib.sha256(
-                    self.verifier
-                ).digest()
-            )[:-1], 'ascii'
+            base64.urlsafe_b64encode(hashlib.sha256(self.verifier).digest())[:-1],
+            "ascii",
         )
         url_base = super().generate_url()
         webbrowser.open(
-            f"{url_base}&code_challenge={challenge}&"
-            "code_challenge_method=S256"
+            f"{url_base}&code_challenge={challenge}&" "code_challenge_method=S256"
         )
         self.wait_for_callback()
 
     def wait_for_callback(self):
-        listen_to = ('', self.port)
-        s = http.server.HTTPServer(
-            listen_to,
-            partial(self.handler_kls, self)
-        )
+        listen_to = ("", self.port)
+        s = http.server.HTTPServer(listen_to, partial(self.handler_kls, self))
         s.serve_forever()
         if self.error:
             raise self.error
@@ -860,16 +856,16 @@ class OAuth2PKCECredentials(OAuth2Credentials):
     def verify_url(self, params, reqhandler):
         """Used to verify the parameters xero returns in the
         redirect callback"""
-        error = params.get('error', None)
+        error = params.get("error", None)
         if error:
             self.handle_error(error, reqhandler)
             return
 
-        if params['state'][0] != self.state['auth_state']:
+        if params["state"][0] != self.state["auth_state"]:
             self.handle_error("State Mismatch", reqhandler)
             return
 
-        code = params.get('code', None)
+        code = params.get("code", None)
         if code:
             try:
                 self.get_token(code[0])
@@ -886,15 +882,15 @@ class OAuth2PKCECredentials(OAuth2Credentials):
         resp = requests.post(
             url=XERO_OAUTH2_TOKEN_URL,
             data={
-                'grant_type': 'authorization_code',
-                'client_id': self.client_id,
-                'redirect_uri': self.callback_uri,
-                'code': code,
-                'code_verifier': self.verifier
-            }
+                "grant_type": "authorization_code",
+                "client_id": self.client_id,
+                "redirect_uri": self.callback_uri,
+                "code": code,
+                "code_verifier": self.verifier,
+            },
         )
         respdata = resp.json()
-        error = respdata.get('error', None)
+        error = respdata.get("error", None)
         if error:
             raise XeroAccessDenied(error)
 

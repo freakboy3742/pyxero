@@ -1,8 +1,6 @@
-from __future__ import unicode_literals
-
 import os
 import requests
-from six.moves.urllib.parse import parse_qs
+from urllib.parse import parse_qs
 
 from .constants import XERO_PROJECTS_URL
 from .exceptions import (
@@ -19,7 +17,7 @@ from .exceptions import (
 )
 
 
-class ProjectManager(object):
+class ProjectManager:
     DECORATED_METHODS = (
         "get",
         "all",
@@ -55,7 +53,7 @@ class ProjectManager(object):
             return result[self.singular]
 
     def _get_data(self, func):
-        """ This is the decorator for our DECORATED_METHODS.
+        """This is the decorator for our DECORATED_METHODS.
         Each of the decorated methods must return:
             uri, params, method, body, headers, singleobject
         """

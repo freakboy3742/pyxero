@@ -1,20 +1,16 @@
-from __future__ import unicode_literals
-
+""" Tests of the utils module. """
 import datetime
 import unittest
 
 import xero.utils
 
-""" Tests of the utils module. """
-
 
 class UtilsTest(unittest.TestCase):
-    """ Test of the utils module.
-    """
+    """Test of the utils module."""
 
     def test_json_hook(self):
-        """ Tests the json hook used in Manager._parse_api_response, and the
-            call it makes to parse_date.
+        """Tests the json hook used in Manager._parse_api_response, and the
+        call it makes to parse_date.
         """
         # The hook parses dates
         example_input = {
@@ -63,8 +59,7 @@ class UtilsTest(unittest.TestCase):
         )
 
     def test_parse_date(self):
-        """ Tests of the parse_date input formats.
-        """
+        """Tests of the parse_date input formats."""
         # 07/05/2015 00:00:00 +12 (06/05/2015 12:00:00 GMT/UTC)
         self.assertEqual(
             xero.utils.parse_date("/Date(1430913600000+1200)/"),

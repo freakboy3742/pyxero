@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .basemanager import BaseManager
 from .constants import XERO_API_URL
 from .utils import resolve_user_agent, singular

@@ -1,16 +1,11 @@
-
 import re
-import six
 from collections import defaultdict
 from xml.dom.minidom import parseString
 
 
 def assertXMLEqual(test_case, xml1, xml2, message=""):
-    def to_str(s):
-        return s.decode("utf-8") if six.PY3 and isinstance(s, bytes) else str(s)
-
     def clean_xml(xml):
-        xml = "<root>%s</root>" % to_str(xml)
+        xml = f"<root>{xml}</root>"
         return str(re.sub(">\n *<", "><", parseString(xml).toxml()))
 
     def xml_to_dict(xml):
