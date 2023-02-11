@@ -1,8 +1,6 @@
-from __future__ import unicode_literals
-
 import datetime
 import unittest
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from xero.exceptions import XeroExceptionUnknown
 from xero.manager import Manager
@@ -11,7 +9,6 @@ from .helpers import assertXMLEqual
 
 
 class ManagerTest(unittest.TestCase):
-
     def test_serializer(self):
         credentials = Mock(base_url="")
         manager = Manager("contacts", credentials)
@@ -137,10 +134,7 @@ class ManagerTest(unittest.TestCase):
         """
 
         assertXMLEqual(
-            self,
-            resultant_xml,
-            expected_xml,
-            "Resultant XML does not match expected."
+            self, resultant_xml, expected_xml, "Resultant XML does not match expected."
         )
 
     def test_serializer_nested_singular(self):
@@ -238,9 +232,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(method, "get")
         self.assertFalse(singleobject)
 
-        expected_params = {
-            "IDs": "1,2,3,4,5"
-        }
+        expected_params = {"IDs": "1,2,3,4,5"}
         self.assertEqual(params, expected_params)
 
     def test_rawfilter(self):
@@ -302,8 +294,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, {}, "test 4dps can be disabled explicitly")
 
     def test_get_params(self):
-        """The 'get' methods should pass GET parameters if provided.
-        """
+        """The 'get' methods should pass GET parameters if provided."""
 
         credentials = Mock(base_url="")
         manager = Manager("reports", credentials)
@@ -334,8 +325,7 @@ class ManagerTest(unittest.TestCase):
         )
 
     def test_user_agent_inheritance(self):
-        """The user_agent should be inherited from the provided credentials when not set explicitly.
-        """
+        """The user_agent should be inherited from the provided credentials when not set explicitly."""
 
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
@@ -354,8 +344,7 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.post")
     def test_request_content_type(self, request):
-        """The Content-Type should be application/xml
-        """
+        """The Content-Type should be application/xml"""
 
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
@@ -369,8 +358,7 @@ class ManagerTest(unittest.TestCase):
         self.assertTrue(call.kwargs["headers"]["Content-Type"], "application/xml")
 
     def test_request_body_format(self):
-        """The body content should be in valid XML format
-        """
+        """The body content should be in valid XML format"""
 
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)

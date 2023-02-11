@@ -1,4 +1,3 @@
-
 import re
 import six
 from collections import defaultdict

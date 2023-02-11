@@ -1,14 +1,10 @@
-from __future__ import unicode_literals
-
 from .basemanager import BaseManager
 from .constants import XERO_API_URL
 from .utils import resolve_user_agent, singular
 
 
 class PaymentManager(BaseManager):
-
     def __init__(self, name, credentials, unit_price_4dps=False, user_agent=None):
-
         self.credentials = credentials
         self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
@@ -24,6 +20,6 @@ class PaymentManager(BaseManager):
 
     def _delete(self, id):
         uri = "/".join([self.base_url, self.name, id])
-        data = {'Status': 'DELETED'}
+        data = {"Status": "DELETED"}
         body = {"xml": self._prepare_data_for_save(data)}
         return uri, {}, "post", body, None, False

@@ -1,10 +1,8 @@
-from __future__ import unicode_literals
-
 import json
 import requests
 import six
 from datetime import datetime
-from six.moves.urllib.parse import parse_qs
+from urllib.parse import parse_qs
 from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.parsers.expat import ExpatError
 
@@ -24,7 +22,7 @@ from .exceptions import (
 from .utils import isplural, json_load_object_hook, singular
 
 
-class BaseManager(object):
+class BaseManager:
     DECORATED_METHODS = (
         "get",
         "save",
@@ -161,7 +159,7 @@ class BaseManager(object):
                 elif key in self.DATE_FIELDS:
                     val = sub_data.strftime("%Y-%m-%dT%H:%M:%S")
                 else:
-                    val = six.text_type(sub_data)
+                    val = str(sub_data)
                 elm.text = val
 
         return root_elm
@@ -176,7 +174,7 @@ class BaseManager(object):
             root_elm = self.dict_to_xml(Element(self.singular), data)
 
         # In python3 this seems to return a bytestring
-        return six.u(tostring(root_elm))
+        return tostring(root_elm)
 
     def _parse_api_response(self, response, resource_name):
         data = json.loads(response.text, object_hook=json_load_object_hook)
@@ -190,7 +188,7 @@ class BaseManager(object):
             return data
 
     def _get_data(self, func):
-        """ This is the decorator for our DECORATED_METHODS.
+        """This is the decorator for our DECORATED_METHODS.
         Each of the decorated methods must return:
             uri, params, method, body, headers, singleobject
         """
@@ -261,9 +259,13 @@ class BaseManager(object):
 
             elif response.status_code == 429:
                 limit_reason = response.headers.get("X-Rate-Limit-Problem") or "unknown"
-                payload = {"oauth_problem": ["rate limit exceeded: " + limit_reason],
-                           "oauth_problem_advice": ["please wait before retrying the xero api, "
-                                                    "the limit exceeded is: " + limit_reason]}
+                payload = {
+                    "oauth_problem": ["rate limit exceeded: " + limit_reason],
+                    "oauth_problem_advice": [
+                        "please wait before retrying the xero api, "
+                        "the limit exceeded is: " + limit_reason
+                    ],
+                }
                 raise XeroRateLimitExceeded(response, payload)
 
             elif response.status_code == 500:
@@ -355,7 +357,7 @@ class BaseManager(object):
         details_data = {"Details": details}
         root_elm = Element("HistoryRecord")
         self.dict_to_xml(root_elm, details_data)
-        data = six.u(tostring(root_elm))
+        data = tostring(root_elm)
         return uri, {}, "put", data, None, False
 
     def _put_history(self, id, details):
@@ -403,15 +405,17 @@ class BaseManager(object):
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]
                 if last_key.endswith("ID"):
-                    return 'Guid("%s")' % six.text_type(value)
+                    return 'Guid("%s")' % str(value)
                 if key in self.BOOLEAN_FIELDS:
                     return "true" if value else "false"
                 elif key in self.DATE_FIELDS:
-                    return "DateTime(%s,%s,%s)" % (value.year, value.month, value.day)
+                    return "DateTime({},{},{})".format(
+                        value.year, value.month, value.day
+                    )
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
-                    return '"%s"' % six.text_type(value)
+                    return '"%s"' % str(value)
 
             def generate_param(key, value):
                 parts = key.split("__")
@@ -432,7 +436,7 @@ class BaseManager(object):
                         fmt = "%s" + self.OPERATOR_MAPPINGS[parts[1]] + "%s"
                     elif parts[1] in ["isnull"]:
                         sign = "=" if value else "!"
-                        return "%s%s=null" % (parts[0], sign)
+                        return f"{parts[0]}{sign}=null"
                     field = field.replace("_", ".")
                 return fmt % (field, get_filter_params(key, value))
 
@@ -452,7 +456,7 @@ class BaseManager(object):
             # Xero will break if you search without a check for null in the first position:
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
             sortedkwargs = sorted(
-                six.iteritems(kwargs), key=lambda item: -1 if "isnull" in item[0] else 0
+                kwargs.items(), key=lambda item: -1 if "isnull" in item[0] else 0
             )
             for key, value in sortedkwargs:
                 filter_params.append(generate_param(key, value))

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .filesmanager import FilesManager
 from .manager import Manager
 from .paymentmanager import PaymentManager
@@ -7,7 +5,7 @@ from .payrollmanager import PayrollManager
 from .projectmanager import ProjectManager
 
 
-class Xero(object):
+class Xero:
     """An ORM-like interface to the Xero API"""
 
     OBJECT_LIST = (
@@ -48,10 +46,9 @@ class Xero(object):
         # the lowercase name of the object and attach it to an
         # instance of a Manager object to operate on it
         for name in self.OBJECT_LIST:
-
             manager_class = Manager
 
-            if name == 'Payments':
+            if name == "Payments":
                 manager_class = PaymentManager
 
             setattr(
@@ -65,7 +62,7 @@ class Xero(object):
         setattr(self, "projectsAPI", Project(credentials))
 
 
-class Files(object):
+class Files:
     """An ORM-like interface to the Xero Files API"""
 
     OBJECT_LIST = (
@@ -84,7 +81,7 @@ class Files(object):
             setattr(self, name.lower(), FilesManager(name, credentials))
 
 
-class Payroll(object):
+class Payroll:
     """An ORM-like interface to the Xero Payroll API"""
 
     OBJECT_LIST = (
@@ -107,7 +104,7 @@ class Payroll(object):
             )
 
 
-class Project(object):
+class Project:
     """An ORM-like interface to the Xero Projects API"""
 
     OBJECT_LIST = (

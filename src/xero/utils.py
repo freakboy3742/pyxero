@@ -1,9 +1,6 @@
-from __future__ import unicode_literals
-
 import datetime
 import re
 import requests
-import six
 
 DATE = re.compile(
     r"^(\/Date\((?P<timestamp>-?\d+)((?P<offset_h>[-+]\d\d)(?P<offset_m>\d\d))?\)\/)"
@@ -80,18 +77,16 @@ def singular(word):
 
 
 def parse_date(string, force_datetime=False):
-    """ Takes a Xero formatted date, e.g. /Date(1426849200000+1300)/"""
+    """Takes a Xero formatted date, e.g. /Date(1426849200000+1300)/"""
     matches = DATE.match(string)
     if not matches:
         return None
 
-    values = dict(
-        [
-            (k, v if v[0] in "+-" else int(v))
-            for k, v in matches.groupdict().items()
-            if v and int(v)
-        ]
-    )
+    values = {
+        k: v if v[0] in "+-" else int(v)
+        for k, v in matches.groupdict().items()
+        if v and int(v)
+    }
 
     if "timestamp" in values:
         value = datetime.datetime.utcfromtimestamp(0) + datetime.timedelta(
@@ -117,10 +112,9 @@ def parse_date(string, force_datetime=False):
 
 
 def json_load_object_hook(dct):
-    """ Hook for json.parse(...) to parse Xero date formats.
-    """
+    """Hook for json.parse(...) to parse Xero date formats."""
     for key, value in dct.items():
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = parse_date(value)
             if value:
                 dct[key] = value

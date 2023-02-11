@@ -1,8 +1,6 @@
-from __future__ import unicode_literals
-
 import unittest
 from datetime import date
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from xero import Xero
 from xero.exceptions import (
@@ -89,7 +87,7 @@ class ExceptionsTest(unittest.TestCase):
         xero = Xero(credentials)
 
         with self.assertRaises(
-                XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
+            XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
         ):
             xero.invoices.put(
                 {
@@ -276,7 +274,10 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroRateLimitExceeded as e:
             # Error messages have been extracted
-            self.assertEqual(str(e), "please wait before retrying the xero api, the limit exceeded is: day")
+            self.assertEqual(
+                str(e),
+                "please wait before retrying the xero api, the limit exceeded is: day",
+            )
             self.assertIn("rate limit exceeded", e.errors[0])
 
             # The response has also been stored
