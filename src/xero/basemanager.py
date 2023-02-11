@@ -1,6 +1,6 @@
+import io
 import json
 import requests
-import six
 from datetime import datetime
 from urllib.parse import parse_qs
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -371,7 +371,7 @@ class BaseManager:
         uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
         params = {"IncludeOnline": "true"} if include_online else {}
         headers = {"Content-Type": content_type, "Content-Length": str(len(data))}
-        return uri, params, "put", six.BytesIO(data), headers, False
+        return uri, params, "put", io.BytesIO(data), headers, False
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
         """Upload an attachment to the Xero object (from file object)."""

@@ -1,7 +1,8 @@
 import re
-import six
 from collections import defaultdict
 from xml.dom.minidom import parseString
+
+import six
 
 
 def assertXMLEqual(test_case, xml1, xml2, message=""):
