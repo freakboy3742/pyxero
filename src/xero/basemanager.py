@@ -203,7 +203,9 @@ class BaseManager(object):
             if headers is None:
                 headers = {}
 
-            headers["Content-Type"] = "application/xml"
+            # Send xml by default, but remember we might upload a binary attachment with a custom mime-type
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/xml"
 
             if isinstance(self.credentials, OAuth2Credentials):
                 if self.credentials.tenant_id:
@@ -367,7 +369,7 @@ class BaseManager(object):
         uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
         params = {"IncludeOnline": "true"} if include_online else {}
         headers = {"Content-Type": content_type, "Content-Length": str(len(data))}
-        return uri, params, "put", data, headers, False
+        return uri, params, "put", six.BytesIO(data), headers, False
 
     def put_attachment(self, id, filename, file, content_type, include_online=False):
         """Upload an attachment to the Xero object (from file object)."""
