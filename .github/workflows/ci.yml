@@ -14,7 +14,7 @@ jobs:
 
   python-versions:
     name: Python compatibility test
-    needs: precheck
+    needs: pre-commit
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
