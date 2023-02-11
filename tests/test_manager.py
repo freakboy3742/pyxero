@@ -354,8 +354,8 @@ class ManagerTest(unittest.TestCase):
         except XeroExceptionUnknown:
             pass
 
-        call = request.mock_calls[0]
-        self.assertTrue(call.kwargs["headers"]["Content-Type"], "application/xml")
+        kwargs = request.mock_calls[0][2]
+        self.assertTrue(kwargs["headers"]["Content-Type"], "application/xml")
 
     def test_request_body_format(self):
         """The body content should be in valid XML format"""

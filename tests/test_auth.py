@@ -530,7 +530,7 @@ class OAuth2CredentialsTest(unittest.TestCase):
             auth_event_id="b71db552-68ff-4d80-a824-7544e5ccad28"
         )
         self.assertEqual(
-            r_get.mock_calls[-1].args[0].split("?authEventId=")[1],
+            r_get.call_args[0][0].split("?authEventId=")[1],
             "b71db552-68ff-4d80-a824-7544e5ccad28",
         )
 
