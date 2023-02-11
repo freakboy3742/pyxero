@@ -17,7 +17,7 @@ pip install pyxero
 ### Using OAuth2 Credentials
 
 OAuth2 is an open standard authorization protocol that allows users to
-provide specific permissions to apps that want to use their account. OAuth2 
+provide specific permissions to apps that want to use their account. OAuth2
 authentication is performed using *tokens* that are obtained using an API;
 these tokens are then provided with each subsequent request.
 
@@ -186,12 +186,152 @@ def some_view_which_calls_xero(request):
     ...
  ```
 
+### Using PKCE Credentials
+
+PKCE is an alternative flow for providing authentication via OAuth2. It works
+largely the same as the standard OAuth2 mechanism, but unlike the normal flow is
+designed to work with applications which cannot keep private keys secure, such
+as desktop, mobile or single page apps where such secrets could be extracted. A
+client ID is still required.
+
+As elsewhere, OAuth2 tokens have a 30 minute expiry, but can be only swapped for
+a new token if the `offline_access` scope is requested.
+
+Xero documentation on the PKCE flow can be found
+[here](https://developer.xero.com/documentation/guides/oauth2/pkce-flow). The
+procedure for creating and authenticating credentials is as follows *(with a CLI
+example at the end)*:
+
+ 1) [Register your app](https://developer.xero.com/myapps) with Xero, using a
+    redirect URI which will be served by your app in order to complete the
+    authorisation e.g. `http://localhost:<port>/callback/`. You can chose any
+    port, anc can pass it to the credentials object on construction, allow with
+    the the Client Id you are provded with.
+
+ 2) Construct an `OAuth2Credentials` instance using the details from the first
+    step.
+
+    ```python
+    >>> from xero.auth import OAuth2Credentials
+    >>>
+    >>> credentials = OAuth2PKCECredentials(client_id,   port=my_port)
+    ```
+
+    If neccessary, pass in a list of scopes to define the scopes required by
+    your app. E.g. if write access is required to transactions and payroll
+    employees:
+
+    ```python
+    >>> from xero.constants import XeroScopes
+    >>>
+    >>> my_scope = [XeroScopes.ACCOUNTING_TRANSACTIONS,
+    >>>             XeroScopes.PAYROLL_EMPLOYEES]
+    >>> credentials = OAuth2Credentials(client_id, scope=my_scope
+    >>>                                 port=my_port)
+    ```
+
+    The default scopes are `['offline_access', 'accounting.transactions.read',
+    'accounting.contacts.read']`. `offline_access` is required in order for
+    tokens to be refreshable. For more details on scopes see [Xero's
+    documentation on oAuth2
+    scopes](https://developer.xero.com/documentation/oauth2/scopes).
+
+ 3) Call `credentials.logon()` . This will open a browser window, an visit
+    a Xero authentication page.
+
+    ```python
+    >>> credentials.logon()
+    ```
+
+    The Authenticator will also start a local webserver on the provided port.
+    This webserver will be used to collect the tokens that Xero returns.
+
+    The default `PCKEAuthReceiver` class has no reponse pages defined so the
+    browser will show an error, on empty page for all transactions. But the
+    application is now authorised and will continue. If you wish you can
+    override the `send_access_ok()` method, and the `send_error_page()` method
+    to create a more userfriendly experience.
+
+    In either case once the callback url has been visited the local server will
+    shutdown.
+
+ 4) You can now continue as per the normal OAuth2 flow. Now the credentials may
+    be used to authorize a Xero session. As OAuth2 allows authentication for
+    multiple Xero Organisations, it is necessary to set the tenant_id against
+    which the xero client's queries will run.
+
+    ```python
+    >>> from xero import Xero
+    >>> # Use the first xero organisation (tenant) permitted
+    >>> credentials.set_default_tenant()
+    >>> xero = Xero(credentials)
+    >>> xero.contacts.all()
+    >>> ...
+    ```
+    If the scopes supplied in Step 2 did not require access to organisations
+    (e.g. when only requesting scopes for single sign) it will not be possible
+    to make requests with the Xero API and `set_default_tenant()` will raise an
+    exception.
+
+    To pick from multiple possible Xero organisations the `tenant_id` may be set
+    explicitly:
+
+    ```python
+    >>> tenants = credentials.get_tenants()
+    >>> credentials.tenant_id = tenants[1]['tenantId']
+    >>> xero = Xero(credentials)
+    ```
+    `OAuth2Credentials.__init__()` accepts `tenant_id` as a keyword argument.
+
+ 5) When using the API over an extended period, you will need to exchange tokens
+    when they expire. If a refresh token is available, it can be used to
+    generate a new token:
+
+    ```python
+    >>> if credentials.expired():
+    >>>     credentials.refresh()
+    >>>     # Then store the new credentials or token somewhere for future use:
+    >>>     cred_state = credentials.state
+    >>>     # or
+    >>>     new_token = credentials.token
+
+    **Important**: ``credentials.state`` changes after a token swap. Be sure to
+    persist the new state.
+
+    ```
+
+#### CLI OAuth2 App Example
+
+This example shows authorisation, automatic token refreshing and API use in
+a Django app which has read/write access to contacts and transactions.
+
+Each time this app starts it asks for authentication, but you
+could consider using the user `keyring` to store tokens.
+
+```python
+from xero import Xero
+from xero.auth import OAuth2PKCECredentials
+from xero.constants import XeroScopes
+
+# Get client_id, client_secret from config file or settings then
+credentials = OAuth2PKCECredentials(
+    client_id, port=8080,
+    scope=[XeroScopes.OFFLINE_ACCESS, XeroScopes.ACCOUNTING_CONTACTS,
+            XeroScopes.ACCOUNTING_TRANSACTIONS]
+)
+credentials.logon()
+credentials.set_default_tenant()
+
+for contacts in xero.contacts.all()
+    print contact["Name"]
+```
+
 ### Older authentication methods ###
 
-In the past, Xero had the concept of "Public", "Private", and "Partner" 
+In the past, Xero had the concept of "Public", "Private", and "Partner"
 applications, which each had their own authentication procedures. However,
-they removed access for Public applications on 31 March 2021; Private 
-applications were removed on 30 September 2021. Partner applications 
+they removed access for Public applications on 31 March 2021; Private
+applications were removed on 30 September 2021. Partner applications
 still exist, but the only supported authentication method is OAuth2; these
 are now referred to as "OAuth2 apps". As Xero no longer supports these older
 authentication methods, neither does PyXero.
@@ -446,4 +586,3 @@ New features or bug fixes can be submitted via a pull request. If you want
 your pull request to be merged quickly, make sure you either include
 regression test(s) for the behavior you are adding/fixing, or provide a
 good explanation of why a regression test isn't possible.
-
