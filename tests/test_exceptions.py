@@ -172,12 +172,15 @@ class ExceptionsTest(unittest.TestCase):
             self.fail("Should raise a XeroUnauthorized, not %s" % e)
 
     @patch("requests.get")
-    def test_unauthorized_expired(self, r_get):
+    def test_unauthorized_expired_text(self, r_get):
         "A session with an expired token raises an unauthorized exception"
         # Verified response from the live API
+        head = dict()
+        head["content-type"] = "text/html; charset=utf-8"
         r_get.return_value = Mock(
             status_code=401,
             text="oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired",
+            headers=head
         )
 
         credentials = Mock(base_url="")
@@ -197,6 +200,39 @@ class ExceptionsTest(unittest.TestCase):
             self.assertEqual(
                 e.response.text,
                 "oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired",
+            )
+        except Exception as e:
+            self.fail("Should raise a XeroUnauthorized, not %s" % e)
+            
+    @patch("requests.get")
+    def test_unauthorized_expired_json(self, r_get):
+        "A session with an expired token raises an unauthorized exception"
+        # Verified response from the live API
+        head = dict()
+        head["content-type"] = "application/json; charset=utf-8"
+        r_get.return_value = Mock(
+            status_code=401,
+            text='{"Type":null,"Title":"Unauthorized","Status":401,"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}',
+            headers=head
+        )
+
+        credentials = Mock(base_url="")
+        xero = Xero(credentials)
+
+        try:
+            xero.contacts.all()
+            self.fail("Should raise a XeroUnauthorized.")
+
+        except XeroUnauthorized as e:
+            # Error messages have been extracted
+            self.assertEqual(str(e), "TokenExpired: token expired at 01/01/2001 00:00:00")
+            self.assertEqual(e.errors[0], "token_expired")
+
+            # The response has also been stored
+            self.assertEqual(e.response.status_code, 401)
+            self.assertEqual(
+                e.response.text,
+                '{"Type":null,"Title":"Unauthorized","Status":401,"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}',
             )
         except Exception as e:
             self.fail("Should raise a XeroUnauthorized, not %s" % e)
