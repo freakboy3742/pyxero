@@ -79,8 +79,8 @@ class XeroUnauthorized(XeroException):
             msg_info = data.get("Detail", "") or data.get("Message", "")
             msg = "{}: {}".format(data["Type"], msg_info)
             self.errors = [msg]
-            self.problems = self.errors[0]
-            super().__init__(response, self.problems)
+            self.problem = self.errors[0]
+            super().__init__(response, msg_info)
 
 
 class XeroForbidden(XeroException):
