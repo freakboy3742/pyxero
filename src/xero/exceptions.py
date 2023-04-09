@@ -75,12 +75,11 @@ class XeroUnauthorized(XeroException):
             self.problem = self.errors[0]
             super().__init__(response, payload["oauth_problem_advice"][0])
         elif response.headers["content-type"].startswith("application/json"):
-            data = response.json()
-            msg_info = data.get("Detail", "") or data.get("Message", "")
-            msg = "{}: {}".format(data["Type"], msg_info)
+            data = json.loads(response.text)
+            msg = data.get("Detail", "")
             self.errors = [msg.split(":")[0]]
             self.problem = self.errors[0]
-            super().__init__(response, msg_info)
+            super().__init__(response, msg)
 
 
 class XeroForbidden(XeroException):
