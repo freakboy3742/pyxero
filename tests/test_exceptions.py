@@ -226,7 +226,7 @@ class ExceptionsTest(unittest.TestCase):
         except XeroUnauthorized as e:
             # Error messages have been extracted
             self.assertEqual(str(e), "TokenExpired: token expired at 01/01/2001 00:00:00")
-            self.assertEqual(e.errors[0], "token_expired")
+            self.assertEqual(e.errors[0], "TokenExpired")
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 401)
