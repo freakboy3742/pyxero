@@ -439,7 +439,7 @@ class BaseManager:
                         value.hex if type(value) == UUID else UUID(value).hex
                     )
                 else:
-                    return "%s" % str(value)
+                    return value
 
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]

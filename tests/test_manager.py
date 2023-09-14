@@ -226,13 +226,18 @@ class ManagerTest(unittest.TestCase):
         manager = Manager("contacts", credentials)
 
         uri, params, method, body, headers, singleobject = manager._filter(
-            IDs=["1", "2", "3", "4", "5"]
+            IDs=[
+                "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f",
+                "12345678901234567890123456789012",
+            ]
         )
 
         self.assertEqual(method, "get")
         self.assertFalse(singleobject)
 
-        expected_params = {"IDs": "1,2,3,4,5"}
+        expected_params = {
+            "IDs": "3e776c4bea9e4bb196be6b0c7a71a37f,12345678901234567890123456789012"
+        }
         self.assertEqual(params, expected_params)
 
     def test_rawfilter(self):
