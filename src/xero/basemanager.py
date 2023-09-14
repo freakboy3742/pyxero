@@ -1,8 +1,9 @@
 import io
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, date
 from urllib.parse import parse_qs
+from uuid import UUID
 from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.parsers.expat import ExpatError
 
@@ -39,6 +40,46 @@ class BaseManager:
     OBJECT_DECORATED_METHODS = {
         "Invoices": ["email", "online_invoice"],
         "Organisations": ["actions"],
+    }
+    OBJECT_FILTER_FIELDS = {
+        "Invoices": {
+            "createdByMyApp": bool,
+            "summaryOnly": bool,
+            "IDs": list,
+            "InvoiceNumbers": list,
+            "ContactIDs": list,
+            "Statuses": list
+        },
+        "PurchaseOrders": {
+            "DateFrom": date,
+            "DateTo": date,
+            "Status": str
+        },
+        "Quotes": {
+            "ContactID": UUID,
+            "ExpiryDateFrom": date,
+            "ExpiryDateTo": date,
+            "DateFrom": date,
+            "DateTo": date,
+            "Status": str,
+            "QuoteNumber": str
+        },
+        "Journals": {
+            "paymentsOnly": bool
+        },
+        "Budgets": {
+            "DateFrom": date,
+            "DateTo": date
+        },
+        "Contacts": {
+            "IDs": list,
+            "includeArchived": bool,
+            "summaryOnly": bool,
+            "searchTerm": str
+        },
+        "TrackingCategories": {
+            "includeArchived": bool
+        }
     }
     DATETIME_FIELDS = (
         "UpdatedDateUTC",
@@ -397,10 +438,17 @@ class BaseManager:
                 headers = self.prepare_filtering_date(val)
                 del kwargs["since"]
 
-            # Accept IDs parameter for Invoices and Contacts endpoints
-            if "IDs" in kwargs:
-                params["IDs"] = ",".join(kwargs["IDs"])
-                del kwargs["IDs"]
+            def get_filter_value(key, value, value_type = None):
+                if key in self.BOOLEAN_FIELDS or value_type == bool:
+                    return "true" if value else "false"
+                elif key in self.DATE_FIELDS or value_type == date:
+                    return "{}-{}-{}".format(value.year, value.month, value.day)
+                elif key in self.DATETIME_FIELDS or value_type == datetime:
+                    return value.isoformat()
+                elif key.endswith("ID") or value_type == UUID:
+                    return '%s' % (value.hex if type(value) == UUID else UUID(value).hex)
+                else:
+                    return '%s' % str(value)
 
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]
@@ -440,11 +488,22 @@ class BaseManager:
                     field = field.replace("_", ".")
                 return fmt % (field, get_filter_params(key, value))
 
+            KNOWN_PARAMETERS = ["order", "offset", "page"]
+            object_params = self.OBJECT_FILTER_FIELDS.get(self.name, {})
+            LIST_PARAMETERS = list(filter(lambda x: object_params[x] == list, object_params))
+            EXTRA_PARAMETERS = list(filter(lambda x: object_params[x] != list, object_params))
+
             # Move any known parameter names to the query string
-            KNOWN_PARAMETERS = ["order", "offset", "page", "includeArchived"]
-            for param in KNOWN_PARAMETERS:
+            for param in KNOWN_PARAMETERS + EXTRA_PARAMETERS:
                 if param in kwargs:
-                    params[param] = kwargs.pop(param)
+                    params[param] = get_filter_value(param, kwargs.pop(param), object_params.get(param, None))
+            # Support xero optimised list filtering; validate IDs we send but may need other validation
+            for param in LIST_PARAMETERS:
+                if param in kwargs:
+                    if param.endswith('IDs'):
+                        params[param] = ",".join(map(lambda x: UUID(x).hex, kwargs.pop(param)))
+                    else:
+                        params[param] = ",".join(kwargs.pop(param))
 
             filter_params = []
 
