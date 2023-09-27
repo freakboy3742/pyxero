@@ -21,8 +21,7 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(params, {})
         self.assertEqual(method, "post")
-        self.assertIn("xml", body)
 
-        assertXMLEqual(self, body["xml"], "<Status>DELETED</Status>")
+        assertXMLEqual(self, body, "<Status>DELETED</Status>")
 
         self.assertIsNone(headers)
