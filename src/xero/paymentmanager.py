@@ -21,5 +21,5 @@ class PaymentManager(BaseManager):
     def _delete(self, id):
         uri = "/".join([self.base_url, self.name, id])
         data = {"Status": "DELETED"}
-        body = {"xml": self._prepare_data_for_save(data)}
+        body = self._prepare_data_for_save(data)
         return uri, {}, "post", body, None, False
