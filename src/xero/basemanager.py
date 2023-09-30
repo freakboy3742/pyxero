@@ -50,7 +50,11 @@ class BaseManager:
             "ContactIDs": list,
             "Statuses": list,
         },
-        "PurchaseOrders": {"DateFrom": date, "DateTo": date, "Status": str},
+        "PurchaseOrders": {
+            "DateFrom": date,
+            "DateTo": date,
+            "Status": str,
+        },
         "Quotes": {
             "ContactID": UUID,
             "ExpiryDateFrom": date,
@@ -60,15 +64,22 @@ class BaseManager:
             "Status": str,
             "QuoteNumber": str,
         },
-        "Journals": {"paymentsOnly": bool},
-        "Budgets": {"DateFrom": date, "DateTo": date},
+        "Journals": {
+            "paymentsOnly": bool,
+        },
+        "Budgets": {
+            "DateFrom": date,
+            "DateTo": date,
+        },
         "Contacts": {
             "IDs": list,
             "includeArchived": bool,
             "summaryOnly": bool,
             "searchTerm": str,
         },
-        "TrackingCategories": {"includeArchived": bool},
+        "TrackingCategories": {
+            "includeArchived": bool,
+        },
     }
     DATETIME_FIELDS = (
         "UpdatedDateUTC",
