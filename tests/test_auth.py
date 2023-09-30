@@ -30,7 +30,9 @@ class PublicCredentialsTest(unittest.TestCase):
     def test_initial_constructor(self, r_post):
         "Initial construction causes a request to get a request token"
         r_post.return_value = Mock(
-            status_code=200, text="oauth_token=token&oauth_token_secret=token_secret"
+            status_code=200,
+            text="oauth_token=token&oauth_token_secret=token_secret",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PublicCredentials(
@@ -64,6 +66,7 @@ class PublicCredentialsTest(unittest.TestCase):
         r_post.return_value = Mock(
             status_code=401,
             text="oauth_problem=consumer_key_unknown&oauth_problem_advice=Consumer%20key%20was%20not%20recognised",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         with self.assertRaises(XeroUnauthorized):
@@ -127,7 +130,9 @@ class PublicCredentialsTest(unittest.TestCase):
     def test_url(self, r_post):
         "The request token URL can be obtained"
         r_post.return_value = Mock(
-            status_code=200, text="oauth_token=token&oauth_token_secret=token_secret"
+            status_code=200,
+            text="oauth_token=token&oauth_token_secret=token_secret",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PublicCredentials(consumer_key="key", consumer_secret="secret")
@@ -140,7 +145,9 @@ class PublicCredentialsTest(unittest.TestCase):
     def test_url_with_scope(self, r_post):
         "The request token URL includes the scope parameter"
         r_post.return_value = Mock(
-            status_code=200, text="oauth_token=token&oauth_token_secret=token_secret"
+            status_code=200,
+            text="oauth_token=token&oauth_token_secret=token_secret",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PublicCredentials(
@@ -153,7 +160,9 @@ class PublicCredentialsTest(unittest.TestCase):
     def test_configurable_url(self, r_post):
         "Test configurable API url"
         r_post.return_value = Mock(
-            status_code=200, text="oauth_token=token&oauth_token_secret=token_secret"
+            status_code=200,
+            text="oauth_token=token&oauth_token_secret=token_secret",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         url = "https//api-tls.xero.com"
@@ -170,6 +179,7 @@ class PublicCredentialsTest(unittest.TestCase):
         r_post.return_value = Mock(
             status_code=200,
             text="oauth_token=verified_token&oauth_token_secret=verified_token_secret",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PublicCredentials(
@@ -212,6 +222,7 @@ class PublicCredentialsTest(unittest.TestCase):
         r_post.return_value = Mock(
             status_code=401,
             text="oauth_problem=bad_verifier&oauth_problem_advice=The consumer was denied access to this resource.",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PublicCredentials(
@@ -256,7 +267,9 @@ class PartnerCredentialsTest(unittest.TestCase):
     def test_initial_constructor(self, r_post):
         "Initial construction causes a request to get a request token"
         r_post.return_value = Mock(
-            status_code=200, text="oauth_token=token&oauth_token_secret=token_secret"
+            status_code=200,
+            text="oauth_token=token&oauth_token_secret=token_secret",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PartnerCredentials(
@@ -293,6 +306,7 @@ class PartnerCredentialsTest(unittest.TestCase):
         r_post.return_value = Mock(
             status_code=200,
             text="oauth_token=token2&oauth_token_secret=token_secret2&oauth_session_handle=session",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         credentials = PartnerCredentials(
@@ -329,6 +343,7 @@ class PartnerCredentialsTest(unittest.TestCase):
         r_post.return_value = Mock(
             status_code=200,
             text="oauth_token=token&oauth_token_secret=token_secret&oauth_session_handle=session",
+            headers={"content-type": "text/html; charset=utf-8"},
         )
 
         url = "https//api-tls.xero.com"
