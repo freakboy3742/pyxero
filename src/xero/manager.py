@@ -8,7 +8,7 @@ class Manager(BaseManager):
         from xero import __version__ as VERSION  # noqa
 
         self.credentials = credentials
-        self.name = name.capitalize() if name.islower() else name
+        self.name = name
         self.base_url = credentials.base_url + XERO_API_URL
         self.extra_params = {"unitdp": 4} if unit_price_4dps else {}
         self.singular = singular(name)

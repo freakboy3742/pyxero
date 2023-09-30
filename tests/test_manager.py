@@ -11,7 +11,7 @@ from .helpers import assertXMLEqual
 class ManagerTest(unittest.TestCase):
     def test_serializer(self):
         credentials = Mock(base_url="")
-        manager = Manager("contacts", credentials)
+        manager = Manager("Invoice", credentials)
 
         example_invoice_input = {
             "Date": datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
@@ -79,7 +79,7 @@ class ManagerTest(unittest.TestCase):
 
     def test_serializer_phones_addresses(self):
         credentials = Mock(base_url="")
-        manager = Manager("contacts", credentials)
+        manager = Manager("Contacts", credentials)
 
         example_contact_input = {
             "ContactID": "565acaa9-e7f3-4fbf-80c3-16b081ddae10",
@@ -139,7 +139,7 @@ class ManagerTest(unittest.TestCase):
 
     def test_serializer_nested_singular(self):
         credentials = Mock(base_url="")
-        manager = Manager("contacts", credentials)
+        manager = Manager("Invoice", credentials)
 
         example_invoice_input = {
             "Date": datetime.datetime(2015, 6, 6, 16, 25, 2, 711109),
@@ -173,7 +173,7 @@ class ManagerTest(unittest.TestCase):
     def test_filter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager("contacts", credentials)
+        manager = Manager("Contacts", credentials)
 
         uri, params, method, body, headers, singleobject = manager._filter(
             order="LastName",
@@ -202,7 +202,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, {})
         self.assertIsNone(headers)
 
-        manager = Manager("invoices", credentials)
+        manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
             **{"Contact.ContactID": "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f"}
         )
@@ -223,7 +223,7 @@ class ManagerTest(unittest.TestCase):
     def test_filter_ids(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager("contacts", credentials)
+        manager = Manager("Contacts", credentials)
 
         uri, params, method, body, headers, singleobject = manager._filter(
             IDs=[
@@ -243,7 +243,7 @@ class ManagerTest(unittest.TestCase):
     def test_rawfilter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager("invoices", credentials)
+        manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
             Status="VOIDED", raw='Name.ToLower()=="test contact"'
         )
@@ -254,7 +254,7 @@ class ManagerTest(unittest.TestCase):
     def test_boolean_filter(self):
         """The filter function should correctly handle various arguments"""
         credentials = Mock(base_url="")
-        manager = Manager("invoices", credentials)
+        manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
             CanApplyToRevenue=True
         )
@@ -264,14 +264,14 @@ class ManagerTest(unittest.TestCase):
         """The filter function should correctlu handle date arguments and gt, lt operators"""
         credentials = Mock(base_url="")
 
-        manager = Manager("invoices", credentials)
+        manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
             **{"Date__gt": datetime.datetime(2007, 12, 6)}
         )
 
         self.assertEqual(params, {"where": "Date>DateTime(2007,12,6)"})
 
-        manager = Manager("invoices", credentials)
+        manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
             **{"Date__lte": datetime.datetime(2007, 12, 6)}
         )
@@ -284,17 +284,17 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock(base_url="")
 
         # test 4dps is disabled by default
-        manager = Manager("contacts", credentials)
+        manager = Manager("Contacts", credentials)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps not enabled by default")
 
         # test 4dps is enabled by default
-        manager = Manager("contacts", credentials, unit_price_4dps=True)
+        manager = Manager("Contacts", credentials, unit_price_4dps=True)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {"unitdp": 4}, "test 4dps can be enabled explicitly")
 
         # test 4dps can be disable explicitly
-        manager = Manager("contacts", credentials, unit_price_4dps=False)
+        manager = Manager("Contacts", credentials, unit_price_4dps=False)
         uri, params, method, body, headers, singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps can be disabled explicitly")
 
@@ -302,7 +302,7 @@ class ManagerTest(unittest.TestCase):
         """The 'get' methods should pass GET parameters if provided."""
 
         credentials = Mock(base_url="")
-        manager = Manager("reports", credentials)
+        manager = Manager("Reports", credentials)
 
         # test no parameters or headers sent by default
         uri, params, method, body, headers, singleobject = manager._get("ProfitAndLoss")
@@ -319,7 +319,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, passed_params, "test params can be set")
 
         # test params respect, but can override, existing configuration
-        manager = Manager("reports", credentials, unit_price_4dps=True)
+        manager = Manager("Reports", credentials, unit_price_4dps=True)
         uri, params, method, body, headers, singleobject = manager._get(
             "ProfitAndLoss", params=passed_params
         )
@@ -334,17 +334,17 @@ class ManagerTest(unittest.TestCase):
 
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
-        manager = Manager("reports", credentials)
+        manager = Manager("Reports", credentials)
         self.assertTrue(manager.user_agent.startswith("pyxero/"))
 
         # Taken from credentials when no user_agent set on manager.
         credentials = Mock(base_url="", user_agent="MY_COMPANY-MY_CONSUMER_KEY")
-        manager = Manager("reports", credentials)
+        manager = Manager("Reports", credentials)
         self.assertEqual(manager.user_agent, "MY_COMPANY-MY_CONSUMER_KEY")
 
         # Manager's user_agent used when explicitly set.
         credentials = Mock(base_url="", user_agent="MY_COMPANY-MY_CONSUMER_KEY")
-        manager = Manager("reports", credentials, user_agent="DemoCompany-1234567890")
+        manager = Manager("Reports", credentials, user_agent="DemoCompany-1234567890")
         self.assertEqual(manager.user_agent, "DemoCompany-1234567890")
 
     @patch("xero.basemanager.requests.post")
@@ -353,7 +353,7 @@ class ManagerTest(unittest.TestCase):
 
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
-        manager = Manager("reports", credentials)
+        manager = Manager("Reports", credentials)
         try:
             manager._get_data(lambda: ("_", {}, "post", {}, {}, True))()
         except XeroExceptionUnknown:
@@ -367,7 +367,7 @@ class ManagerTest(unittest.TestCase):
 
         # Default used when no user_agent set on manager and credentials has nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
-        manager = Manager("reports", credentials)
+        manager = Manager("Reports", credentials)
 
         body = manager.save_or_put({"bing": "bong"})[3]
 
