@@ -180,7 +180,7 @@ class ExceptionsTest(unittest.TestCase):
         r_get.return_value = Mock(
             status_code=401,
             text="oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired",
-            headers=head
+            headers=head,
         )
 
         credentials = Mock(base_url="")
@@ -203,7 +203,7 @@ class ExceptionsTest(unittest.TestCase):
             )
         except Exception as e:
             self.fail("Should raise a XeroUnauthorized, not %s" % e)
-            
+
     @patch("requests.get")
     def test_unauthorized_expired_json(self, r_get):
         "A session with an expired token raises an unauthorized exception"
@@ -213,7 +213,7 @@ class ExceptionsTest(unittest.TestCase):
         r_get.return_value = Mock(
             status_code=401,
             text='{"Type":null,"Title":"Unauthorized","Status":401,"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}',
-            headers=head
+            headers=head,
         )
 
         credentials = Mock(base_url="")
@@ -225,7 +225,9 @@ class ExceptionsTest(unittest.TestCase):
 
         except XeroUnauthorized as e:
             # Error messages have been extracted
-            self.assertEqual(str(e), "TokenExpired: token expired at 01/01/2001 00:00:00")
+            self.assertEqual(
+                str(e), "TokenExpired: token expired at 01/01/2001 00:00:00"
+            )
             self.assertEqual(e.errors[0], "TokenExpired")
 
             # The response has also been stored
