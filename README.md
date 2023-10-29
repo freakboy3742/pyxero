@@ -575,7 +575,7 @@ for normal operation of PyXero. It's only required for testing purposes.
 Once you've installed these dependencies, you can run the test suite by
 running the following from the root directory of the project:
 
-    $ python setup.py test
+    $ tox -e py
 
 If you find any problems with PyXero, you can log them on [Github Issues](https://github.com/freakboy3742/pyxero/issues).
 When reporting problems, it's extremely helpful if you can provide
