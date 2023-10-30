@@ -235,8 +235,9 @@ class PublicCredentials:
             self.oauth_expires_at = datetime.datetime.now() + datetime.timedelta(
                 seconds=int(oauth_expires_in)
             )
-            self.oauth_authorization_expires_at = datetime.datetime.now() + datetime.timedelta(
-                seconds=int(oauth_authorisation_expires_in)
+            self.oauth_authorization_expires_at = (
+                datetime.datetime.now()
+                + datetime.timedelta(seconds=int(oauth_authorisation_expires_in))
             )
         else:
             self._handle_error_response(response)
