@@ -63,7 +63,7 @@ class FilesManagerTest(unittest.TestCase):
         xero = Xero(credentials)
         r_get.return_value = None
         try:
-            with open(self.filepath, "r") as f:
+            with open(self.filepath) as f:
                 xero.filesAPI.files.upload_file(
                     file=f, filename=os.path.basename(self.filepath)
                 )
