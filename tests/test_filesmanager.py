@@ -34,10 +34,7 @@ class FilesManagerTest(unittest.TestCase):
         xero = Xero(credentials)
         # Just return any old response
         r_get.return_value = None
-        try:
-            xero.filesAPI.files.all()
-        except:  # NOQA: E722
-            pass
+        xero.filesAPI.files.all()
 
         self.assertEqual(r_get.call_args[1]["headers"]["Xero-tenant-id"], "12345")
 
@@ -48,10 +45,7 @@ class FilesManagerTest(unittest.TestCase):
         )
         xero = Xero(credentials)
         r_get.return_value = None
-        try:
-            xero.filesAPI.files.upload_file(path=self.filepath)
-        except:  # NOQA: E722
-            pass
+        xero.filesAPI.files.upload_file(path=self.filepath)
 
         self.assertIn(self.filepath, r_get.call_args[1]["files"])
 
@@ -62,12 +56,10 @@ class FilesManagerTest(unittest.TestCase):
         )
         xero = Xero(credentials)
         r_get.return_value = None
-        try:
-            with open(self.filepath) as f:
-                xero.filesAPI.files.upload_file(
-                    file=f, filename=os.path.basename(self.filepath)
-                )
-        except:  # NOQA: E722
-            pass
+
+        with open(self.filepath) as f:
+            xero.filesAPI.files.upload_file(
+                file=f, filename=os.path.basename(self.filepath)
+            )
 
         self.assertIn(self.filepath, r_get.call_args[1]["files"])
