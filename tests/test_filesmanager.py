@@ -1,7 +1,7 @@
 import os.path
 import unittest
 from time import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from xero import Xero
 from xero.auth import OAuth2Credentials
@@ -32,8 +32,10 @@ class FilesManagerTest(unittest.TestCase):
             "client_id", "client_secret", token=self.expired_token, tenant_id="12345"
         )
         xero = Xero(credentials)
-        # Just return any old response
-        r_get.return_value = None
+        r_get.return_value = Mock(
+            status_code=200,
+            headers={"content-type": "text/html; charset=utf-8"},
+        )
         xero.filesAPI.files.all()
 
         self.assertEqual(r_get.call_args[1]["headers"]["Xero-tenant-id"], "12345")
@@ -44,7 +46,10 @@ class FilesManagerTest(unittest.TestCase):
             "client_id", "client_secret", token=self.expired_token, tenant_id="12345"
         )
         xero = Xero(credentials)
-        r_get.return_value = None
+        r_get.return_value = Mock(
+            status_code=200,
+            headers={"content-type": "text/html; charset=utf-8"},
+        )
         xero.filesAPI.files.upload_file(path=self.filepath)
 
         self.assertIn(self.filepath, r_get.call_args[1]["files"])
@@ -55,7 +60,10 @@ class FilesManagerTest(unittest.TestCase):
             "client_id", "client_secret", token=self.expired_token, tenant_id="12345"
         )
         xero = Xero(credentials)
-        r_get.return_value = None
+        r_get.return_value = Mock(
+            status_code=200,
+            headers={"content-type": "text/html; charset=utf-8"},
+        )
 
         with open(self.filepath) as f:
             xero.filesAPI.files.upload_file(
