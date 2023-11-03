@@ -2,6 +2,8 @@ import os
 import requests
 from urllib.parse import parse_qs
 
+from xero.auth import OAuth2Credentials
+
 from .constants import XERO_FILES_URL
 from .exceptions import (
     XeroBadRequest,
@@ -12,6 +14,7 @@ from .exceptions import (
     XeroNotFound,
     XeroNotImplemented,
     XeroRateLimitExceeded,
+    XeroTenantIdNotSet,
     XeroUnauthorized,
     XeroUnsupportedMediaType,
 )
@@ -67,6 +70,14 @@ class FilesManager:
             uri, params, method, body, headers, singleobject, files = func(
                 *args, **kwargs
             )
+            if headers is None:
+                headers = {}
+
+            if isinstance(self.credentials, OAuth2Credentials):
+                if self.credentials.tenant_id:
+                    headers["Xero-tenant-id"] = self.credentials.tenant_id
+                else:
+                    raise XeroTenantIdNotSet
 
             response = getattr(requests, method)(
                 uri,
@@ -169,15 +180,19 @@ class FilesManager:
         uri = "/".join([self.base_url, self.name, id])
         return uri, {}, "delete", None, None, False, None
 
-    def _upload_file(self, path, folderId=None):
+    def _upload_file(self, path=None, folderId=None, filename=None, file=None):
         if folderId is not None:
             uri = "/".join([self.base_url, self.name, folderId])
         else:
             uri = "/".join([self.base_url, self.name])
-        filename = self.filename(path)
 
         files = dict()
-        files[filename] = open(path, mode="rb")
+        if path:
+            filename = os.path.basename(path)
+            files[filename] = open(path, mode="rb")
+
+        elif filename and file:
+            files[filename] = file
 
         return uri, {}, "post", None, None, False, files
 
@@ -193,7 +208,3 @@ class FilesManager:
     def _all(self):
         uri = "/".join([self.base_url, self.name])
         return uri, {}, "get", None, None, False, None
-
-    def filename(self, path):
-        head, tail = os.path.split(path)
-        return tail or os.path.basename(head)
