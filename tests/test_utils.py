@@ -1,5 +1,7 @@
 """ Tests of the utils module. """
+
 import datetime
+import sys
 import unittest
 
 import xero.utils
@@ -16,10 +18,11 @@ class UtilsTest(unittest.TestCase):
         example_input = {
             "date": "/Date(1426849200000+1300)/",
         }
+        tzinfo = None if sys.version_info < (3, 11) else datetime.UTC
 
         self.assertEqual(
             xero.utils.json_load_object_hook(example_input),
-            {"date": datetime.datetime(2015, 3, 21, 0, 0)},
+            {"date": datetime.datetime(2015, 3, 21, 0, 0, tzinfo=tzinfo)},
         )
 
         # In both format styles
@@ -60,22 +63,24 @@ class UtilsTest(unittest.TestCase):
 
     def test_parse_date(self):
         """Tests of the parse_date input formats."""
+        tzinfo = None if sys.version_info < (3, 11) else datetime.UTC
+
         # 07/05/2015 00:00:00 +12 (06/05/2015 12:00:00 GMT/UTC)
         self.assertEqual(
             xero.utils.parse_date("/Date(1430913600000+1200)/"),
-            datetime.datetime(2015, 5, 7, 0, 0),
+            datetime.datetime(2015, 5, 7, 0, 0, tzinfo=tzinfo),
         )
 
         # 16/09/2008 10:28:51.5 +12 (15/09/2008 22:25:51.5 GMT/UTC)
         self.assertEqual(
             xero.utils.parse_date("/Date(1221517731500+1200)/"),
-            datetime.datetime(2008, 9, 16, 10, 28, 51, 500000),
+            datetime.datetime(2008, 9, 16, 10, 28, 51, 500000, tzinfo=tzinfo),
         )
 
         # 10/08/2015 10:55:33 GMT/UTC
         self.assertEqual(
             xero.utils.parse_date("/Date(1439204133355)/"),
-            datetime.datetime(2015, 8, 10, 10, 55, 33, 355000),
+            datetime.datetime(2015, 8, 10, 10, 55, 33, 355000, tzinfo=tzinfo),
         )
 
         # 29/04/2015 00:00:00

@@ -1,11 +1,12 @@
 import io
 import json
-import requests
 from datetime import date, datetime
 from urllib.parse import parse_qs
 from uuid import UUID
 from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.parsers.expat import ExpatError
+
+import requests
 
 from .auth import OAuth2Credentials
 from .exceptions import (
@@ -447,7 +448,7 @@ class BaseManager:
                     return value.isoformat()
                 elif key.endswith("ID") or value_type == UUID:
                     return "%s" % (
-                        value.hex if type(value) == UUID else UUID(value).hex
+                        value.hex if type(value) is UUID else UUID(value).hex
                     )
                 else:
                     return value

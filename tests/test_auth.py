@@ -1,10 +1,11 @@
 import json
-import requests
 import time
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlparse
+
+import requests
 
 from xero.api import Xero
 from xero.auth import (
@@ -747,9 +748,10 @@ class PKCECredentialsTest(unittest.TestCase):
             port=8123,
         )
         server = Mock()
-        with patch("http.server.HTTPServer", return_value=server) as hs, patch(
-            "webbrowser.open"
-        ) as wb:
+        with (
+            patch("http.server.HTTPServer", return_value=server) as hs,
+            patch("webbrowser.open") as wb,
+        ):
             credentials.logon()
 
         self.assertTrue(wb.called)
