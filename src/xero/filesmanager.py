@@ -1,6 +1,8 @@
 import os
 from urllib.parse import parse_qs
 
+import requests
+
 from xero.auth import OAuth2Credentials
 
 from .constants import XERO_FILES_URL
