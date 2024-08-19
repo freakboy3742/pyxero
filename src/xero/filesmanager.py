@@ -1,6 +1,7 @@
 import os
-import requests
 from urllib.parse import parse_qs
+
+import requests
 
 from xero.auth import OAuth2Credentials
 

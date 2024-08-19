@@ -1,6 +1,7 @@
 import os
-import requests
 from urllib.parse import parse_qs
+
+import requests
 
 from .constants import XERO_PROJECTS_URL
 from .exceptions import (

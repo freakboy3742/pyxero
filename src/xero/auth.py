@@ -2,13 +2,14 @@ import base64
 import datetime
 import hashlib
 import http.server
-import requests
 import secrets
+import sys
 import threading
 import webbrowser
 from functools import partial
 from urllib.parse import parse_qs, urlencode, urlparse
 
+import requests
 from oauthlib.oauth1 import SIGNATURE_HMAC, SIGNATURE_RSA, SIGNATURE_TYPE_AUTH_HEADER
 from requests_oauthlib import OAuth1, OAuth2, OAuth2Session
 
@@ -612,14 +613,23 @@ class OAuth2Credentials:
     @property
     def expires_at(self):
         """Return the expires_at value from the token as a UTC datetime."""
-        return datetime.datetime.utcfromtimestamp(self.token["expires_at"])
+        if sys.version_info < (3, 11):
+            return datetime.datetime.utcfromtimestamp(self.token["expires_at"])
+        else:
+            return datetime.datetime.fromtimestamp(
+                self.token["expires_at"], datetime.UTC
+            )
 
     def expired(self, seconds=30, now=None):
         """Check if the token has expired yet.
         :param seconds: the minimum number of seconds allowed before expiry.
         """
         if now is None:
-            now = datetime.datetime.utcnow()
+            if sys.version_info < (3, 11):
+                now = datetime.datetime.utcnow()
+            else:
+                now = datetime.datetime.now(datetime.UTC)
+
         # Allow a bit of time for clock differences and round trip times
         # to prevent false negatives. If users want the precise expiry,
         # they can use self.expires_at.

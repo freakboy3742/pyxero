@@ -1,6 +1,17 @@
 name: CI
-
 on: [pull_request]
+
+# Cancel active CI runs for a PR before starting another run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash  # https://github.com/beeware/briefcase/pull/912
+
+env:
+  FORCE_COLOR: "1"
 
 jobs:
   pre-commit:
@@ -19,11 +30,11 @@ jobs:
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12-dev"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13-dev"]
         include:
         - experimental: false
 
-        - python-version: "3.12-dev"
+        - python-version: "3.13-dev"
           experimental: true
     steps:
     - uses: actions/checkout@v4
