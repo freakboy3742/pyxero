@@ -1,6 +1,17 @@
 name: CI
-
 on: [pull_request]
+
+# Cancel active CI runs for a PR before starting another run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash  # https://github.com/beeware/briefcase/pull/912
+
+env:
+  FORCE_COLOR: "1"
 
 jobs:
   pre-commit:
