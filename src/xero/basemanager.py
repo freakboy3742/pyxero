@@ -491,7 +491,7 @@ class BaseManager:
                     field = field.replace("_", ".")
                 return fmt % (field, get_filter_params(key, value))
 
-            KNOWN_PARAMETERS = ["order", "offset", "page"]
+            KNOWN_PARAMETERS = ["order", "offset", "page", "pageSize"]
             object_params = self.OBJECT_FILTER_FIELDS.get(self.name, {})
             LIST_PARAMETERS = list(
                 filter(lambda x: object_params[x] == list, object_params)
