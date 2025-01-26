@@ -45,7 +45,7 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 dev = [
-    "pre-commit == 4.0.1",
+    "pre-commit == 4.1.0",
     "pytest == 8.3.4",
     "tox == 4.23.2",
 ]
