@@ -41,6 +41,7 @@ class BaseManager:
     OBJECT_DECORATED_METHODS = {
         "Invoices": ["email", "online_invoice"],
         "Organisations": ["actions"],
+        "CreditNotes": ["put_allocation", "delete_allocation"]
     }
     OBJECT_FILTER_FIELDS = {
         "Invoices": {
@@ -374,6 +375,15 @@ class BaseManager:
     def _actions(self):
         uri = "/".join([self.base_url, self.name, "Actions"])
         return uri, {}, "get", None, None, False
+
+    def _put_allocation(self, id, data):
+        uri = "/".join([self.base_url, self.name, id, "Allocations"])
+        body = json.dumps(data)
+        return uri, {}, "put", body, {"Content-Type": "application/json"}, True
+
+    def _delete_allocation(self, cn_id, allocation_id):
+        uri = "/".join([self.base_url, self.name, cn_id, "Allocations", allocation_id])
+        return uri, {}, "delete", None, None, True
 
     def save_or_put(self, data, method="post", headers=None, summarize_errors=True):
         uri = "/".join([self.base_url, self.name])
