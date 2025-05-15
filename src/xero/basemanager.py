@@ -378,8 +378,14 @@ class BaseManager:
 
     def _put_allocation(self, id, data):
         uri = "/".join([self.base_url, self.name, id, "Allocations"])
-        body = json.dumps(data)
-        return uri, {}, "put", body, {"Content-Type": "application/json"}, True
+        #body = json.dumps(data)
+        root_elm = Element("Allocation")
+        if "Amount" in data:
+            data["AppliedAmount"] = data["Amount"]
+            del data["Amount"]
+        self.dict_to_xml(root_elm, data)
+        body = tostring(root_elm)
+        return uri, {}, "put", body, None, False
 
     def _delete_allocation(self, cn_id, allocation_id):
         uri = "/".join([self.base_url, self.name, cn_id, "Allocations", allocation_id])
