@@ -154,6 +154,7 @@ class BaseManager:
         "HasErrors",
         "DueDateString",
         "HasAccount",
+        "ID"
     )
     OPERATOR_MAPPINGS = {
         "gt": ">",
