@@ -41,7 +41,7 @@ class BaseManager:
     OBJECT_DECORATED_METHODS = {
         "Invoices": ["email", "online_invoice"],
         "Organisations": ["actions"],
-        "CreditNotes": ["put_allocation", "delete_allocation"]
+        "CreditNotes": ["put_allocation", "delete_allocation"],
     }
     OBJECT_FILTER_FIELDS = {
         "Invoices": {
@@ -154,7 +154,7 @@ class BaseManager:
         "HasErrors",
         "DueDateString",
         "HasAccount",
-        "ID"
+        "ID",
     )
     OPERATOR_MAPPINGS = {
         "gt": ">",
@@ -379,7 +379,7 @@ class BaseManager:
 
     def _put_allocation(self, id, data):
         uri = "/".join([self.base_url, self.name, id, "Allocations"])
-        #body = json.dumps(data)
+        # body = json.dumps(data)
         root_elm = Element("Allocation")
         if "Amount" in data:
             data["AppliedAmount"] = data["Amount"]
