@@ -379,7 +379,6 @@ class BaseManager:
 
     def _put_allocation(self, id, data):
         uri = "/".join([self.base_url, self.name, id, "Allocations"])
-        # body = json.dumps(data)
         root_elm = Element("Allocation")
         if "Amount" in data:
             data["AppliedAmount"] = data["Amount"]
