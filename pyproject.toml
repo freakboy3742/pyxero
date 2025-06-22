@@ -51,7 +51,7 @@ dependencies = [
 dev = [
     "pre-commit == 4.2.0",
     "pytest == 8.4.0",
-    "tox == 4.26.0",
+    "tox == 4.27.0",
 ]
 
 [project.urls]
