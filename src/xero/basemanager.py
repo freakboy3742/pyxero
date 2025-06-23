@@ -182,19 +182,26 @@ class BaseManager:
                 self.dict_to_xml(elm, sub_data)
 
             # Key references a list/tuple
-            elif isinstance(sub_data, list) or isinstance(sub_data, tuple):
+            elif isinstance(sub_data, (list, tuple)):
                 # key name is a plural. This means each item
                 # in the list needs to be wrapped in an XML
                 # node that is a singular version of the list name.
                 if isplural(key):
                     for d in sub_data:
-                        self.dict_to_xml(SubElement(elm, singular(key)), d)
-
+                        sub_elm = SubElement(elm, singular(key))
+                        if isinstance(d, dict):
+                            self.dict_to_xml(sub_elm, d)
+                        else:
+                            sub_elm.text = str(d)
                 # key name isn't a plural. Just insert the content
                 # as an XML node with subnodes
                 else:
                     for d in sub_data:
-                        self.dict_to_xml(elm, d)
+                        if isinstance(d, dict):
+                            self.dict_to_xml(elm, d)
+                        else:
+                            sub_elm = SubElement(elm, "Value")
+                            sub_elm.text = str(d)
 
             # Normal element - just insert the data.
             else:
