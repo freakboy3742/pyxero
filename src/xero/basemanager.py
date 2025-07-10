@@ -399,8 +399,8 @@ class BaseManager:
             params["summarizeErrors"] = "false"
         return uri, params, method, body, headers, False
 
-    def _save(self, data):
-        return self.save_or_put(data, method="post")
+    def _save(self, data, summarize_errors=True):
+        return self.save_or_put(data, method="post", summarize_errors=summarize_errors)
 
     def _put(self, data, summarize_errors=True):
         return self.save_or_put(data, method="put", summarize_errors=summarize_errors)
