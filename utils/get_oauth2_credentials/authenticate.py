@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
 from collections import namedtuple
 
+file_path = Path(__file__).resolve()
+
 # Allow using the local source version of PyXero if not installed in Python env.
 # This would mostly be useful for anyone making changes to PyXero's auth flow and needing
 # to test it still works.
@@ -21,23 +23,20 @@ try:
     import xero
     print('Using PyXero installed in Python environment.')
 except ImportError:
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
-
+    sys.path.insert(0, str(file_path.parents[2] / 'src'))
     import xero
-
     print('Using PyXero from local source directory.')
 
 
 DOMAIN = 'localhost'
 PORT = 9376  # XERO on a pin-pad/telephone
-CERT_FILE = '.cert'
-KEY_FILE = '.key'
-CALLBACK_PATH = 'c'
-STATE_FILE = str(Path(__file__).resolve().parents[0] / '.auth_state.json')
+CERT_FILE = str(file_path.parents[0] / '.cert')
+KEY_FILE = str(file_path.parents[0] / '.key')
+STATE_FILE = str(file_path.parents[0] / '.auth_state.json')
 
 URL_PATHS = namedtuple(
-    'URLPaths', [
+    typename='URLPaths',
+    field_names=[
         'callback',
         'select_tenant',
         'success',
