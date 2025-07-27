@@ -1,0 +1,30 @@
+<p class="mt-3">
+    You have connected Xero to multiple tenants/organisations. Please select one tenancy below to activate.
+</p>
+<div class="card mt-3 mb-5">
+    <div class="card-body">
+        <form action="." method="post">
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Type
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                {tenants}
+                </tbody>
+            </table>
+            <div class="d-grid my-5">
+                <button type="submit" class="btn btn-primary btn-block">
+                    Activate Connection
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
