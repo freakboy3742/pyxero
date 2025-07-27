@@ -1,6 +1,6 @@
 # PyXero OAuth 2.0 Credential Generator
 
-This is a tool designed for local development use only to assist
+This is a tool designed for __local development use only__ to assist
 contributors to the PyXero package in generating OAuth 2.0 credentials
 to access the Xero API.
 
@@ -43,7 +43,7 @@ I expect Linux works fine, but have no idea about Windows.
 ![Click "proceed (unsafe)"](./docs/certwarning2.png)
 
 
-6) Enter your Xero client ID and client secret keys, and select all the scopes you wish to authenticate for,
+6) Enter your Xero client ID and client secret, and select all the scopes you wish to authenticate for,
    then click _Begin Authentication_.
    
    Note that the "restricted" scopes require a specialised agreement with Xero, and requesting them without
