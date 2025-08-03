@@ -282,7 +282,7 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         state = read_state_file()
 
         if path == URL_PATHS.callback:
-            if not "?" in self.path:
+            if "?" not in self.path:
                 return self.redirect_to_index()
 
             if state:
