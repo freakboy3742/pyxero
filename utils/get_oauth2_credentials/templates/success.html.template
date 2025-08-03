@@ -37,48 +37,11 @@
         >to copy and paste the following code</a>
         into an interactive Python session.
       </p>
-<pre>
-<code class="d-block" style="background-color: antiquewhite" id="code-block">
-def get_xero():
-    import json
-    from xero import Xero
-    from xero.auth import OAuth2Credentials
+      <p>This code has also been saved as the following Python file: <code>{example_path}</code>
 
-    STATE_FILE = '{state_file_path}'
-
-    def read_state_file() -> dict:
-        try:
-            with open(STATE_FILE, 'r') as f:
-                try:
-                    return json.load(f)
-                except json.decoder.JSONDecodeError:
-                    return {{}} <!-- Doubled for escaping as we will run this whole document through str.format() -->
-        except FileNotFoundError:
-            return {{}} <!-- Doubled for escaping as we will run this whole document through str.format() -->
-
-
-    def write_state_file(state: dict) -> None:
-        with open(STATE_FILE, 'w') as f:
-            json.dump(state, f, indent=2, sort_keys=True)
-
-    state = read_state_file()
-
-    if state:
-        credentials = OAuth2Credentials(**state)
-        if credentials.expired(seconds=200):
-            try:
-                credentials.refresh()
-            except Exception as e:
-                print('Unable to refresh - try re-authenticating and ensure that offline_access scope is enabled')
-                raise
-            else:
-                write_state_file(credentials.state)
-        return Xero(credentials)
-    return
-
-xero = get_xero()
-
-print('Now you can interact with the xero object like xero.invoices.filter(page=1)')
+<pre style="background-color: antiquewhite;">
+<code id="code-block">
+{example}
 </code>
 </pre>
     </div>

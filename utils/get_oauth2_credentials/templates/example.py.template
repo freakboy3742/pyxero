@@ -1,0 +1,47 @@
+def get_xero():
+    import json
+    try:
+        import xero
+        print('Imported PyXero from Python environment')
+    except ImportError:
+        import sys
+        sys.path.insert(0, '{src_path}')
+        import xero
+        print('Imported PyXero from source path ({src_path})')
+
+    STATE_FILE = '{state_file_path}'
+
+    def read_state_file() -> dict:
+        try:
+            with open(STATE_FILE, 'r') as f:
+                try:
+                    return json.load(f)
+                except json.decoder.JSONDecodeError:
+                    return {{}}
+        except FileNotFoundError:
+            return {{}}
+
+
+    def write_state_file(state: dict) -> None:
+        with open(STATE_FILE, 'w') as f:
+            json.dump(state, f, indent=2, sort_keys=True)
+
+    state = read_state_file()
+
+    if state:
+        credentials = xero.auth.OAuth2Credentials(**state)
+        if credentials.expired(seconds=200):
+            try:
+                credentials.refresh()
+            except Exception as e:
+                print('Unable to refresh - try re-authenticating and ensure that offline_access scope is enabled')
+                raise
+            else:
+                write_state_file(credentials.state)
+        print('\n\n\nNow you can interact with the xero object like xero.invoices.filter(page=1).\n\nFriendly reminder that this tool is intended for development use only.')
+        return xero.Xero(credentials)
+    print('Unable to load auth state. Please try re-authenticating.')
+    return
+
+xero = get_xero()
+

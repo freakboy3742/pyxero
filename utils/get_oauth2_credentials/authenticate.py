@@ -7,7 +7,6 @@ import ssl
 import sys
 import json
 import io
-from functools import cached_property
 from urllib.parse import urlparse
 from pathlib import Path
 from dataclasses import dataclass
@@ -15,6 +14,7 @@ from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
 from collections import namedtuple
 
 file_path = Path(__file__).resolve()
+src_path = str(file_path.parents[2] / 'src')
 
 # Allow using the local source version of PyXero if not installed in Python env.
 # This would mostly be useful for anyone making changes to PyXero's auth flow and needing
@@ -23,16 +23,24 @@ try:
     import xero
     print('Using PyXero installed in Python environment.')
 except ImportError:
-    sys.path.insert(0, str(file_path.parents[2] / 'src'))
+    sys.path.insert(0, src_path)
     import xero
-    print('Using PyXero from local source directory.')
+    print(f'Using PyXero from local source directory ({src_path}).')
 
 
 DOMAIN = 'localhost'
 PORT = 9376  # XERO on a pin-pad/telephone
-CERT_FILE = str(file_path.parents[0] / '.cert')
-KEY_FILE = str(file_path.parents[0] / '.key')
-STATE_FILE = str(file_path.parents[0] / '.auth_state.json')
+
+CERT_FILE_PATH = str(file_path.parents[0] / '.cert')
+KEY_FILE_PATH = str(file_path.parents[0] / '.key')
+STATE_FILE_PATH = str(file_path.parents[0] / '.auth_state.json')
+EXAMPLE_FILE_PATH = str(file_path.parents[0] / 'example.py')
+
+TEMPLATES: dict[str, str] = {}
+for extension, templates in (('html', ('base', 'form', 'success', 'tenant',)), ('py', ('example',))):
+    for template in templates:
+        with open(file_path.parent / 'templates' / f'{template}.{extension}.template', 'r') as f:
+            TEMPLATES[template] = f.read()
 
 URL_PATHS = namedtuple(
     typename='URLPaths',
@@ -54,7 +62,7 @@ CALLBACK_URL = f'https://{DOMAIN}:{PORT}/{URL_PATHS.callback}/'
 
 MESSAGES = []  # cache to provide user feedback
 
-def generate_self_signed_certificate(cert_path, key_path, common_name, days=365):
+def generate_self_signed_certificate(cert_path: str, key_path: str, common_name: str, days: int = 365) -> None:
     command = [
         "openssl", "req", "-x509", "-newkey", "rsa:4096", "-nodes",
         "-out", cert_path, "-keyout", key_path, "-days", str(days),
@@ -65,7 +73,7 @@ def generate_self_signed_certificate(cert_path, key_path, common_name, days=365)
 
 def read_state_file() -> dict:
     try:
-        with open(STATE_FILE, 'r') as f:
+        with open(STATE_FILE_PATH, 'r') as f:
             try:
                 return json.load(f)
             except json.decoder.JSONDecodeError:
@@ -75,11 +83,18 @@ def read_state_file() -> dict:
 
 
 def write_state_file(state: dict) -> None:
-    with open(STATE_FILE, 'w') as f:
+    with open(STATE_FILE_PATH, 'w') as f:
         json.dump(state, f, indent=2, sort_keys=True)
 
 
 class Context(dict):
+    """
+    Modified dictionary that won't ever raise a KeyError.
+
+    "Templates" are handled using `str.format()` and if a particular
+    key is in the template but not provided, then we want to fail
+    gracefully instead of raising KeyError.
+    """
     def __missing__(self, key):
         return key
 
@@ -134,7 +149,7 @@ class TenantRadio:
         )
 
 
-def get_scopes():
+def get_scopes() -> dict[str, list[str]]:
     restricted_scopes = [
         xero.constants.XeroScopes.PAYMENTSERVICES,
         xero.constants.XeroScopes.BANKFEEDS,
@@ -152,28 +167,29 @@ def get_scopes():
 
 
 class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    def log_request(self, code='-', message='-'):
+    def log_request(self, *args, **kwargs) -> None:
+        # Override the default to not log successful requests.
         pass
 
-    def copyfile(self, source, outputfile):
+    def copyfile(self, source, outputfile) -> None:
         http.server.SimpleHTTPRequestHandler.copyfile(self, source, outputfile)
 
-    def send_redirect_response(self, url):
-        """
-        Send a 303 temporary redirect response to the given URI.
-        303 is used to ensure the response is always changed to GET rather than POST.
-        """
-        self.send_response(303)
+    def send_redirect_response(self, url: str, permanent: bool = False) -> None:
+        if permanent:
+            self.send_response(301)   # Using 301 over 308 because we actually WANT browsers to switch to GET (implicit)
+        else:
+            self.send_response(303)   # 303 to ensure browsers switch to GET (explicit)
+
         self.send_header("Location", url)
         self.end_headers()
 
-    def redirect_to_index(self):
+    def redirect_to_index(self) -> None:
         self.send_redirect_response(f'/{URL_PATHS.index}/')
 
-    def redirect_to_select_tenant(self):
+    def redirect_to_select_tenant(self) -> None:
         self.send_redirect_response(f'/{URL_PATHS.select_tenant}/')
 
-    def redirect_to_success(self):
+    def redirect_to_success(self) -> None:
         self.send_redirect_response(f'/{URL_PATHS.success}/')
 
     def send_html_response(self, body: str, status_code: int = 200, encoding: str = 'utf-8') -> None:
@@ -187,24 +203,6 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.copyfile(f, self.wfile)
 
-    @cached_property
-    def templates(self):
-        with open(Path(__file__).resolve().parent / 'templates' / 'base.html', 'r') as f:
-            base_template = f.read()
-        with open(Path(__file__).resolve().parent / 'templates' / 'form.html', 'r') as f:
-            form_template = f.read()
-        with open(Path(__file__).resolve().parent / 'templates' / 'tenant.html', 'r') as f:
-            tenant_template = f.read()
-        with open(Path(__file__).resolve().parent / 'templates' / 'success.html', 'r') as f:
-            success_template = f.read()
-
-        return {
-            'base': base_template,
-            'form': form_template,
-            'tenant': tenant_template,
-            'success': success_template,
-        }
-
     @property
     def clean_path(self) -> str:
         # Parse request path, handle both presence and absense of trailing slash
@@ -214,13 +212,11 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def add_message(message: str, *, level: str = 'info') -> None:
         MESSAGES.append((level, message))
 
-    @staticmethod
-    def add_success_message(message: str) -> None:
-        MESSAGES.append(('success', message))
-
-    @staticmethod
-    def add_error_message(message: str) -> None:
-        MESSAGES.append(('error', message))
+    def add_error_message(self, message: str) -> None:
+        self.add_message(
+            message=message,
+            level='error',
+        )
 
     @staticmethod
     def get_messages() -> str:
@@ -238,15 +234,14 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             )
         return '\n'.join(messages)
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         path = self.clean_path
 
         state = read_state_file()
 
         if path == URL_PATHS.callback:
             if not '?' in self.path:
-                self.redirect_to_index()
-                return
+                return self.redirect_to_index()
 
             if state:
                 credentials = xero.auth.OAuth2Credentials(
@@ -259,12 +254,13 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     credentials.verify(auth_secret)
                 except Exception as e:
                     self.add_error_message(f'Failed to verify credentials: {e}. Please try re-authenticating to Xero.')
-                    self.redirect_to_index()
-                    return
+                    return self.redirect_to_index()
                 write_state_file(credentials.state)
 
-                self.redirect_to_select_tenant()
-                return
+                return self.redirect_to_select_tenant()
+            else:
+                self.add_error_message('Auth state has expired, please re-authenticate to Xero.')
+                return self.redirect_to_index()
 
         elif path == URL_PATHS.select_tenant:
             if state:
@@ -274,8 +270,7 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                         credentials.refresh()
                     except Exception as e:
                         self.add_error_message(f'Failed to refresh credentials: {e}. Please try re-authenticating to Xero.')
-                        self.redirect_to_index()
-                        return
+                        return self.redirect_to_index()
                     else:
                         write_state_file(credentials.state)
                 if credentials.tenant_id:
@@ -284,18 +279,17 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     tenants = credentials.get_tenants()
                 except TokenExpiredError:
                     self.add_error_message('Your token has expired, please re-authenticate to Xero.')
-                    self.redirect_to_index()
-                    return
+                    return self.redirect_to_index()
                 else:
                     if len(tenants) == 1:
                         if tenant_id := tenants[0].get('tenantId'):
                             credentials.tenant_id = tenant_id
                             write_state_file(credentials.state)
-                            self.redirect_to_success()
-                            return
-                    self.send_html_response(self.templates['base'].format_map(Context(
+                            return self.redirect_to_success()
+
+                    return self.send_html_response(TEMPLATES['base'].format_map(Context(
                         title='Select a tenant',
-                        content=self.templates['tenant'].format_map(Context(
+                        content=TEMPLATES['tenant'].format_map(Context(
                             tenants='\n'.join([
                                 str(TenantRadio(
                                     tenant_id=tenant['tenantId'],
@@ -307,11 +301,9 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                         )),
                         messages=self.get_messages(),
                     )))
-                    return
             else:
                 self.add_error_message('Auth state has expired, please re-authenticate to Xero.')
-                self.redirect_to_index()
-                return
+                return self.redirect_to_index()
 
         elif path == URL_PATHS.success:
             if state:
@@ -321,38 +313,60 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                         credentials.refresh()
                     except Exception as e:
                         self.add_error_message(f'Failed to refresh credentials: {e}. Please try re-authenticating to Xero.')
-                        self.redirect_to_index()
-                        return
+                        return self.redirect_to_index()
                     else:
                         write_state_file(credentials.state)
+
                 if not credentials.tenant_id:
-                    self.redirect_to_select_tenant()
-                    return
+                    return self.redirect_to_select_tenant()
+
                 xero_api = xero.api.Xero(credentials)
                 organisation = xero_api.organisations.all()[0]
                 short_code = organisation['ShortCode']
                 contacts = xero_api.contacts.filter(page=1)[:10]
-                self.send_html_response(self.templates['base'].format_map(Context(
+
+                example = TEMPLATES['example'].format_map(Context(
+                    state_file_path=STATE_FILE_PATH,
+                    src_path=src_path,
+                ))
+
+                with open(EXAMPLE_FILE_PATH, 'w') as f:
+                    f.write(example)
+
+                print(
+                    '\n\n\n'
+                    '---- Authentication is now complete. This web server will now self-terminate.'
+                    '\n\n'
+                    f'An example file has been saved at {EXAMPLE_FILE_PATH} to allow you to access and use the Xero API.'
+                    '\n\n'
+                    'Please remember this tool is only intended for development uses.'
+                )
+
+                self.send_html_response(TEMPLATES['base'].format_map(Context(
                     title='Success!',
-                    content=self.templates['success'].format_map(Context(
+                    content=TEMPLATES['success'].format_map(Context(
                         contacts='\n'.join([
                             f'<tr>'
                             f'<td>{contact["Name"]}</td>'
-                            f'<td><a href="https://go.xero.com/app/{short_code}/contacts/contact/{contact["ContactID"]}" target="_blank">{contact["ContactID"]}</a></td>'
+                            f'<td>'
+                            f'<a href="https://go.xero.com/app/{short_code}/contacts/contact/{contact["ContactID"]}" '
+                            f'target="_blank">{contact["ContactID"]}</a>'
+                            f'</td>'
                             f'</tr>'
                             for contact
                             in contacts
                         ]),
                         organisation=organisation['Name'],
-                        state_file_path = STATE_FILE,
+                        example=example,
+                        example_path=EXAMPLE_FILE_PATH,
                     )),
                     messages=self.get_messages(),
                 )))
                 sys.exit(0)
-                return   # unreachable but here in case I comment out the previous line
-            self.add_error_message('Auth state has expired, please re-authenticate to Xero.')
-            self.redirect_to_index()
-            return
+
+            else:
+                self.add_error_message('Auth state has expired, please re-authenticate to Xero.')
+                return self.redirect_to_index()
 
         elif path == URL_PATHS.index:
 
@@ -384,9 +398,10 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                     str(ScopeCheckBox(name=scope, checked=False))
                     for scope in all_scopes['restricted_scopes']
                 ])
-            self.send_html_response(self.templates['base'].format_map(Context(
+
+            return self.send_html_response(TEMPLATES['base'].format_map(Context(
                 title='Connect to Xero via OAuth 2.0',
-                content=self.templates['form'].format_map(Context(
+                content=TEMPLATES['form'].format_map(Context(
                     fields='\n'.join([
                         str(FormTextInput(
                             title='Xero Client ID',
@@ -405,17 +420,17 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 )),
                 messages=self.get_messages(),
             )))
-            return
 
         elif path == URL_PATHS.favicon:
-            self.send_redirect_response('https://edge.xero.com/images/1.0.0/favicon/favicon.ico')
-            return
+            return self.send_redirect_response(
+                url='https://edge.xero.com/images/1.0.0/favicon/favicon.ico',
+                permanent=True,
+            )
         else:
             self.add_error_message(f'Unknown path: /{path}/')
-            self.redirect_to_index()
-            return
+            return self.redirect_to_index()
 
-    def do_POST(self):
+    def do_POST(self) -> None:
         path = self.clean_path
         content_length = int(self.headers['Content-Length'])
         post_data = dict([
@@ -437,34 +452,32 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                         credentials.refresh()
                     except Exception as e:
                         self.add_error_message(f'Failed to refresh credentials: {e}. Please try re-authenticating to Xero.')
-                        self.redirect_to_index()
-                        return
+                        return self.redirect_to_index()
                     else:
                         write_state_file(credentials.state)
                 try:
                     tenants = credentials.get_tenants()
                 except TokenExpiredError:
                     self.add_error_message('Your token has expired, please re-authenticate to Xero.')
-                    self.redirect_to_index()
-                    return
+                    return self.redirect_to_index()
                 else:
                     tenant_ids = [
                         tenant['tenantId']
                         for tenant
                         in tenants
                     ]
+
                     if tenant_id not in tenant_ids:
                         self.add_error_message('The selected tenant is somehow not valid. (???wtf???)')
-                        self.redirect_to_index()
-                        return
+                        return self.redirect_to_index()
+
                     credentials.tenant_id = tenant_id
                     write_state_file(credentials.state)
-                    self.redirect_to_success()
-                    return
+                    return self.redirect_to_success()
+
             else:
                 self.add_error_message('Auth state has expired, please re-authenticate to Xero.')
-                self.redirect_to_index()
-                return
+                return self.redirect_to_index()
 
         elif path == URL_PATHS.index:
             scopes = [
@@ -483,38 +496,47 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             url = credentials.generate_url()
             write_state_file(credentials.state)
 
-            self.send_redirect_response(url)
-            return
+            return self.send_redirect_response(url)
 
         else:
-            self.redirect_to_index()
-            return
+            return self.redirect_to_index()
 
 
 if __name__ == '__main__':
+
     print(
         '\n\n\n---- Generating a self-signed certificate. Xero requires the OAuth callback URI to use HTTPS.\n'
         'You will receive a certificate warning from your browser but the callback will still work.'
     )
+
     generate_self_signed_certificate(
-        cert_path=CERT_FILE,
-        key_path=KEY_FILE,
+        cert_path=CERT_FILE_PATH,
+        key_path=KEY_FILE_PATH,
         common_name=DOMAIN,
     )
+    context = ssl.SSLContext(
+        protocol=ssl.PROTOCOL_TLS_SERVER,
+    )
+    context.load_cert_chain(
+        certfile=CERT_FILE_PATH,
+        keyfile=KEY_FILE_PATH,
+    )
+
     print('\n\n\n---- Starting a web server to begin the authentication process with Xero.')
 
     httpd = http.server.HTTPServer(
         server_address=(DOMAIN, PORT,),
         RequestHandlerClass=HTTPRequestHandler,
     )
-    context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
     httpd.socket = context.wrap_socket(
         httpd.socket,
         server_side=True,
     )
-    url = f'https://{DOMAIN}:{PORT}/'
-    webbrowser.open(url)
-    print(f'Please open your web browser and navigate to {url} if it did not automatically open.')
+    app_url = f'https://{DOMAIN}:{PORT}/'
+
+    webbrowser.open(app_url)
+
+    print(f'Please open your web browser and navigate to {app_url} if it did not automatically open.')
+
     httpd.serve_forever()
 
