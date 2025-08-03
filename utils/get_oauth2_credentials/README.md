@@ -45,7 +45,7 @@ I expect Linux works fine, but have no idea about Windows.
 
 6) Enter your Xero client ID and client secret, and select all the scopes you wish to authenticate for,
    then click _Begin Authentication_.
-   
+
    Note that the "restricted" scopes require a specialised agreement with Xero, and requesting them without
    such an agreement in place will prevent you from authenticating.
 
