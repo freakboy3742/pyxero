@@ -44,4 +44,3 @@ def get_xero():
     return
 
 xero = get_xero()
-
