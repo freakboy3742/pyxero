@@ -53,7 +53,9 @@ for extension, templates in (
     ("py", ("example",)),
 ):
     for template in templates:
-        with open(file_path.parent / "templates" / f"{template}.{extension}.template") as f:
+        with open(
+            file_path.parent / "templates" / f"{template}.{extension}.template"
+        ) as f:
             TEMPLATES[template] = f.read()
 
 URL_PATHS = namedtuple(
