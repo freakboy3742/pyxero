@@ -53,9 +53,7 @@ for extension, templates in (
     ("py", ("example",)),
 ):
     for template in templates:
-        with open(
-            file_path.parent / "templates" / f"{template}.{extension}.template", "r"
-        ) as f:
+        with open(file_path.parent / "templates" / f"{template}.{extension}.template") as f:
             TEMPLATES[template] = f.read()
 
 URL_PATHS = namedtuple(
@@ -106,7 +104,7 @@ def generate_self_signed_certificate(
 
 def read_state_file() -> dict:
     try:
-        with open(STATE_FILE_PATH, "r") as f:
+        with open(STATE_FILE_PATH) as f:
             try:
                 return json.load(f)
             except json.decoder.JSONDecodeError:
