@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
 import http.server
-import subprocess
-import webbrowser
-import ssl
-import sys
-import json
 import io
-from urllib.parse import urlparse
-from pathlib import Path
-from dataclasses import dataclass
-from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
+import json
+import ssl
+import subprocess
+import sys
+import webbrowser
 from collections import namedtuple
+from dataclasses import dataclass
+from pathlib import Path
+from urllib.parse import urlparse
+
+from oauthlib.oauth2.rfc6749.errors import TokenExpiredError
 
 file_path = Path(__file__).resolve()
 src_path = str(file_path.parents[2] / "src")
