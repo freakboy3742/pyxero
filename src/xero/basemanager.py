@@ -42,6 +42,8 @@ class BaseManager:
         "Invoices": ["email", "online_invoice"],
         "Organisations": ["actions"],
         "CreditNotes": ["put_allocation", "delete_allocation"],
+        "Prepayments": ["put_allocation", "delete_allocation"],
+        "Overpayments": ["put_allocation", "delete_allocation"],
     }
     OBJECT_FILTER_FIELDS = {
         "Invoices": {
