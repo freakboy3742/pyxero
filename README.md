@@ -356,7 +356,13 @@ For example, to deal with contacts::
 {...contact info...}
 
 # Retrieve all contacts updated since 1 Jan 2013
+>>> from datetime import datetime
 >>> xero.contacts.filter(since=datetime(2013, 1, 1))
+[{...contact info...}, {...contact info...}, {...contact info...}]
+
+# Retrieve all contacts updated in the last week
+>>> from datetime import datetime, timedelta
+>>> xero.contacts.filter(since=(datetime.now() - timedelta(days=7)))
 [{...contact info...}, {...contact info...}, {...contact info...}]
 
 # Retrieve all contacts whose name is 'John Smith'
@@ -411,6 +417,7 @@ return more than 100 results, you should make use of the ``page`` parameter::
 
 ```python
 # Grab 100 invoices created after 01-01-2013
+>>> from datetime import datetime
 >>> xero.invoices.filter(since=datetime(2013, 1, 1), page=1)
 ```
 
