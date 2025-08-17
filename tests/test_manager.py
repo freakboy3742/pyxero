@@ -372,3 +372,98 @@ class ManagerTest(unittest.TestCase):
         body = manager.save_or_put({"bing": "bong"})[3]
 
         self.assertTrue(body, "<Invoice><bing>bong</bing></Invoice>")
+
+    def test_idempotency_key(self):
+        """
+        A valid idempotency key should be provided as a header on post and
+        put API calls. An invalid idempotency key should raise an exception.
+        """
+        from io import BytesIO
+
+        from xero.utils import generate_idempotency_key
+
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        with patch("xero.basemanager.requests.post") as mock_post:
+            # Don't provide an idempotency key so we should not
+            # have a header in the request
+            with self.assertRaises(KeyError):
+                try:
+                    manager.save(
+                        {
+                            "foo": "bar",
+                        },
+                    )
+                except XeroExceptionUnknown:
+                    pass
+
+                headers = mock_post.mock_calls[0][2]["headers"]
+                _ = headers["Idempotency-Key"]  # raises KeyError
+
+            # pass a non-string and ensure we get a TypeError
+            with self.assertRaises(TypeError):
+                manager.save(
+                    {
+                        "foo": "bar",
+                    },
+                    idempotency_key=12345,
+                )
+
+            # pass too long of a string and check for ValueError
+            with self.assertRaises(ValueError):
+                manager.save(
+                    {
+                        "foo": "bar",
+                    },
+                    idempotency_key=("a" * 129),
+                )
+
+        # Use the Xero recommended key generation method from here on out
+        idempotency_key = generate_idempotency_key()
+
+        #  Ensure header is sent on POST if key is valid
+        with patch("xero.basemanager.requests.post") as mock_post:
+            try:
+                manager.save(
+                    {
+                        "foo": "bar",
+                    },
+                    idempotency_key=idempotency_key,
+                )
+            except XeroExceptionUnknown:
+                pass
+
+            headers = mock_post.mock_calls[0][2]["headers"]
+            self.assertEqual(headers["Idempotency-Key"], idempotency_key)
+
+        #  Ensure header is sent on PUT if key is valid
+        with patch("xero.basemanager.requests.put") as mock_put:
+            try:
+                manager.put(
+                    {
+                        "foo": "bar",
+                    },
+                    idempotency_key=idempotency_key,
+                )
+            except XeroExceptionUnknown:
+                pass
+
+            headers = mock_put.mock_calls[0][2]["headers"]
+            self.assertEqual(headers["Idempotency-Key"], idempotency_key)
+
+        #  Ensure header is sent when uploading an attachment
+        with patch("xero.basemanager.requests.put") as mock_put:
+            try:
+                manager.put_attachment(
+                    id="foobar",
+                    filename="upload.pdf",
+                    content_type="application/pdf",
+                    file=BytesIO(b"foobar"),
+                    idempotency_key=idempotency_key,
+                )
+            except XeroExceptionUnknown:
+                pass
+
+            headers = mock_put.mock_calls[0][2]["headers"]
+            self.assertEqual(headers["Idempotency-Key"], idempotency_key)

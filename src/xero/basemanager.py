@@ -1,6 +1,7 @@
 import io
 import json
 from datetime import date, datetime
+from typing import BinaryIO, Optional, Union
 from urllib.parse import parse_qs
 from uuid import UUID
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -217,7 +218,9 @@ class BaseManager:
 
         return root_elm
 
-    def _prepare_data_for_save(self, data):
+    def _prepare_data_for_save(
+        self, data: Union[dict, list[dict], tuple[dict]]
+    ) -> bytes:
         if isinstance(data, list) or isinstance(data, tuple):
             root_elm = Element(self.name)
             for d in data:
@@ -257,6 +260,19 @@ class BaseManager:
             # Send xml by default, but remember we might upload a binary attachment with a custom mime-type
             if "Content-Type" not in headers:
                 headers["Content-Type"] = "application/xml"
+
+            # Validate any idempotency key provided by the wrapped function
+            # Xero docs suggest a max of 128 chars, but also kill an empty string
+            # if that was somehow provided. Additionally, force the user to
+            # coerce any other type to string before calling.
+            if "Idempotency-Key" in headers:
+                idempotency_key = headers["Idempotency-Key"]
+                if not isinstance(idempotency_key, str):
+                    raise TypeError("Idempotency key must be a string.")
+                if not (0 < len(idempotency_key) <= 128):
+                    raise ValueError(
+                        "A provided Idempotency key must be between 1 and 128 characters long."
+                    )
 
             if isinstance(self.credentials, OAuth2Credentials):
                 if self.credentials.tenant_id:
@@ -400,50 +416,142 @@ class BaseManager:
         uri = "/".join([self.base_url, self.name, cn_id, "Allocations", allocation_id])
         return uri, {}, "delete", None, None, True
 
-    def save_or_put(self, data, method="post", headers=None, summarize_errors=True):
+    def save_or_put(
+        self,
+        data: Union[dict, list[dict], tuple[dict]],
+        method: str = "post",
+        headers: Optional[dict] = None,
+        summarize_errors: bool = True,
+        *,
+        idempotency_key: Optional[str] = None,
+    ):
         uri = "/".join([self.base_url, self.name])
         body = self._prepare_data_for_save(data)
         params = self.extra_params.copy()
+        headers = headers or {}
+        if idempotency_key:
+            headers["Idempotency-Key"] = idempotency_key
         if not summarize_errors:
             params["summarizeErrors"] = "false"
         return uri, params, method, body, headers, False
 
-    def _save(self, data, summarize_errors=True):
-        return self.save_or_put(data, method="post", summarize_errors=summarize_errors)
+    def _save(
+        self,
+        data: Union[dict, list[dict], tuple[dict]],
+        summarize_errors: bool = True,
+        *,
+        idempotency_key: Optional[str] = None,
+    ):
+        """
+        POST one or more items to the Xero API.
 
-    def _put(self, data, summarize_errors=True):
-        return self.save_or_put(data, method="put", summarize_errors=summarize_errors)
+        :param data: The item (as a dictionary) or list/tuple of items to send.
+        :param summarize_errors: If set to False, the response from Xero will itemise any errors against the item that they relate to.
+        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        """
+        return self.save_or_put(
+            data,
+            method="post",
+            summarize_errors=summarize_errors,
+            idempotency_key=idempotency_key,
+        )
+
+    def _put(
+        self,
+        data: Union[dict, list[dict], tuple[dict]],
+        summarize_errors: bool = True,
+        *,
+        idempotency_key: Optional[str] = None,
+    ):
+        """
+        PUT one or more items to the Xero API.
+
+        :param data: The item (as a dictionary) or list/tuple of items to send.
+        :param summarize_errors: If set to False, the response from Xero will itemise any errors against the item that they relate to.
+        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        """
+        return self.save_or_put(
+            data,
+            method="put",
+            summarize_errors=summarize_errors,
+            idempotency_key=idempotency_key,
+        )
 
     def _delete(self, id):
         uri = "/".join([self.base_url, self.name, id])
         return uri, {}, "delete", None, None, False
 
-    def _put_history_data(self, id, details):
+    def _put_history_data(self, id, details, *, idempotency_key: Optional[str] = None):
         """Add a history note to the Xero object."""
         uri = "/".join([self.base_url, self.name, id, "history"])
+        headers = {}
+        if idempotency_key:
+            headers["Idempotency-Key"] = idempotency_key
         details_data = {"Details": details}
         root_elm = Element("HistoryRecord")
         self.dict_to_xml(root_elm, details_data)
         data = tostring(root_elm)
-        return uri, {}, "put", data, None, False
+        return uri, headers, "put", data, None, False
 
-    def _put_history(self, id, details):
+    def _put_history(self, id, details, *, idempotency_key: Optional[str] = None):
         """Upload a history note to the Xero object."""
-        return self._put_history_data(id, details)
+        return self._put_history_data(id, details, idempotency_key=idempotency_key)
 
     def _put_attachment_data(
-        self, id, filename, data, content_type, include_online=False
+        self,
+        id: str,
+        filename: str,
+        data: bytes,
+        content_type: str,
+        include_online: bool = False,
+        *,
+        idempotency_key: Optional[str] = None,
     ):
-        """Upload an attachment to the Xero object."""
+        """
+        Upload an attachment to the Xero object from a bytestring.
+
+        :param id: The UUID of the Xero object you wish to add an attachment to.
+        :param filename: The filename of the file you are uploading. This will display in the Xero UI for end users.
+        :param data: The binary data of the file you are uploading. To upload a file-like object instead, use the put_attachment() method.
+        :param content_type: The content type of the file you are uploading.
+        :param include_online: Whether to make this file available to the public via the online invoice URL. If false it will still be available in the Xero UI, but only for members of the organisation.
+        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+
+        """
         uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
         params = {"IncludeOnline": "true"} if include_online else {}
         headers = {"Content-Type": content_type, "Content-Length": str(len(data))}
+        if idempotency_key:
+            headers["Idempotency-Key"] = idempotency_key
         return uri, params, "put", io.BytesIO(data), headers, False
 
-    def put_attachment(self, id, filename, file, content_type, include_online=False):
-        """Upload an attachment to the Xero object (from file object)."""
+    def put_attachment(
+        self,
+        id: str,
+        filename: str,
+        file: BinaryIO,
+        content_type: str,
+        include_online: bool = False,
+        *,
+        idempotency_key: Optional[str] = None,
+    ):
+        """
+        Upload an attachment to the Xero object (from file object).
+
+        :param id: The UUID of the Xero object you wish to add an attachment to.
+        :param filename: The filename of the file you are uploading. This will display in the Xero UI for end users.
+        :param file: A file-like object containing the attachment to upload.
+        :param content_type: The content type of the file you are uploading.
+        :param include_online: Whether to make this file available to the public via the online invoice URL. If false it will still be available in the Xero UI, but only for members of the organisation.
+        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        """
         return self.put_attachment_data(
-            id, filename, file.read(), content_type, include_online=include_online
+            id,
+            filename,
+            file.read(),
+            content_type,
+            include_online=include_online,
+            idempotency_key=idempotency_key,
         )
 
     def prepare_filtering_date(self, val):
