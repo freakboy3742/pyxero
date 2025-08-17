@@ -504,7 +504,7 @@ argument on the following manager methods:
 * put_attachment_data
 * put_attachment
 
-You can use any string up to 128 characters in length as an idempotency key, A helper function is provided to 
+You can use any string up to 128 characters in length as an idempotency key, A helper function is provided to
 generate strings according to Xero's recommended method of concatenating four UUIDs together (without hyphens).
 
 ```python3
