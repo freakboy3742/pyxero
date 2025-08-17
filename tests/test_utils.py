@@ -99,3 +99,11 @@ class UtilsTest(unittest.TestCase):
 
         # Weird Date output from Xero
         self.assertEqual(xero.utils.parse_date("/Date(0+0000)/"), None)
+
+    def test_generate_idempotency_key(self):
+        key = xero.utils.generate_idempotency_key()
+
+        self.assertEqual(
+            len(key),
+            128
+        )
