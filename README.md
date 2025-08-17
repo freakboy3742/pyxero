@@ -493,6 +493,45 @@ This same API pattern exists for the following API objects:
 * Users
 
 
+## Idempotent Requests
+Xero [supports idempotent requests](https://developer.xero.com/documentation/guides/idempotent-requests/idempotency)
+to its API to prevent accidentally repeating actions when modifying data. PyXero accepts an `idempotency_key` keyword
+argument on the following manager methods:
+* put
+* save
+* put_history_data
+* put_history
+* put_attachment_data
+* put_attachment
+
+You can use any string up to 128 characters in length as an idempotency key, A helper function is provided to 
+generate strings according to Xero's recommended method of concatenating four UUIDs together (without hyphens).
+
+```python3
+from xero.utils import generate_idempotency_key
+
+invoice = {
+    "Type": "ACCPAY",
+    "InvoiceNumber": "AB1234",
+    "Contact": {
+        "Name": "Joe The Plumber",
+    },
+}
+
+# Performing the following request 3 times would create 3 draft bills in your Xero payables
+xero.invoices.put(invoice)
+
+# Performing the same request with an idempotency key 3 times will result in only 1 draft bill being created.
+# The subsequent requests will return the same response as the first successful request with that key.
+key = generate_idempotency_key()
+xero.invoices.put(invoice, idempotency_key=key)
+
+# Any reuse of the same key on a different request (such as the same request but using POST [save] instead of PUT)
+# will raise a 400 Bad Request
+xero.invoices.save(invoice, idempotency_key=key)   # Raises XeroBadRequest: None: No Message Provided
+```
+
+
 ## Payroll
 
 In order to access the payroll methods from Xero, you can do it like this:
