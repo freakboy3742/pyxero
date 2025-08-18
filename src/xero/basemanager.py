@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import io
 import json
 from datetime import date, datetime
-from typing import BinaryIO, Optional, Union
+from typing import BinaryIO
 from urllib.parse import parse_qs
 from uuid import UUID
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -219,7 +221,8 @@ class BaseManager:
         return root_elm
 
     def _prepare_data_for_save(
-        self, data: Union[dict, list[dict], tuple[dict]]
+        self,
+        data: dict | list[dict] | tuple[dict],
     ) -> bytes:
         if isinstance(data, list) or isinstance(data, tuple):
             root_elm = Element(self.name)
@@ -418,12 +421,12 @@ class BaseManager:
 
     def save_or_put(
         self,
-        data: Union[dict, list[dict], tuple[dict]],
+        data: dict | list[dict] | tuple[dict],
         method: str = "post",
-        headers: Optional[dict] = None,
+        headers: dict | None = None,
         summarize_errors: bool = True,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         uri = "/".join([self.base_url, self.name])
         body = self._prepare_data_for_save(data)
@@ -437,10 +440,10 @@ class BaseManager:
 
     def _save(
         self,
-        data: Union[dict, list[dict], tuple[dict]],
+        data: dict | list[dict] | tuple[dict],
         summarize_errors: bool = True,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         """
         POST one or more items to the Xero API.
@@ -458,10 +461,10 @@ class BaseManager:
 
     def _put(
         self,
-        data: Union[dict, list[dict], tuple[dict]],
+        data: dict | list[dict] | tuple[dict],
         summarize_errors: bool = True,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         """
         PUT one or more items to the Xero API.
@@ -486,7 +489,7 @@ class BaseManager:
         id: str,
         details: str,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         """Add a history note to the Xero object."""
         if not isinstance(details, str):
@@ -512,7 +515,7 @@ class BaseManager:
         id: str,
         details: str,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         """
         Upload a history note to the Xero object.
@@ -531,7 +534,7 @@ class BaseManager:
         content_type: str,
         include_online: bool = False,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         """
         Upload an attachment to the Xero object from a bytestring.
@@ -559,7 +562,7 @@ class BaseManager:
         content_type: str,
         include_online: bool = False,
         *,
-        idempotency_key: Optional[str] = None,
+        idempotency_key: str | None = None,
     ):
         """
         Upload an attachment to the Xero object (from file object).
