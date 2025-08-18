@@ -16,12 +16,10 @@ class PayrollManager(BaseManager):
         self.singular = singular(name)
 
         if user_agent is None:
-            self.user_agent = (
-                "pyxero/%s " % VERSION + requests.utils.default_user_agent()
-            )
+            self.user_agent = f"pyxero/{VERSION} " + requests.utils.default_user_agent()
         else:
             self.user_agent = user_agent
 
         for method_name in self.DECORATED_METHODS:
-            method = getattr(self, "_%s" % method_name)
+            method = getattr(self, f"_{method_name}")
             setattr(self, method_name, self._get_data(method))

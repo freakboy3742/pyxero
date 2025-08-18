@@ -10,7 +10,7 @@ dynamic = ["version"]
 name = "pyxero"
 description = "Python API for accessing the REST API of the Xero accounting tool."
 readme = "README.md"
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [
@@ -29,7 +29,6 @@ classifiers = [
     "Intended Audience :: Financial and Insurance Industry",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -45,13 +44,23 @@ dependencies = [
     "cryptography>=1.3.1",  # As above, but fixes issue with missing module imports not picked up for some reason.
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
-dev = [
+pre-commit = [
     "pre-commit == 4.3.0",
+]
+test = [
     "pytest == 8.4.1",
-    "tox == 4.28.4",
+]
+ci = [
+    "setuptools_scm == 8.3.1",
+    "tox-uv == 1.28.0",
+]
+dev = [
+    {include-group = "pre-commit"},
+    {include-group = "test"},
+    {include-group = "ci"},
 ]
 
 [project.urls]
@@ -67,10 +76,23 @@ Source = "https://github.com/freakboy3742/pyxero"
 [tool.pytest.ini_options]
 testpaths = "tests"
 
-[tool.isort]
-profile = "black"
-skip_glob = [
-    "venv*",
-    "local",
+[tool.ruff.lint]
+# In addition to the default rules, these additional rules will be used:
+extend-select = [
+    "E",      # pycodestyle
+    "W",      # pycodestyle
+    "F",      # pyflakes
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "YTT",    # flake8-2020
+    "ASYNC",  # flake8-async
+    "C4",     # flake8-comprehensions
+    "I",      # isort
+    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
+    # They may be worth occasionally turning on just to see if something could actually
+    # use improvement.
+    # "SIM",    # flake8-simplify
 ]
-multi_line_output = 3
+
+# [tool.ruff.lint.isort]
+# known-first-party = []

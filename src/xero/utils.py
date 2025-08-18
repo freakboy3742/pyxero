@@ -143,15 +143,13 @@ def resolve_user_agent(user_agent, default_override=None):
     return (
         user_agent
         or default_override
-        or "pyxero/%s " % VERSION + requests.utils.default_user_agent()
+        or f"pyxero/{VERSION} " + requests.utils.default_user_agent()
     )
 
 
 def generate_idempotency_key() -> str:
-    """
-    Utility function to generate request idempotency keys
-    according to Xero's recommendation of generating 4
-    UUIDs and concatenating them
+    """Utility function to generate request idempotency keys according to Xero's
+    recommendation of generating 4 UUIDs and concatenating them.
 
     https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/#getting-started
 

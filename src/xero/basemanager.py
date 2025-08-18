@@ -187,7 +187,7 @@ class BaseManager:
                 self.dict_to_xml(elm, sub_data)
 
             # Key references a list/tuple
-            elif isinstance(sub_data, (list, tuple)):
+            elif isinstance(sub_data, list | tuple):
                 # key name is a plural. This means each item
                 # in the list needs to be wrapped in an XML
                 # node that is a singular version of the list name.
@@ -238,7 +238,7 @@ class BaseManager:
     def _parse_api_response(self, response, resource_name):
         data = json.loads(response.text, object_hook=json_load_object_hook)
         assert data["Status"] == "OK", (
-            "Expected the API to say OK but received %s" % data["Status"]
+            f"Expected the API to say OK but received {data['Status']}"
         )
 
         try:
@@ -248,6 +248,7 @@ class BaseManager:
 
     def _get_data(self, func):
         """This is the decorator for our DECORATED_METHODS.
+
         Each of the decorated methods must return:
             uri, params, method, body, headers, singleobject
         """
@@ -260,7 +261,8 @@ class BaseManager:
             if headers is None:
                 headers = {}
 
-            # Send xml by default, but remember we might upload a binary attachment with a custom mime-type
+            # Send xml by default, but remember we might upload a binary
+            # attachment with a custom mime-type
             if "Content-Type" not in headers:
                 headers["Content-Type"] = "application/xml"
 
@@ -274,7 +276,8 @@ class BaseManager:
                     raise TypeError("Idempotency key must be a string.")
                 if not (0 < len(idempotency_key) <= 128):
                     raise ValueError(
-                        "A provided Idempotency key must be between 1 and 128 characters long."
+                        "A provided Idempotency key must be between "
+                        "1 and 128 characters long."
                     )
 
             if isinstance(self.credentials, OAuth2Credentials):
@@ -283,8 +286,8 @@ class BaseManager:
                 else:
                     raise XeroTenantIdNotSet
 
-            # Use the JSON API by default, but remember we might request a PDF (application/pdf)
-            # so don't force the Accept header.
+            # Use the JSON API by default, but remember we might request a PDF
+            # (application/pdf) so don't force the Accept header.
             if "Accept" not in headers:
                 headers["Accept"] = "application/json"
 
@@ -315,10 +318,10 @@ class BaseManager:
             elif response.status_code == 400:
                 try:
                     raise XeroBadRequest(response)
-                except (ValueError, ExpatError):
+                except (ValueError, ExpatError) as e:
                     raise XeroExceptionUnknown(
                         response, msg="Unable to parse Xero API response"
-                    )
+                    ) from e
 
             elif response.status_code == 401:
                 raise XeroUnauthorized(response)
@@ -377,15 +380,12 @@ class BaseManager:
         return uri, {}, "get", None, None, False
 
     def _get_attachment_data(self, id, filename):
-        """
-        Retrieve the contents of a specific attachment (identified by filename).
-        """
+        """Retrieve the contents of a specific attachment (identified by filename)."""
         uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
         return uri, {}, "get", None, None, False
 
     def get_attachment(self, id, filename, file):
-        """
-        Retrieve the contents of a specific attachment (identified by filename).
+        """Retrieve the contents of a specific attachment (identified by filename).
 
         Writes data to file object, returns length of data written.
         """
@@ -445,12 +445,14 @@ class BaseManager:
         *,
         idempotency_key: str | None = None,
     ):
-        """
-        POST one or more items to the Xero API.
+        """POST one or more items to the Xero API.
 
         :param data: The item (as a dictionary) or list/tuple of items to send.
-        :param summarize_errors: If set to False, the response from Xero will itemise any errors against the item that they relate to.
-        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        :param summarize_errors: If set to False, the response from Xero will itemise
+            any errors against the item that they relate to.
+        :param idempotency_key: Optional idempotency key for the request. See
+            https://developer.xero.com/documentation/guides/idempotent-
+            requests/idempotency/ for more information.
         """
         return self.save_or_put(
             data,
@@ -466,12 +468,14 @@ class BaseManager:
         *,
         idempotency_key: str | None = None,
     ):
-        """
-        PUT one or more items to the Xero API.
+        """PUT one or more items to the Xero API.
 
         :param data: The item (as a dictionary) or list/tuple of items to send.
-        :param summarize_errors: If set to False, the response from Xero will itemise any errors against the item that they relate to.
-        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        :param summarize_errors: If set to False, the response from Xero will itemise
+            any errors against the item that they relate to.
+        :param idempotency_key: Optional idempotency key for the request. See
+            https://developer.xero.com/documentation/guides/idempotent-
+            requests/idempotency/ for more information.
         """
         return self.save_or_put(
             data,
@@ -517,12 +521,16 @@ class BaseManager:
         *,
         idempotency_key: str | None = None,
     ):
-        """
-        Upload a history note to the Xero object.
+        """Upload a history note to the Xero object.
 
         :param id: The UUID of the object you wish to add a history note against.
-        :param details: A string (up to 2500 characters) containing the note you wish to add. See https://developer.xero.com/documentation/api/accounting/historyandnotes#put-history for more information.
-        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        :param details: A string (up to 2500 characters) containing the note you wish to
+            add. See
+            https://developer.xero.com/documentation/api/accounting/historyandnotes#put-
+            history for more information.
+        :param idempotency_key: Optional idempotency key for the request. See
+            https://developer.xero.com/documentation/guides/idempotent-
+            requests/idempotency/ for more information.
         """
         return self._put_history_data(id, details, idempotency_key=idempotency_key)
 
@@ -536,16 +544,20 @@ class BaseManager:
         *,
         idempotency_key: str | None = None,
     ):
-        """
-        Upload an attachment to the Xero object from a bytestring.
+        """Upload an attachment to the Xero object from a bytestring.
 
         :param id: The UUID of the Xero object you wish to add an attachment to.
-        :param filename: The filename of the file you are uploading. This will display in the Xero UI for end users.
-        :param data: The binary data of the file you are uploading. To upload a file-like object instead, use the put_attachment() method.
+        :param filename: The filename of the file you are uploading. This will display
+            in the Xero UI for end users.
+        :param data: The binary data of the file you are uploading. To upload a file-
+            like object instead, use the put_attachment() method.
         :param content_type: The content type of the file you are uploading.
-        :param include_online: Whether to make this file available to the public via the online invoice URL. If false it will still be available in the Xero UI, but only for members of the organisation.
-        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
-
+        :param include_online: Whether to make this file available to the public via the
+            online invoice URL. If false it will still be available in the Xero UI, but
+            only for members of the organisation.
+        :param idempotency_key: Optional idempotency key for the request. See
+            https://developer.xero.com/documentation/guides/idempotent-
+            requests/idempotency/ for more information.
         """
         uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
         params = {"IncludeOnline": "true"} if include_online else {}
@@ -564,15 +576,19 @@ class BaseManager:
         *,
         idempotency_key: str | None = None,
     ):
-        """
-        Upload an attachment to the Xero object (from file object).
+        """Upload an attachment to the Xero object (from file object).
 
         :param id: The UUID of the Xero object you wish to add an attachment to.
-        :param filename: The filename of the file you are uploading. This will display in the Xero UI for end users.
+        :param filename: The filename of the file you are uploading. This will display
+            in the Xero UI for end users.
         :param file: A file-like object containing the attachment to upload.
         :param content_type: The content type of the file you are uploading.
-        :param include_online: Whether to make this file available to the public via the online invoice URL. If false it will still be available in the Xero UI, but only for members of the organisation.
-        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        :param include_online: Whether to make this file available to the public via the
+            online invoice URL. If false it will still be available in the Xero UI, but
+            only for members of the organisation.
+        :param idempotency_key: Optional idempotency key for the request. See
+            https://developer.xero.com/documentation/guides/idempotent-
+            requests/idempotency/ for more information.
         """
         return self.put_attachment_data(
             id,
@@ -587,7 +603,7 @@ class BaseManager:
         if isinstance(val, datetime):
             val = val.strftime("%a, %d %b %Y %H:%M:%S GMT")
         else:
-            val = '"%s"' % val
+            val = f'"{val}"'
         return {"If-Modified-Since": val}
 
     def _filter(self, **kwargs):
@@ -602,13 +618,13 @@ class BaseManager:
                 del kwargs["since"]
 
             def get_filter_value(key, value, value_type=None):
-                if key in self.BOOLEAN_FIELDS or value_type == bool:
+                if key in self.BOOLEAN_FIELDS or value_type is bool:
                     return "true" if value else "false"
-                elif key in self.DATE_FIELDS or value_type == date:
+                elif key in self.DATE_FIELDS or value_type is date:
                     return f"{value.year}-{value.month}-{value.day}"
-                elif key in self.DATETIME_FIELDS or value_type == datetime:
+                elif key in self.DATETIME_FIELDS or value_type is datetime:
                     return value.isoformat()
-                elif key.endswith("ID") or value_type == UUID:
+                elif key.endswith("ID") or value_type is UUID:
                     return "%s" % (
                         value.hex if type(value) is UUID else UUID(value).hex
                     )
@@ -618,17 +634,15 @@ class BaseManager:
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]
                 if last_key.endswith("ID"):
-                    return 'Guid("%s")' % str(value)
+                    return f'Guid("{str(value)}")'
                 if key in self.BOOLEAN_FIELDS:
                     return "true" if value else "false"
                 elif key in self.DATE_FIELDS:
-                    return "DateTime({},{},{})".format(
-                        value.year, value.month, value.day
-                    )
+                    return f"DateTime({value.year},{value.month},{value.day})"
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
-                    return '"%s"' % str(value)
+                    return f'"{str(value)}"'
 
             def generate_param(key, value):
                 parts = key.split("__")
@@ -656,10 +670,10 @@ class BaseManager:
             KNOWN_PARAMETERS = ["order", "offset", "page", "pageSize"]
             object_params = self.OBJECT_FILTER_FIELDS.get(self.name, {})
             LIST_PARAMETERS = list(
-                filter(lambda x: object_params[x] == list, object_params)
+                filter(lambda x: object_params[x] is list, object_params)
             )
             EXTRA_PARAMETERS = list(
-                filter(lambda x: object_params[x] != list, object_params)
+                filter(lambda x: object_params[x] is not list, object_params)
             )
 
             # Move any known parameter names to the query string
@@ -668,13 +682,12 @@ class BaseManager:
                     params[param] = get_filter_value(
                         param, kwargs.pop(param), object_params.get(param, None)
                     )
-            # Support xero optimised list filtering; validate IDs we send but may need other validation
+            # Support xero optimised list filtering; validate IDs we send but
+            # may need other validation
             for param in LIST_PARAMETERS:
                 if param in kwargs:
                     if param.endswith("IDs"):
-                        params[param] = ",".join(
-                            map(lambda x: UUID(x).hex, kwargs.pop(param))
-                        )
+                        params[param] = ",".join(UUID(x).hex for x in kwargs.pop(param))
                     else:
                         params[param] = ",".join(kwargs.pop(param))
 
@@ -684,8 +697,8 @@ class BaseManager:
                 raw = kwargs.pop("raw")
                 filter_params.append(raw)
 
-            # Treat any remaining arguments as filter predicates
-            # Xero will break if you search without a check for null in the first position:
+            # Treat any remaining arguments as filter predicates Xero will break
+            # if you search without a check for null in the first position:
             # http://developer.xero.com/documentation/getting-started/http-requests-and-responses/#title3
             sortedkwargs = sorted(
                 kwargs.items(), key=lambda item: -1 if "isnull" in item[0] else 0

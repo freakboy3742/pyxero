@@ -42,7 +42,7 @@ class ManagerTest(unittest.TestCase):
             "Contact": {"Name": "Basket Case"},
         }
         resultant_xml = manager._prepare_data_for_save(example_invoice_input)
-        resultant_xml = "<Invoice>%s</Invoice>" % resultant_xml
+        resultant_xml = f"<Invoice>{resultant_xml}</Invoice>"
 
         expected_xml = """
         <Invoice>
@@ -100,7 +100,7 @@ class ManagerTest(unittest.TestCase):
             "HasAttachments": False,
         }
         resultant_xml = manager._prepare_data_for_save(example_contact_input)
-        resultant_xml = "<Contact>%s</Contact>" % resultant_xml
+        resultant_xml = f"<Contact>{resultant_xml}</Contact>"
 
         expected_xml = """
         <Contact>
@@ -173,7 +173,7 @@ class ManagerTest(unittest.TestCase):
         assertXMLEqual(self, resultant_xml, expected_xml)
 
     def test_filter(self):
-        """The filter function should correctly handle various arguments"""
+        """The filter function should correctly handle various arguments."""
         credentials = Mock(base_url="")
         manager = Manager("Contacts", credentials)
 
@@ -205,15 +205,14 @@ class ManagerTest(unittest.TestCase):
         self.assertIsNone(headers)
 
         manager = Manager("Invoices", credentials)
+        guid = "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f"
         uri, params, method, body, headers, singleobject = manager._filter(
-            **{"Contact.ContactID": "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f"}
+            **{"Contact.ContactID": guid}
         )
 
         self.assertEqual(
             params,
-            {
-                "where": 'Contact.ContactID==Guid("3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f")'
-            },
+            {"where": f'Contact.ContactID==Guid("{guid}")'},
         )
 
         (uri, params, method, body, headers, singleobject) = manager._filter(
@@ -223,7 +222,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, {"where": 'AmountPaid=="0.0"'})
 
     def test_filter_ids(self):
-        """The filter function should correctly handle various arguments"""
+        """The filter function should correctly handle various arguments."""
         credentials = Mock(base_url="")
         manager = Manager("Contacts", credentials)
 
@@ -243,7 +242,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, expected_params)
 
     def test_rawfilter(self):
-        """The filter function should correctly handle various arguments"""
+        """The filter function should correctly handle various arguments."""
         credentials = Mock(base_url="")
         manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
@@ -254,7 +253,7 @@ class ManagerTest(unittest.TestCase):
         )
 
     def test_boolean_filter(self):
-        """The filter function should correctly handle various arguments"""
+        """The filter function should correctly handle various arguments."""
         credentials = Mock(base_url="")
         manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
@@ -263,7 +262,8 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, {"where": "CanApplyToRevenue==true"})
 
     def test_magnitude_filters(self):
-        """The filter function should correctlu handle date arguments and gt, lt operators"""
+        """The filter function should correctlu handle date arguments and gt, lt
+        operators."""
         credentials = Mock(base_url="")
 
         manager = Manager("Invoices", credentials)
@@ -281,7 +281,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(params, {"where": "Date<=DateTime(2007,12,6)"})
 
     def test_unit4dps(self):
-        """The manager should add a query param of unitdp iff enabled"""
+        """The manager should add a query param of unitdp iff enabled."""
 
         credentials = Mock(base_url="")
 
@@ -332,9 +332,11 @@ class ManagerTest(unittest.TestCase):
         )
 
     def test_user_agent_inheritance(self):
-        """The user_agent should be inherited from the provided credentials when not set explicitly."""
+        """The user_agent should be inherited from the provided credentials when not set
+        explicitly."""
 
-        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        # Default used when no user_agent set on manager and credentials has
+        # nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Reports", credentials)
         self.assertTrue(manager.user_agent.startswith("pyxero/"))
@@ -351,9 +353,10 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.post")
     def test_request_content_type(self, request):
-        """The Content-Type should be application/xml"""
+        """The Content-Type should be application/xml."""
 
-        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        # Default used when no user_agent set on manager and credentials has
+        # nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Reports", credentials)
         try:
@@ -365,9 +368,10 @@ class ManagerTest(unittest.TestCase):
         self.assertTrue(kwargs["headers"]["Content-Type"], "application/xml")
 
     def test_request_body_format(self):
-        """The body content should be in valid XML format"""
+        """The body content should be in valid XML format."""
 
-        # Default used when no user_agent set on manager and credentials has nothing to offer.
+        # Default used when no user_agent set on manager and credentials has
+        # nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Reports", credentials)
 
@@ -528,9 +532,9 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.put")
     def test_idempotency_key_on_put_history(self, mock_put):
-        """Generate a valid idempotency key and use it on a
-        Manager.put_history() call. We should find the key stored as a request
-        header called 'Idempotency-Key'.
+        """Generate a valid idempotency key and use it on a Manager.put_history() call.
+
+        We should find the key stored as a request header called 'Idempotency-Key'.
         """
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Invoices", credentials)

@@ -67,11 +67,12 @@ class ExceptionsTest(unittest.TestCase):
             self.assertEqual(e.response.status_code, 400)
             self.assertTrue(e.response.text.startswith("<ApiException"))
         except Exception as e:
-            self.fail("Should raise a XeroBadRequest, not %s" % e)
+            self.fail(f"Should raise a XeroBadRequest, not {e}")
 
     @patch("requests.put")
     def test_bad_request_invalid_response(self, r_put):
-        "If the error response from the backend is malformed (or truncated), raise a XeroExceptionUnknown"
+        """If the error response from the backend is malformed (or truncated), raise a
+        XeroExceptionUnknown."""
         # Same error as before, but the response got cut off prematurely
         bad_response = mock_data.bad_request_text[:1000]
 
@@ -106,11 +107,16 @@ class ExceptionsTest(unittest.TestCase):
 
     @patch("requests.get")
     def test_unregistered_app(self, r_get):
-        "An app without a signature raises a BadRequest exception, but with HTML payload"
+        """An app without a signature raises a BadRequest exception, but with HTML
+        payload."""
         # Verified response from the live API
         r_get.return_value = Mock(
             status_code=400,
-            text="oauth_problem=signature_method_rejected&oauth_problem_advice=No%20certificates%20have%20been%20registered%20for%20the%20consumer",
+            text=(
+                "oauth_problem=signature_method_rejected&"
+                "oauth_problem_advice=No%20certificates%20have%20been"
+                "%20registered%20for%20the%20consumer"
+            ),
             headers={"content-type": "text/html; charset=utf-8"},
         )
 
@@ -132,11 +138,15 @@ class ExceptionsTest(unittest.TestCase):
             self.assertEqual(e.response.status_code, 400)
             self.assertEqual(
                 e.response.text,
-                "oauth_problem=signature_method_rejected&oauth_problem_advice=No%20certificates%20have%20been%20registered%20for%20the%20consumer",
+                (
+                    "oauth_problem=signature_method_rejected&"
+                    "oauth_problem_advice=No%20certificates%20have%20been"
+                    "%20registered%20for%20the%20consumer"
+                ),
             )
 
         except Exception as e:
-            self.fail("Should raise a XeroBadRequest, not %s" % e)
+            self.fail(f"Should raise a XeroBadRequest, not {e}")
 
     @patch("requests.get")
     def test_unauthorized_invalid(self, r_get):
@@ -167,7 +177,7 @@ class ExceptionsTest(unittest.TestCase):
                 "oauth_problem=signature_invalid&oauth_problem_advice=Failed%20to%20validate%20signature",
             )
         except Exception as e:
-            self.fail("Should raise a XeroUnauthorized, not %s" % e)
+            self.fail(f"Should raise a XeroUnauthorized, not {e}")
 
     @patch("requests.get")
     def test_unauthorized_expired_text(self, r_get):
@@ -198,7 +208,7 @@ class ExceptionsTest(unittest.TestCase):
                 "oauth_problem=token_expired&oauth_problem_advice=The%20access%20token%20has%20expired",
             )
         except Exception as e:
-            self.fail("Should raise a XeroUnauthorized, not %s" % e)
+            self.fail(f"Should raise a XeroUnauthorized, not {e}")
 
     @patch("requests.get")
     def test_unauthorized_expired_json(self, r_get):
@@ -206,7 +216,10 @@ class ExceptionsTest(unittest.TestCase):
         # Verified response from the live API
         r_get.return_value = Mock(
             status_code=401,
-            text='{"Type":null,"Title":"Unauthorized","Status":401,"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}',
+            text=(
+                '{"Type":null,"Title":"Unauthorized","Status":401,'
+                '"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}'
+            ),
             headers={"content-type": "application/json; charset=utf-8"},
         )
 
@@ -228,10 +241,13 @@ class ExceptionsTest(unittest.TestCase):
             self.assertEqual(e.response.status_code, 401)
             self.assertEqual(
                 e.response.text,
-                '{"Type":null,"Title":"Unauthorized","Status":401,"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}',
+                (
+                    '{"Type":null,"Title":"Unauthorized","Status":401,'
+                    '"Detail":"TokenExpired: token expired at 01/01/2001 00:00:00"}'
+                ),
             )
         except Exception as e:
-            self.fail("Should raise a XeroUnauthorized, not %s" % e)
+            self.fail(f"Should raise a XeroUnauthorized, not {e}")
 
     @patch("requests.get")
     def test_forbidden(self, r_get):
@@ -260,7 +276,7 @@ class ExceptionsTest(unittest.TestCase):
                 e.response.text, "The client SSL certificate was not valid."
             )
         except Exception as e:
-            self.fail("Should raise a XeroForbidden, not %s" % e)
+            self.fail(f"Should raise a XeroForbidden, not {e}")
 
     @patch("requests.get")
     def test_not_found(self, r_get):
@@ -289,7 +305,7 @@ class ExceptionsTest(unittest.TestCase):
                 e.response.text, "The resource you're looking for cannot be found"
             )
         except Exception as e:
-            self.fail("Should raise a XeroNotFound, not %s" % e)
+            self.fail(f"Should raise a XeroNotFound, not {e}")
 
     @patch("requests.get")
     def test_rate_limit_exceeded_429(self, r_get):
@@ -326,7 +342,7 @@ class ExceptionsTest(unittest.TestCase):
                 "oauth_problem=rate%20limit%20exceeded&oauth_problem_advice=please%20wait%20before%20retrying%20the%20xero%20api",
             )
         except Exception as e:
-            self.fail("Should raise a XeroRateLimitExceeded, not %s" % e)
+            self.fail(f"Should raise a XeroRateLimitExceeded, not {e}")
 
     @patch("requests.get")
     def test_internal_error(self, r_get):
@@ -334,7 +350,10 @@ class ExceptionsTest(unittest.TestCase):
         # This is unconfirmed; haven't been able to verify this response from API.
         r_get.return_value = Mock(
             status_code=500,
-            text="An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.",
+            text=(
+                "An unhandled error with the Xero API occurred. "
+                "Contact the Xero API team if problems persist."
+            ),
             headers={"content-type": "text/html; charset=utf-8"},
         )
 
@@ -349,17 +368,23 @@ class ExceptionsTest(unittest.TestCase):
             # Error messages have been extracted
             self.assertEqual(
                 str(e),
-                "An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.",
+                (
+                    "An unhandled error with the Xero API occurred. "
+                    "Contact the Xero API team if problems persist."
+                ),
             )
 
             # The response has also been stored
             self.assertEqual(e.response.status_code, 500)
             self.assertEqual(
                 e.response.text,
-                "An unhandled error with the Xero API occurred. Contact the Xero API team if problems persist.",
+                (
+                    "An unhandled error with the Xero API occurred. "
+                    "Contact the Xero API team if problems persist."
+                ),
             )
         except Exception as e:
-            self.fail("Should raise a XeroInternalError, not %s" % e)
+            self.fail(f"Should raise a XeroInternalError, not {e}")
 
     @patch("requests.post")
     def test_not_implemented(self, r_post):
@@ -387,7 +412,7 @@ class ExceptionsTest(unittest.TestCase):
             self.assertEqual(e.response.status_code, 501)
             self.assertTrue(e.response.text.startswith, "<ApiException")
         except Exception as e:
-            self.fail("Should raise a XeroNotImplemented, not %s" % e)
+            self.fail(f"Should raise a XeroNotImplemented, not {e}")
 
     @patch("requests.get")
     def test_rate_limit_exceeded(self, r_get):
@@ -418,7 +443,7 @@ class ExceptionsTest(unittest.TestCase):
                 "oauth_problem=rate%20limit%20exceeded&oauth_problem_advice=please%20wait%20before%20retrying%20the%20xero%20api",
             )
         except Exception as e:
-            self.fail("Should raise a XeroRateLimitExceeded, not %s" % e)
+            self.fail(f"Should raise a XeroRateLimitExceeded, not {e}")
 
     @patch("requests.get")
     def test_not_available(self, r_get):
@@ -449,4 +474,4 @@ class ExceptionsTest(unittest.TestCase):
                 e.response.text, "The Xero API is currently offline for maintenance"
             )
         except Exception as e:
-            self.fail("Should raise a XeroNotAvailable, not %s" % e)
+            self.fail(f"Should raise a XeroNotAvailable, not {e}")

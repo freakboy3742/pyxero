@@ -15,7 +15,7 @@ class PaymentManager(BaseManager):
         )
 
         for method_name in self.DECORATED_METHODS:
-            method = getattr(self, "_%s" % method_name)
+            method = getattr(self, f"_{method_name}")
             setattr(self, method_name, self._get_data(method))
 
     def _delete(self, id):

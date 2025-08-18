@@ -17,11 +17,11 @@ class Manager(BaseManager):
         )
 
         for method_name in self.DECORATED_METHODS:
-            method = getattr(self, "_%s" % method_name)
+            method = getattr(self, f"_{method_name}")
             setattr(self, method_name, self._get_data(method))
 
         if self.name in self.OBJECT_DECORATED_METHODS.keys():
             object_decorated_methods = self.OBJECT_DECORATED_METHODS[self.name]
             for method_name in object_decorated_methods:
-                method = getattr(self, "_%s" % method_name)
+                method = getattr(self, f"_{method_name}")
                 setattr(self, method_name, self._get_data(method))

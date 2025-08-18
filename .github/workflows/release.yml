@@ -6,20 +6,48 @@ on:
       - 'v*'
 
 jobs:
-  build:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    with:
+      attest-package: "true"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    name: Create Release
+    needs: [ ci ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # This permission is required for trusted publishing.
+      id-token: write
+    steps:
+      - name: Set build variables
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME#v}" | tee -a $GITHUB_ENV
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          python-version: "3.x"
+
+      - name: Get packages
+        uses: actions/download-artifact@v5.0.0
+        with:
+          name: ${{ needs.ci.outputs.artifact-name }}
+          path: dist
+
+      - name: Install packages
+        run: pip install dist/*.whl
+
+      - name: Create release
+        uses: ncipollo/release-action@v1.18.0
+        with:
+          name: v${{ env.VERSION }}
           draft: true
-          prerelease: false
+          artifacts: dist/${{ github.event.repository.name }}*
+          artifactErrorsFailBuild: true
+
+      - name: Publish release to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

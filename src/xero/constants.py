@@ -50,7 +50,7 @@ class XeroScopes:
     FILES = "files"
     FILES_READ = "files.read"
 
-    # Asssets API
+    # Assets API
     ASSETS = "assets"
     ASSETS_READ = "assets.read"
 

@@ -1,7 +1,11 @@
 PyXero
 ======
 
-[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE) [![Build Status](https://github.com/freakboy3742/pyxero/workflows/Build%20status/badge.svg)](https://github.com/freakboy3742/pyxero/actions)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
+[![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
+[![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
+[![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE)
+[![Build Status](https://github.com/freakboy3742/pyxero/workflows/CI/badge.svg?branch=main)](https://github.com/freakboy3742/pyxero/actions)
 
 PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.
@@ -42,7 +46,7 @@ example at the end)*:
     >>> credentials = OAuth2Credentials(client_id, client_secret,
     >>>                                 callback_uri=callback_uri)
     ```
-    If neccessary pass in a list of scopes to define the scopes required by your
+    If necessary pass in a list of scopes to define the scopes required by your
     app. E.g. if write access is required to transactions and payroll employees:
 
     ```python
@@ -205,8 +209,8 @@ example at the end)*:
  1) [Register your app](https://developer.xero.com/myapps) with Xero, using a
     redirect URI which will be served by your app in order to complete the
     authorisation e.g. `http://localhost:<port>/callback/`. You can chose any
-    port, anc can pass it to the credentials object on construction, allow with
-    the the Client Id you are provded with.
+    port, and can pass it to the credentials object on construction, allow with
+    the the Client Id you are provided with.
 
  2) Construct an `OAuth2Credentials` instance using the details from the first
     step.
@@ -217,7 +221,7 @@ example at the end)*:
     >>> credentials = OAuth2PKCECredentials(client_id,   port=my_port)
     ```
 
-    If neccessary, pass in a list of scopes to define the scopes required by
+    If necessary, pass in a list of scopes to define the scopes required by
     your app. E.g. if write access is required to transactions and payroll
     employees:
 
@@ -246,7 +250,7 @@ example at the end)*:
     The Authenticator will also start a local webserver on the provided port.
     This webserver will be used to collect the tokens that Xero returns.
 
-    The default `PCKEAuthReceiver` class has no reponse pages defined so the
+    The default `PCKEAuthReceiver` class has no response pages defined so the
     browser will show an error, on empty page for all transactions. But the
     application is now authorised and will continue. If you wish you can
     override the `send_access_ok()` method, and the `send_error_page()` method
