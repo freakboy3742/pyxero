@@ -518,3 +518,37 @@ class ManagerTest(unittest.TestCase):
         headers = mock_put.mock_calls[0][2]["headers"]
         self.assertEqual(headers["Idempotency-Key"], idempotency_key)
 
+    @patch("xero.basemanager.requests.put")
+    def test_history_note_is_string(self, _):
+        """
+        Manager.put_history expects a string as "details". Pass
+        a dictionary instead (like if we were saving a payment)
+        and we should receive a TypeError.
+        """
+
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        with self.assertRaises(TypeError):
+            manager.put_history(
+                id="foobar",
+                details={
+                    "foo": "bar",
+                },
+            )
+
+    @patch("xero.basemanager.requests.post")
+    def test_history_note_length(self, _):
+        """
+        History notes are limited to 2500 characters, so provide a 2501
+        character one and we should see a ValueError.
+        """
+
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        with self.assertRaises(ValueError):
+            manager.put_history(
+                id="foobar",
+                details=("a" * 2501),
+            )

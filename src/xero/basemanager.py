@@ -481,8 +481,22 @@ class BaseManager:
         uri = "/".join([self.base_url, self.name, id])
         return uri, {}, "delete", None, None, False
 
-    def _put_history_data(self, id, details, *, idempotency_key: Optional[str] = None):
+    def _put_history_data(
+        self,
+        id: str,
+        details: str,
+        *,
+        idempotency_key: Optional[str] = None,
+    ):
         """Add a history note to the Xero object."""
+        if not isinstance(details, str):
+            raise TypeError("details must be a string")
+        if len(details) > 2500:
+            raise ValueError(
+                "Xero allows a maximum of 2500 characters for history details.\n"
+                "See https://developer.xero.com/documentation/api/accounting/historyandnotes#put-history"
+            )
+
         uri = "/".join([self.base_url, self.name, id, "history"])
         headers = {}
         if idempotency_key:
@@ -493,8 +507,20 @@ class BaseManager:
         data = tostring(root_elm)
         return uri, headers, "put", data, None, False
 
-    def _put_history(self, id, details, *, idempotency_key: Optional[str] = None):
-        """Upload a history note to the Xero object."""
+    def _put_history(
+        self,
+        id: str,
+        details: str,
+        *,
+        idempotency_key: Optional[str] = None,
+    ):
+        """
+        Upload a history note to the Xero object.
+
+        :param id: The UUID of the object you wish to add a history note against.
+        :param details: A string (up to 2500 characters) containing the note you wish to add. See https://developer.xero.com/documentation/api/accounting/historyandnotes#put-history for more information.
+        :param idempotency_key: Optional idempotency key for the request. See https://developer.xero.com/documentation/guides/idempotent-requests/idempotency/ for more information.
+        """
         return self._put_history_data(id, details, idempotency_key=idempotency_key)
 
     def _put_attachment_data(
