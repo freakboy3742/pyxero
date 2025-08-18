@@ -505,7 +505,7 @@ class BaseManager:
         root_elm = Element("HistoryRecord")
         self.dict_to_xml(root_elm, details_data)
         data = tostring(root_elm)
-        return uri, headers, "put", data, None, False
+        return uri, {}, "put", data, headers, False
 
     def _put_history(
         self,
