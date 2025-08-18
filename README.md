@@ -1,7 +1,11 @@
 PyXero
 ======
 
-[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE) [![Build Status](https://github.com/freakboy3742/pyxero/workflows/Build%20status/badge.svg)](https://github.com/freakboy3742/pyxero/actions)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
+[![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
+[![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
+[![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE)
+[![Build Status](https://github.com/freakboy3742/pyxero/workflows/CI/badge.svg?branch=main)](https://github.com/freakboy3742/pyxero/actions)
 
 PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com)
 accounting tool. It allows access to both Public, Private and Partner applications.

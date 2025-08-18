@@ -1,5 +1,19 @@
 name: CI
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      attest-package:
+        description: "Create GitHub provenance attestation for the package."
+        default: "false"
+        type: string
+    outputs:
+      artifact-name:
+        description: "Name of the uploaded artifact; use for artifact retrieval."
+        value: ${{ jobs.package.outputs.artifact-name }}
 
 # Cancel active CI runs for a PR before starting another run
 concurrency:
@@ -23,9 +37,19 @@ jobs:
           python-version: ${{ env.min_python_version }}
       - uses: pre-commit/action@v3.0.1
 
-  python-versions:
-    name: Python compatibility test
-    needs: pre-commit
+  package:
+    name: Package Briefcase
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    with:
+      attest: ${{ inputs.attest-package }}
+
+  unit-tests:
+    name: Unit tests
+    needs: [ pre-commit, package ]
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     strategy:
@@ -39,14 +63,18 @@ jobs:
           experimental: true
     steps:
     - uses: actions/checkout@v5
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
+
     - name: Install dependencies
       run: |
-        pip install -e ".[dev]"
+        python -m pip install -U pip
+        python -m pip install --group ci
+
     - name: Test
       run: |
-        tox -e py
+        python -m tox -e py
