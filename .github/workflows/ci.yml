@@ -38,7 +38,7 @@ jobs:
       - uses: pre-commit/action@v3.0.1
 
   package:
-    name: Package Briefcase
+    name: Package PyXero
     permissions:
       id-token: write
       contents: read
