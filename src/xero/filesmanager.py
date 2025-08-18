@@ -43,7 +43,7 @@ class FilesManager:
         self.base_url = credentials.base_url + XERO_FILES_URL
 
         for method_name in self.DECORATED_METHODS:
-            method = getattr(self, "_%s" % method_name)
+            method = getattr(self, f"_{method_name}")
             setattr(self, method_name, self._get_data(method))
 
     def _get_results(self, data):
@@ -63,6 +63,7 @@ class FilesManager:
 
     def _get_data(self, func):
         """This is the decorator for our DECORATED_METHODS.
+
         Each of the decorated methods must return:
             uri, params, method, body, headers, singleobject
         """
@@ -141,7 +142,7 @@ class FilesManager:
         return uri, {}, "get", None, headers, True, None
 
     def _get_files(self, folderId):
-        """Retrieve the list of files contained in a folder"""
+        """Retrieve the list of files contained in a folder."""
         uri = "/".join([self.base_url, self.name, folderId, "Files"])
         return uri, {}, "get", None, None, False, None
 
@@ -187,7 +188,7 @@ class FilesManager:
         else:
             uri = "/".join([self.base_url, self.name])
 
-        files = dict()
+        files = {}
         if path:
             filename = os.path.basename(path)
             files[filename] = open(path, mode="rb")

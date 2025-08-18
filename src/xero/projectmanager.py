@@ -35,7 +35,7 @@ class ProjectManager:
         self.base_url = credentials.base_url + XERO_PROJECTS_URL
 
         for method_name in self.DECORATED_METHODS:
-            method = getattr(self, "_%s" % method_name)
+            method = getattr(self, f"_{method_name}")
             setattr(self, method_name, self._get_data(method))
 
     def _get_results(self, data):
@@ -55,6 +55,7 @@ class ProjectManager:
 
     def _get_data(self, func):
         """This is the decorator for our DECORATED_METHODS.
+
         Each of the decorated methods must return:
             uri, params, method, body, headers, singleobject
         """
@@ -125,12 +126,12 @@ class ProjectManager:
         return uri, {}, "get", None, headers, True, None
 
     def _get_tasks(self, projectId):
-        """Retrieve the list of tasks contained in a project"""
+        """Retrieve the list of tasks contained in a project."""
         uri = "/".join([self.base_url, self.name, projectId, "Tasks"])
         return uri, {}, "get", None, None, False, None
 
     def _get_time(self, projectId):
-        """Retrieve the list of times contained in a project"""
+        """Retrieve the list of times contained in a project."""
         uri = "/".join([self.base_url, self.name, projectId, "Time"])
         return uri, {}, "get", None, None, False, None
 

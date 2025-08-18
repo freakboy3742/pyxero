@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Upload receipts to Xero from a CSV file"""
+"""Upload receipts to Xero from a CSV file."""
 
 # Contributed by @davidbitton, https://github.com/freakboy3742/pyxero/pull/48
 

@@ -105,7 +105,7 @@ class PublicCredentials:
         If a callback URI was provided (e.g., https://example.com/oauth),
         the user will be redirected to a URL of the form:
 
-        https://example.com/oauth?oauth_token=<token>&oauth_verifier=<verifier>&org=<organization ID>
+        https://example.com/oauth?oauth_token=<token>&oauth_verifier=<verifier>&org=<org_id>
 
         from which the verifier can be extracted. If no callback URI is
         provided, the verifier will be shown on the screen, and must be
@@ -139,10 +139,9 @@ class PublicCredentials:
     ):
         """Construct the auth instance.
 
-        Must provide the consumer key and secret.
-        A callback URL may be provided as an option. If provided, the
-        Xero verification process will redirect to that URL when
-
+        Must provide the consumer key and secret. A callback URL may be provided as an
+        option. If provided, the Xero verification process will redirect to that URL
+        when
         """
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
@@ -174,7 +173,7 @@ class PublicCredentials:
                 self._init_oauth(oauth_token, oauth_token_secret)
 
             else:
-                # If provided, we are reconstructing an initalized
+                # If provided, we are reconstructing an initialized
                 # (but non-verified) set of public credentials.
                 self.oauth_token = oauth_token
                 self.oauth_token_secret = oauth_token_secret
@@ -277,9 +276,8 @@ class PublicCredentials:
 
     @property
     def state(self):
-        """Obtain the useful state of this credentials object so that
-        we can reconstruct it independently.
-        """
+        """Obtain the useful state of this credentials object so that we can reconstruct
+        it independently."""
         return {
             attr: getattr(self, attr)
             for attr in (
@@ -398,10 +396,9 @@ class PartnerCredentials(PublicCredentials):
     ):
         """Construct the auth instance.
 
-        Must provide the consumer key and secret.
-        A callback URL may be provided as an option. If provided, the
-        Xero verification process will redirect to that URL when
-
+        Must provide the consumer key and secret. A callback URL may be provided as an
+        option. If provided, the Xero verification process will redirect to that URL
+        when
         """
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
@@ -513,9 +510,7 @@ class OAuth2Credentials:
         self.relax_token_scope = relax_token_scope
 
         if user_agent is None:
-            self.user_agent = (
-                "pyxero/%s " % VERSION + requests.utils.default_user_agent()
-            )
+            self.user_agent = f"pyxero/{VERSION} " + requests.utils.default_user_agent()
         else:
             self.user_agent = user_agent
 
@@ -523,9 +518,7 @@ class OAuth2Credentials:
         self._init_credentials(token, auth_secret)
 
     def _init_credentials(self, token, auth_secret):
-        """
-        Depending on the state passed in, get self._oauth up and running.
-        """
+        """Depending on the state passed in, get self._oauth up and running."""
         if token:
             self._init_oauth(token)
         elif auth_secret and self.auth_state:
@@ -539,9 +532,8 @@ class OAuth2Credentials:
 
     @property
     def state(self):
-        """Obtain the useful state of this credentials object so that
-        we can reconstruct it independently.
-        """
+        """Obtain the useful state of this credentials object so that we can reconstruct
+        it independently."""
         return {
             attr: getattr(self, attr)
             for attr in (
@@ -580,12 +572,14 @@ class OAuth2Credentials:
             if self.relax_token_scope and isinstance(e, Warning):
                 session.token = e.token
             else:
-                raise XeroAccessDenied(e)
+                raise XeroAccessDenied(e) from None
         self._init_oauth(token)
 
     def generate_url(self):
-        """Get the authorization url. This will also set `self.auth_state` to a
-        random string if it has not already been set.
+        """Get the authorization url.
+
+        This will also set `self.auth_state` to a random string if it has not
+        already been set.
         """
         session = OAuth2Session(
             self.client_id, scope=self.scope, redirect_uri=self.callback_uri
@@ -597,7 +591,7 @@ class OAuth2Credentials:
 
     @property
     def oauth(self):
-        """Return the requests-compatible OAuth object"""
+        """Return the requests-compatible OAuth object."""
         if self._oauth is None:
             raise XeroNotVerified("OAuth credentials haven't been verified")
         return self._oauth
@@ -622,6 +616,7 @@ class OAuth2Credentials:
 
     def expired(self, seconds=30, now=None):
         """Check if the token has expired yet.
+
         :param seconds: the minimum number of seconds allowed before expiry.
         """
         if now is None:
@@ -636,19 +631,21 @@ class OAuth2Credentials:
         return (self.expires_at - now) < datetime.timedelta(seconds=seconds)
 
     def refresh(self):
-        """Obtain a refreshed token. Note that `offline_access` must be
-        included in scope in order for a token to be refreshable.
+        """Obtain a refreshed token.
+
+        Note that `offline_access` must be included in scope in order for a
+        token to be refreshable.
         """
         if not self.token:
             raise XeroException(None, "Cannot refresh token, no token is present.")
         elif not self.client_secret:
             raise XeroException(
-                None, "Cannot refresh token, " "client_secret must be supplied."
+                None, "Cannot refresh token, client_secret must be supplied."
             )
         elif not self.token.get("refresh_token"):
             raise XeroException(
                 None,
-                "Token cannot be refreshed, was " "`offline_access` included in scope?",
+                "Token cannot be refreshed, was `offline_access` included in scope?",
             )
         session = OAuth2Session(
             client_id=self.client_id, scope=self.scope, token=self.token
@@ -661,8 +658,8 @@ class OAuth2Credentials:
         return token
 
     def get_tenants(self, auth_event_id=None):
-        """
-        Get the list of tenants (Xero Organisations) to which this token grants access.
+        """Get the list of tenants (Xero Organisations) to which this token grants
+        access.
 
         Optionally, you may pass a UUID as auth_event_id that will be used to limit to
         only those tenants that were authorised in that authorisation event.
@@ -680,8 +677,7 @@ class OAuth2Credentials:
 
     def set_default_tenant(self):
         """A quick way to set the tenant to the first in the list of available
-        connections.
-        """
+        connections."""
         try:
             self.tenant_id = self.get_tenants()[0]["tenantId"]
         except IndexError:
@@ -690,7 +686,7 @@ class OAuth2Credentials:
                 "This app is not authorised to access any Xero Organisations. Did the "
                 "scopes requested include access to organisation data, or has access "
                 "to the organisation(s) been removed?",
-            )
+            ) from None
 
     @staticmethod
     def _handle_error_response(response):
@@ -727,13 +723,12 @@ class OAuth2Credentials:
 
 
 class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
-    """This is an http request processsor for server running on localhost,
-    used by the PKCE auth system.
-    Xero will redirect the browser after auth, from which we
-    can collect the toke Xero provides.
+    """This is an http request processor for server running on localhost, used by the
+    PKCE auth system. Xero will redirect the browser after auth, from which we can
+    collect the token Xero provides.
 
     You can subclass this and override the `send_error_page` and
-    `send_access_ok` methods to customise the sucess and failure
+    `send_access_ok` methods to customise the success and failure
     pages displayed in the browser.
     """
 
@@ -756,19 +751,18 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
 
     def send_error_page(self, error):
         """Display an Error page.
+
         Override this for a custom page.
         """
         print("Error:", error)
 
     def send_access_ok(self):
-        """Display a success page"
-        Override this to provide a custom page.
-        """
+        """Display a success page" Override this to provide a custom page."""
         print("LOGIN SUCCESS")
         self.shutdown()
 
     def shutdown(self):
-        """Start shutdowning our server and return immediately"""
+        """Start shutdowning our server and return immediately."""
         # Launch a thread to close our socket cleanly.
         threading.Thread(
             target=self.__class__.close_server, args=(self.server,)
@@ -785,7 +779,7 @@ class OAuth2PKCECredentials(OAuth2Credentials):
         >>> credentials = OAuth2Credentials(client_id,None, port=8080,
                                             scope=scope)
 
-        A webserver will be setup to listen on the provded port
+        A webserver will be setup to listen on the provided port
         number which is used for the Auth callback.
 
       2) Send the login request.
@@ -833,8 +827,8 @@ class OAuth2PKCECredentials(OAuth2Credentials):
 
     def __init__(self, *args, **kwargs):
         self.port = kwargs.pop("port", 8080)
-        # Xero requires between 43 adn 128 bytes, it fails
-        # with invlaid grant if this is not long enough
+        # Xero requires between 43 and 128 bytes, it fails with invalid grant if
+        # this is not long enough
         self.verifier = kwargs.pop("verifier", secrets.token_urlsafe(64))
         self.handler_kls = kwargs.pop("request_handler", PKCEAuthReceiver)
         self.error = None
@@ -845,14 +839,14 @@ class OAuth2PKCECredentials(OAuth2Credentials):
         super().__init__(*args, **kwargs)
 
     def logon(self):
-        """Launch PKCE auth process and wait for completion"""
+        """Launch PKCE auth process and wait for completion."""
         challenge = str(
             base64.urlsafe_b64encode(hashlib.sha256(self.verifier).digest())[:-1],
             "ascii",
         )
         url_base = super().generate_url()
         webbrowser.open(
-            f"{url_base}&code_challenge={challenge}&" "code_challenge_method=S256"
+            f"{url_base}&code_challenge={challenge}&code_challenge_method=S256"
         )
         self.wait_for_callback()
 
@@ -864,8 +858,7 @@ class OAuth2PKCECredentials(OAuth2Credentials):
             raise self.error
 
     def verify_url(self, params, reqhandler):
-        """Used to verify the parameters xero returns in the
-        redirect callback"""
+        """Used to verify the parameters xero returns in the redirect callback."""
         error = params.get("error", None)
         if error:
             self.handle_error(error, reqhandler)

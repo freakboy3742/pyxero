@@ -6,7 +6,7 @@ from .projectmanager import ProjectManager
 
 
 class Xero:
-    """An ORM-like interface to the Xero API"""
+    """An ORM-like interface to the Xero API."""
 
     OBJECT_LIST = (
         "Attachments",
@@ -57,13 +57,13 @@ class Xero:
                 manager_class(name, credentials, unit_price_4dps, user_agent),
             )
 
-        setattr(self, "filesAPI", Files(credentials))
-        setattr(self, "payrollAPI", Payroll(credentials, unit_price_4dps, user_agent))
-        setattr(self, "projectsAPI", Project(credentials))
+        self.filesAPI = Files(credentials)
+        self.payrollAPI = Payroll(credentials, unit_price_4dps, user_agent)
+        self.projectsAPI = Project(credentials)
 
 
 class Files:
-    """An ORM-like interface to the Xero Files API"""
+    """An ORM-like interface to the Xero Files API."""
 
     OBJECT_LIST = (
         "Associations",
@@ -82,7 +82,7 @@ class Files:
 
 
 class Payroll:
-    """An ORM-like interface to the Xero Payroll API"""
+    """An ORM-like interface to the Xero Payroll API."""
 
     OBJECT_LIST = (
         "Employees",
@@ -105,7 +105,7 @@ class Payroll:
 
 
 class Project:
-    """An ORM-like interface to the Xero Projects API"""
+    """An ORM-like interface to the Xero Projects API."""
 
     OBJECT_LIST = (
         "Projects",

@@ -120,7 +120,7 @@ class PublicCredentialsTest(unittest.TestCase):
         )
 
         try:
-            credentials.oauth
+            _ = credentials.oauth
         except XeroNotVerified:
             self.fail("Credentials should have been verified")
 
@@ -213,7 +213,7 @@ class PublicCredentialsTest(unittest.TestCase):
         )
 
         try:
-            credentials.oauth
+            _ = credentials.oauth
         except XeroNotVerified:
             self.fail("Credentials should have been verified")
 
@@ -222,7 +222,10 @@ class PublicCredentialsTest(unittest.TestCase):
         "If verification credentials are bad, an error is raised"
         r_post.return_value = Mock(
             status_code=401,
-            text="oauth_problem=bad_verifier&oauth_problem_advice=The consumer was denied access to this resource.",
+            text=(
+                "oauth_problem=bad_verifier&"
+                "oauth_problem_advice=The consumer was denied access to this resource."
+            ),
             headers={"content-type": "text/html; charset=utf-8"},
         )
 
@@ -237,7 +240,7 @@ class PublicCredentialsTest(unittest.TestCase):
             credentials.verify("badverifier")
 
         with self.assertRaises(XeroNotVerified):
-            credentials.oauth
+            _ = credentials.oauth
 
     def test_expired(self):
         "Expired credentials are correctly detected"
@@ -431,8 +434,8 @@ class OAuth2CredentialsTest(unittest.TestCase):
         credentials = OAuth2Credentials(
             "client_id", "client_secret", auth_state="test_state"
         )
-        bad_auth_uri = "{}?error=access_denied&state={}".format(
-            self.callback_uri, credentials.auth_state
+        bad_auth_uri = (
+            f"{self.callback_uri}?error=access_denied&state={credentials.auth_state}"
         )
         with self.assertRaises(XeroAccessDenied):
             credentials.verify(bad_auth_uri)

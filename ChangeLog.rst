@@ -27,7 +27,7 @@ master (unreleased)
 ------------------
 
     #208 - Support the journal date field
-    #211 - Improve error handling when an API response is unparseable
+    #211 - Improve error handling when an API response is unparsable
     #219 - Corrected declaration of boolean fields on Items
     #222 - Correct the handling of the AmountPaid field
     #232 - Made the API URL configurable

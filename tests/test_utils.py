@@ -11,9 +11,8 @@ class UtilsTest(unittest.TestCase):
     """Test of the utils module."""
 
     def test_json_hook(self):
-        """Tests the json hook used in Manager._parse_api_response, and the
-        call it makes to parse_date.
-        """
+        """Tests the json hook used in Manager._parse_api_response, and the call it
+        makes to parse_date."""
         # The hook parses dates
         example_input = {
             "date": "/Date(1426849200000+1300)/",
