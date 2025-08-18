@@ -1,9 +1,11 @@
 import datetime
 import unittest
+from io import BytesIO
 from unittest.mock import Mock, patch
 
 from xero.exceptions import XeroExceptionUnknown
 from xero.manager import Manager
+from xero.utils import generate_idempotency_key
 
 from .helpers import assertXMLEqual
 
@@ -372,3 +374,179 @@ class ManagerTest(unittest.TestCase):
         body = manager.save_or_put({"bing": "bong"})[3]
 
         self.assertTrue(body, "<Invoice><bing>bong</bing></Invoice>")
+
+    @patch("xero.basemanager.requests.post")
+    def test_idempotency_key_absent(self, mock_post):
+        """No idempotency key header is inclduded if a key isn't provided."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        try:
+            # Try/Except here because we're not actually talking to Xero
+            # and PyXero will raise an error about not knowing what to do with
+            # the response (we don't care, just checking for headers!)
+            manager.save(
+                {
+                    "foo": "bar",
+                },
+            )
+        except XeroExceptionUnknown:
+            pass
+
+        # Header should not exist.
+        assert "Idempotency-Key" not in mock_post.mock_calls[0][2]["headers"]
+
+    @patch("xero.basemanager.requests.post")
+    def test_idempotency_key_is_string(self, _):
+        """Idempotency keys must be strings."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        with self.assertRaises(TypeError):
+            manager.save(
+                {
+                    "foo": "bar",
+                },
+                idempotency_key=12345,
+            )
+
+    @patch("xero.basemanager.requests.post")
+    def test_idempotency_key_length(self, _):
+        """Idempotency keys must be no longer than 128 characters."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        bad_key = "a" * 129
+        with self.assertRaises(ValueError):
+            manager.save(
+                {
+                    "foo": "bar",
+                },
+                idempotency_key=bad_key,
+            )
+
+    @patch("xero.basemanager.requests.post")
+    def test_idempotency_key_on_save(self, mock_post):
+        """An idempotency key can be included on a Manager.save() call."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+        idempotency_key = generate_idempotency_key()
+
+        try:
+            # Try/Except here because we're not actually talking to Xero
+            # and PyXero will raise an error about not knowing what to do with
+            # the response (we don't care, just checking for headers!)
+            manager.save(
+                {
+                    "foo": "bar",
+                },
+                idempotency_key=idempotency_key,
+            )
+        except XeroExceptionUnknown:
+            pass
+
+        headers = mock_post.mock_calls[0][2]["headers"]
+        self.assertEqual(headers["Idempotency-Key"], idempotency_key)
+
+    @patch("xero.basemanager.requests.put")
+    def test_idempotency_key_on_put(self, mock_put):
+        """An idempotency key can be included on a Manager.put() call."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+        idempotency_key = generate_idempotency_key()
+
+        try:
+            # Try/Except here because we're not actually talking to Xero
+            # and PyXero will raise an error about not knowing what to do with
+            # the response (we don't care, just checking for headers!)
+            manager.put(
+                {
+                    "foo": "bar",
+                },
+                idempotency_key=idempotency_key,
+            )
+        except XeroExceptionUnknown:
+            pass
+
+        headers = mock_put.mock_calls[0][2]["headers"]
+        self.assertEqual(headers["Idempotency-Key"], idempotency_key)
+
+    @patch("xero.basemanager.requests.put")
+    def test_idempotency_key_on_upload_attachment(self, mock_put):
+        """An idempotency key can be included on a Manager.put_attachment() call."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+        idempotency_key = generate_idempotency_key()
+
+        try:
+            # Try/Except here because we're not actually talking to Xero
+            # and PyXero will raise an error about not knowing what to do with
+            # the response (we don't care, just checking for headers!)
+            manager.put_attachment(
+                id="foobar",
+                filename="upload.pdf",
+                content_type="application/pdf",
+                file=BytesIO(b"foobar"),
+                idempotency_key=idempotency_key,
+            )
+        except XeroExceptionUnknown:
+            pass
+
+        headers = mock_put.mock_calls[0][2]["headers"]
+        self.assertEqual(headers["Idempotency-Key"], idempotency_key)
+
+    @patch("xero.basemanager.requests.put")
+    def test_history_note_is_string(self, _):
+        """Manager.put_history expects a string as "details"."""
+
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        with self.assertRaises(TypeError):
+            manager.put_history(
+                id="foobar",
+                details={
+                    "foo": "bar",
+                },
+            )
+
+    @patch("xero.basemanager.requests.post")
+    def test_history_note_length(self, _):
+        """History notes are limited to 2500 characters."""
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        long_details = "a" * 2501
+        with self.assertRaises(ValueError):
+            # Try/Except here because we're not actually talking to Xero
+            # and PyXero will raise an error about not knowing what to do with
+            # the response (we don't care, just checking for headers!)
+            manager.put_history(
+                id="foobar",
+                details=long_details,
+            )
+
+    @patch("xero.basemanager.requests.put")
+    def test_idempotency_key_on_put_history(self, mock_put):
+        """Generate a valid idempotency key and use it on a
+        Manager.put_history() call. We should find the key stored as a request
+        header called 'Idempotency-Key'.
+        """
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+        idempotency_key = generate_idempotency_key()
+
+        try:
+            # Try/Except here because we're not actually talking to Xero
+            # and PyXero will raise an error about not knowing what to do with
+            # the response (we don't care, just checking for headers!)
+            manager.put_history(
+                id="foobar",
+                details="This is a comment!",
+                idempotency_key=idempotency_key,
+            )
+        except XeroExceptionUnknown:
+            pass
+
+        headers = mock_put.mock_calls[0][2]["headers"]
+        self.assertEqual(headers["Idempotency-Key"], idempotency_key)
