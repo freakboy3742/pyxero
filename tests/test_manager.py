@@ -1,9 +1,11 @@
 import datetime
 import unittest
+from io import BytesIO
 from unittest.mock import Mock, patch
 
 from xero.exceptions import XeroExceptionUnknown
 from xero.manager import Manager
+from xero.utils import generate_idempotency_key
 
 from .helpers import assertXMLEqual
 
@@ -378,9 +380,6 @@ class ManagerTest(unittest.TestCase):
         A valid idempotency key should be provided as a header on post and
         put API calls. An invalid idempotency key should raise an exception.
         """
-        from io import BytesIO
-
-        from xero.utils import generate_idempotency_key
 
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Invoices", credentials)
