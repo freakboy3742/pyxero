@@ -552,3 +552,27 @@ class ManagerTest(unittest.TestCase):
                 id="foobar",
                 details=("a" * 2501),
             )
+
+    @patch("xero.basemanager.requests.put")
+    def test_idempotency_key_on_put_history(self, mock_put):
+        """
+        Generate a valid idempotency key and use it on a Manager.put_history() call.
+        We should find the key stored as a request header called 'Idempotency-Key'.
+        """
+
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+        idempotency_key = generate_idempotency_key()
+
+        # As explained in test_idempotency_key_absent
+        try:
+            manager.put_history(
+                id="foobar",
+                details="This is a comment!",
+                idempotency_key=idempotency_key,
+            )
+        except XeroExceptionUnknown:
+            pass
+
+        headers = mock_put.mock_calls[0][2]["headers"]
+        self.assertEqual(headers["Idempotency-Key"], idempotency_key)
