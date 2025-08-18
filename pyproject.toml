@@ -10,7 +10,7 @@ dynamic = ["version"]
 name = "pyxero"
 description = "Python API for accessing the REST API of the Xero accounting tool."
 readme = "README.md"
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [
@@ -29,7 +29,6 @@ classifiers = [
     "Intended Audience :: Financial and Insurance Industry",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
