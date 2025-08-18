@@ -8,22 +8,20 @@ repos:
       - id: check-docstring-first
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
     hooks:
-      - id: isort
-        additional_dependencies: [toml]
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.17.0
+      - id: docformatter
+        args: [--in-place, --black]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.3
     hooks:
-      - id: pyupgrade
-        args: [--py39-plus]
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.8.0
+      - id: ruff-format
+      - id: ruff-check
+        args: [ --fix ]
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
     hooks:
-    - id: black
-      language_version: python3
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
+    - id: codespell
+      # remove toml extra once Python 3.10 is no longer supported
+      additional_dependencies: ['.[toml]']

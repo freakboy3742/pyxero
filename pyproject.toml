@@ -67,10 +67,23 @@ Source = "https://github.com/freakboy3742/pyxero"
 [tool.pytest.ini_options]
 testpaths = "tests"
 
-[tool.isort]
-profile = "black"
-skip_glob = [
-    "venv*",
-    "local",
+[tool.ruff.lint]
+# In addition to the default rules, these additional rules will be used:
+extend-select = [
+    "E",      # pycodestyle
+    "W",      # pycodestyle
+    "F",      # pyflakes
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "YTT",    # flake8-2020
+    "ASYNC",  # flake8-async
+    "C4",     # flake8-comprehensions
+    "I",      # isort
+    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
+    # They may be worth occasionally turning on just to see if something could actually
+    # use improvement.
+    # "SIM",    # flake8-simplify
 ]
-multi_line_output = 3
+
+# [tool.ruff.lint.isort]
+# known-first-party = []
