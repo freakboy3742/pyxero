@@ -40,7 +40,7 @@ jobs:
         run: pip install dist/*.whl
 
       - name: Create release
-        uses: ncipollo/release-action@v1.18.0
+        uses: ncipollo/release-action@v1.20.0
         with:
           name: v${{ env.VERSION }}
           draft: true
