@@ -142,6 +142,7 @@ class BaseManager:
         "IsPurchased",
         "IsSold",
         "IsTrackedAsInventory",
+        "AddToWatchlist",
     )
     DECIMAL_FIELDS = (
         "Hours",
