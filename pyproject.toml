@@ -51,7 +51,7 @@ pre-commit = [
     "pre-commit == 4.5.1",
 ]
 test = [
-    "pytest == 9.0.1",
+    "pytest == 9.0.2",
 ]
 ci = [
     "setuptools_scm == 9.2.2",
