@@ -54,7 +54,7 @@ test = [
     "pytest == 9.0.2",
 ]
 ci = [
-    "setuptools_scm == 9.2.2",
+    "setuptools_scm == 10.0.5",
     "tox-uv == 1.34.0",
 ]
 dev = [
