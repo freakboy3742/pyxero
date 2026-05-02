@@ -55,7 +55,7 @@ test = [
 ]
 ci = [
     "setuptools_scm == 10.0.5",
-    "tox-uv == 1.34.0",
+    "tox-uv == 1.35.1",
 ]
 dev = [
     {include-group = "pre-commit"},
