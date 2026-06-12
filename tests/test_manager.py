@@ -1,6 +1,6 @@
 import datetime
-import unittest
 import json
+import unittest
 from io import BytesIO
 from unittest.mock import Mock, patch
 
@@ -559,10 +559,8 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.get")
     def test_list_response_type(self, mock_get):
-        """
-        Responses should be instances of XeroObjectList
-        and also instances of list
-        """
+        """Responses should be instances of XeroObjectList and also instances of
+        list."""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -584,10 +582,8 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.get")
     def test_empty_list_response_type(self, mock_get):
-        """
-        Empty responses should be instances of XeroObjectList
-        and also instances of list
-        """
+        """Empty responses should be instances of XeroObjectList and also instances of
+        list."""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -609,9 +605,7 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.get")
     def test_list_response_behaves_like_list(self, mock_get):
-        """
-        Responses should behave like lists
-        """
+        """Responses should behave like lists."""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -655,10 +649,8 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.get")
     def test_list_response_carries_response_object(self, mock_get):
-        """
-        Xero list responses should carry the requests.response object
-        and expose the headers provided by Xero (in this case, Xero-Correlation-Id)
-        """
+        """Xero list responses should carry the requests.response object and expose the
+        headers provided by Xero (in this case, Xero-Correlation-Id)"""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -680,14 +672,15 @@ class ManagerTest(unittest.TestCase):
         self.assertTrue(hasattr(result.response, "headers"))
 
         # the headers should include the Xero Correlation ID from above
-        self.assertEqual(result.response.headers["Xero-Correlation-Id"], "5fe9659e-e5cc-4747-ad01-47adb038bf34")
+        self.assertEqual(
+            result.response.headers["Xero-Correlation-Id"],
+            "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+        )
 
     @patch("xero.basemanager.requests.get")
     def test_empty_list_response_carries_response_object(self, mock_get):
-        """
-        Empty list responses should carry the requests.response object
-        and expose the headers provided by Xero (in this case, Xero-Correlation-Id)
-        """
+        """Empty list responses should carry the requests.response object and expose the
+        headers provided by Xero (in this case, Xero-Correlation-Id)"""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -709,4 +702,7 @@ class ManagerTest(unittest.TestCase):
         self.assertTrue(hasattr(result.response, "headers"))
 
         # the headers should include the Xero Correlation ID from above
-        self.assertEqual(result.response.headers["Xero-Correlation-Id"], "5fe9659e-e5cc-4747-ad01-47adb038bf34")
+        self.assertEqual(
+            result.response.headers["Xero-Correlation-Id"],
+            "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+        )

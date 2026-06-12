@@ -28,10 +28,8 @@ from .utils import isplural, json_load_object_hook, singular
 
 
 class XeroObjectList(list):
-    """
-    A list subclass that also carries the originating HTTP response, so callers
-    can reach response metadata (e.g. rate-limit headers).
-    """
+    """A list subclass that also carries the originating HTTP response, so callers can
+    reach response metadata (e.g. rate-limit headers)."""
 
     def __init__(self, data=(), *, response=None):
         super().__init__(data)
