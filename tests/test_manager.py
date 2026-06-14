@@ -1,8 +1,10 @@
 import datetime
+import json
 import unittest
 from io import BytesIO
 from unittest.mock import Mock, patch
 
+from xero.basemanager import XeroObjectList
 from xero.exceptions import XeroExceptionUnknown
 from xero.manager import Manager
 from xero.utils import generate_idempotency_key
@@ -554,3 +556,153 @@ class ManagerTest(unittest.TestCase):
 
         headers = mock_put.mock_calls[0][2]["headers"]
         self.assertEqual(headers["Idempotency-Key"], idempotency_key)
+
+    @patch("xero.basemanager.requests.get")
+    def test_list_response_type(self, mock_get):
+        """Responses should be instances of XeroObjectList and also instances of
+        list."""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Contacts": [{"Name": "A"}, {"Name": "B"}]}',
+            headers={
+                "content-type": "application/json",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Contacts", credentials)
+
+        result = manager.all()
+
+        # is instance of XeroObjectList
+        self.assertIsInstance(result, XeroObjectList)
+
+        # is also instance of list
+        self.assertIsInstance(result, list)
+
+    @patch("xero.basemanager.requests.get")
+    def test_empty_list_response_type(self, mock_get):
+        """Empty responses should be instances of XeroObjectList and also instances of
+        list."""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Contacts": []}',
+            headers={
+                "content-type": "application/json",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Contacts", credentials)
+
+        result = manager.all()
+
+        # is instance of XeroObjectList
+        self.assertIsInstance(result, XeroObjectList)
+
+        # is also instance of list
+        self.assertIsInstance(result, list)
+
+    @patch("xero.basemanager.requests.get")
+    def test_list_response_behaves_like_list(self, mock_get):
+        """Responses should behave like lists."""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Contacts": [{"Name": "A"}, {"Name": "B"}]}',
+            headers={
+                "content-type": "application/json",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Contacts", credentials)
+
+        result = manager.all()
+
+        # if it behaves like a list, it should equal a plain list of the same data
+        self.assertListEqual(result, [{"Name": "A"}, {"Name": "B"}])
+
+        # if it behaves like a list, we should be able to index it to get an item
+        self.assertEqual(result[1], {"Name": "B"})
+
+        # if it behaves like a list, we should be able to reverse it
+        reversed(result)
+
+        # if it behaves like a list, we should be able to sort it
+        sorted(result, key=lambda x: x["Name"])
+
+        # if it behaves like a list, we should be able to add it to another
+        self.assertListEqual(result + ["foo"], [{"Name": "A"}, {"Name": "B"}, "foo"])
+
+        # lists can't be keyed, so trying result["foo"] should raise TypeError
+        with self.assertRaises(TypeError):
+            result["foo"]
+
+        # if it behaves like a list, we should be able to append to it
+        result.append("foo")
+        self.assertListEqual(result, [{"Name": "A"}, {"Name": "B"}, "foo"])
+
+        # finally, we should be able to serialize it to JSON without
+        # a custom encoder (not quite true in the real world, since Xero objects
+        # have datetimes in them and these can't be serialized by default)
+        json.dumps(result)
+
+    @patch("xero.basemanager.requests.get")
+    def test_list_response_carries_response_object(self, mock_get):
+        """Xero list responses should carry the requests.response object and expose the
+        headers provided by Xero (in this case, Xero-Correlation-Id)"""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Contacts": [{"Name": "A"}, {"Name": "B"}]}',
+            headers={
+                "content-type": "application/json",
+                "Xero-Correlation-Id": "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Contacts", credentials)
+
+        result = manager.all()
+
+        # the list should have a response attribute
+        self.assertTrue(hasattr(result, "response"))
+
+        # it should have headers
+        self.assertTrue(hasattr(result.response, "headers"))
+
+        # the headers should include the Xero Correlation ID from above
+        self.assertEqual(
+            result.response.headers["Xero-Correlation-Id"],
+            "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+        )
+
+    @patch("xero.basemanager.requests.get")
+    def test_empty_list_response_carries_response_object(self, mock_get):
+        """Empty list responses should carry the requests.response object and expose the
+        headers provided by Xero (in this case, Xero-Correlation-Id)"""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Contacts": []}',
+            headers={
+                "content-type": "application/json",
+                "Xero-Correlation-Id": "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Contacts", credentials)
+
+        result = manager.all()
+
+        # the list should have a response attribute
+        self.assertTrue(hasattr(result, "response"))
+
+        # it should have headers
+        self.assertTrue(hasattr(result.response, "headers"))
+
+        # the headers should include the Xero Correlation ID from above
+        self.assertEqual(
+            result.response.headers["Xero-Correlation-Id"],
+            "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+        )

@@ -27,6 +27,15 @@ from .exceptions import (
 from .utils import isplural, json_load_object_hook, singular
 
 
+class XeroObjectList(list):
+    """A list subclass that also carries the originating HTTP response, so callers can
+    reach response metadata (e.g. rate-limit headers)."""
+
+    def __init__(self, data=(), *, response=None):
+        super().__init__(data)
+        self.response = response
+
+
 class BaseManager:
     DECORATED_METHODS = (
         "get",
@@ -243,9 +252,13 @@ class BaseManager:
         )
 
         try:
-            return data[resource_name]
+            data = data[resource_name]
         except KeyError:
-            return data
+            pass
+
+        if isinstance(data, list):
+            return XeroObjectList(data, response=response)
+        return data
 
     def _get_data(self, func):
         """This is the decorator for our DECORATED_METHODS.
