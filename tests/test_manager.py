@@ -284,7 +284,6 @@ class ManagerTest(unittest.TestCase):
 
     def test_unit4dps(self):
         """The manager should add a query param of unitdp iff enabled."""
-
         credentials = Mock(base_url="")
 
         # test 4dps is disabled by default
@@ -304,7 +303,6 @@ class ManagerTest(unittest.TestCase):
 
     def test_get_params(self):
         """The 'get' methods should pass GET parameters if provided."""
-
         credentials = Mock(base_url="")
         manager = Manager("Reports", credentials)
 
@@ -336,7 +334,6 @@ class ManagerTest(unittest.TestCase):
     def test_user_agent_inheritance(self):
         """The user_agent should be inherited from the provided credentials when not set
         explicitly."""
-
         # Default used when no user_agent set on manager and credentials has
         # nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
@@ -356,7 +353,6 @@ class ManagerTest(unittest.TestCase):
     @patch("xero.basemanager.requests.post")
     def test_request_content_type(self, request):
         """The Content-Type should be application/xml."""
-
         # Default used when no user_agent set on manager and credentials has
         # nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
@@ -371,7 +367,6 @@ class ManagerTest(unittest.TestCase):
 
     def test_request_body_format(self):
         """The body content should be in valid XML format."""
-
         # Default used when no user_agent set on manager and credentials has
         # nothing to offer.
         credentials = Mock(base_url="", user_agent=None)
@@ -504,7 +499,6 @@ class ManagerTest(unittest.TestCase):
     @patch("xero.basemanager.requests.put")
     def test_history_note_is_string(self, _):
         """Manager.put_history expects a string as "details"."""
-
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Invoices", credentials)
 

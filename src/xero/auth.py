@@ -578,8 +578,8 @@ class OAuth2Credentials:
     def generate_url(self):
         """Get the authorization url.
 
-        This will also set `self.auth_state` to a random string if it has not
-        already been set.
+        This will also set `self.auth_state` to a random string if it has not already
+        been set.
         """
         session = OAuth2Session(
             self.client_id, scope=self.scope, redirect_uri=self.callback_uri
@@ -633,8 +633,8 @@ class OAuth2Credentials:
     def refresh(self):
         """Obtain a refreshed token.
 
-        Note that `offline_access` must be included in scope in order for a
-        token to be refreshable.
+        Note that `offline_access` must be included in scope in order for a token to be
+        refreshable.
         """
         if not self.token:
             raise XeroException(None, "Cannot refresh token, no token is present.")
@@ -727,9 +727,8 @@ class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
     PKCE auth system. Xero will redirect the browser after auth, from which we can
     collect the token Xero provides.
 
-    You can subclass this and override the `send_error_page` and
-    `send_access_ok` methods to customise the success and failure
-    pages displayed in the browser.
+    You can subclass this and override the `send_error_page` and `send_access_ok`
+    methods to customise the success and failure pages displayed in the browser.
     """
 
     def __init__(self, credmanager, *args, **kwargs):
