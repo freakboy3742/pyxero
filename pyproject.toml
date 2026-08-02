@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    "setuptools==82.0.1",
-    "setuptools_scm==10.2.0",
+    "setuptools==83.0.0",
+    "setuptools_scm==10.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -48,14 +48,14 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.6.0",
+    "pre-commit == 4.6.1",
 ]
 test = [
     "pytest == 9.1.1",
 ]
 ci = [
-    "setuptools_scm == 10.1.2",
-    "tox-uv == 1.35.2",
+    "setuptools_scm == 10.2.1",
+    "tox-uv == 1.36.0",
 ]
 dev = [
     {include-group = "pre-commit"},
