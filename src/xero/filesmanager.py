@@ -55,7 +55,7 @@ class FilesManager:
         else:
             return None
 
-        if isinstance(result, tuple) or isinstance(result, list):
+        if isinstance(result, (tuple, list)):
             return result
 
         if isinstance(result, dict) and self.singular in result:
@@ -69,7 +69,7 @@ class FilesManager:
         """
 
         def wrapper(*args, **kwargs):
-            uri, params, method, body, headers, singleobject, files = func(
+            uri, params, method, body, headers, _singleobject, files = func(
                 *args, **kwargs
             )
             if headers is None:
@@ -138,29 +138,29 @@ class FilesManager:
         return wrapper
 
     def _get(self, id, headers=None):
-        uri = "/".join([self.base_url, self.name, id])
+        uri = f"{self.base_url}/{self.name}/{id}"
         return uri, {}, "get", None, headers, True, None
 
     def _get_files(self, folderId):
         """Retrieve the list of files contained in a folder."""
-        uri = "/".join([self.base_url, self.name, folderId, "Files"])
+        uri = f"{self.base_url}/{self.name}/{folderId}/Files"
         return uri, {}, "get", None, None, False, None
 
     def _get_associations(self, id):
-        uri = "/".join([self.base_url, self.name, id, "Associations"]) + "/"
+        uri = f"{self.base_url}/{self.name}/{id}/Associations" + "/"
         return uri, {}, "get", None, None, False, None
 
     def _get_association(self, fileId, objectId):
-        uri = "/".join([self.base_url, self.name, fileId, "Associations", objectId])
+        uri = f"{self.base_url}/{self.name}/{fileId}/Associations/{objectId}"
         return uri, {}, "get", None, None, False, None
 
     def _delete_association(self, fileId, objectId):
-        uri = "/".join([self.base_url, self.name, fileId, "Associations", objectId])
+        uri = f"{self.base_url}/{self.name}/{fileId}/Associations/{objectId}"
         return uri, {}, "delete", None, None, False, None
 
     def create_or_save(self, data, method="post", headers=None, summarize_errors=True):
         if "Id" not in data:
-            uri = "/".join([self.base_url, self.name])
+            uri = f"{self.base_url}/{self.name}"
         else:
             uri = "/".join([self.base_url, self.name, data["Id"]])
         body = data
@@ -179,14 +179,14 @@ class FilesManager:
         )
 
     def _delete(self, id):
-        uri = "/".join([self.base_url, self.name, id])
+        uri = f"{self.base_url}/{self.name}/{id}"
         return uri, {}, "delete", None, None, False, None
 
     def _upload_file(self, path=None, folderId=None, filename=None, file=None):
         if folderId is not None:
-            uri = "/".join([self.base_url, self.name, folderId])
+            uri = f"{self.base_url}/{self.name}/{folderId}"
         else:
-            uri = "/".join([self.base_url, self.name])
+            uri = f"{self.base_url}/{self.name}"
 
         files = {}
         if path:
@@ -199,14 +199,14 @@ class FilesManager:
         return uri, {}, "post", None, None, False, files
 
     def _get_content(self, fileId):
-        uri = "/".join([self.base_url, self.name, fileId, "Content"])
+        uri = f"{self.base_url}/{self.name}/{fileId}/Content"
         return uri, {}, "get", None, None, False, None
 
     def _make_association(self, id, data):
-        uri = "/".join([self.base_url, self.name, id, "Associations"])
+        uri = f"{self.base_url}/{self.name}/{id}/Associations"
         body = data
         return uri, {}, "post", body, None, False, None
 
     def _all(self):
-        uri = "/".join([self.base_url, self.name])
+        uri = f"{self.base_url}/{self.name}"
         return uri, {}, "get", None, None, False, None

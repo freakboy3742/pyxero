@@ -75,7 +75,7 @@ OBJECT_NAMES = {
 
 
 def isplural(word):
-    return word in OBJECT_NAMES.keys()
+    return word in OBJECT_NAMES
 
 
 def singular(word):

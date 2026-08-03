@@ -47,7 +47,7 @@ class ProjectManager:
         else:
             return None
 
-        if isinstance(result, tuple) or isinstance(result, list):
+        if isinstance(result, (tuple, list)):
             return result
 
         if isinstance(result, dict) and self.singular in result:
@@ -61,7 +61,7 @@ class ProjectManager:
         """
 
         def wrapper(*args, **kwargs):
-            uri, params, method, body, headers, singleobject, files = func(
+            uri, params, method, body, headers, _singleobject, files = func(
                 *args, **kwargs
             )
 
@@ -122,27 +122,27 @@ class ProjectManager:
         return wrapper
 
     def _get(self, id, headers=None):
-        uri = "/".join([self.base_url, self.name, id])
+        uri = f"{self.base_url}/{self.name}/{id}"
         return uri, {}, "get", None, headers, True, None
 
     def _get_tasks(self, projectId):
         """Retrieve the list of tasks contained in a project."""
-        uri = "/".join([self.base_url, self.name, projectId, "Tasks"])
+        uri = f"{self.base_url}/{self.name}/{projectId}/Tasks"
         return uri, {}, "get", None, None, False, None
 
     def _get_time(self, projectId):
         """Retrieve the list of times contained in a project."""
-        uri = "/".join([self.base_url, self.name, projectId, "Time"])
+        uri = f"{self.base_url}/{self.name}/{projectId}/Time"
         return uri, {}, "get", None, None, False, None
 
     def _set_status(self, projectId, data):
-        uri = "/".join([self.base_url, self.name, projectId])
+        uri = f"{self.base_url}/{self.name}/{projectId}"
         body = data
         return uri, {}, "patch", body, None, False, None
 
     def create_or_save(self, data, method="post", headers=None, summarize_errors=True):
         if "Id" not in data:
-            uri = "/".join([self.base_url, self.name])
+            uri = f"{self.base_url}/{self.name}"
         else:
             uri = "/".join([self.base_url, self.name, data["Id"]])
         body = data
@@ -156,11 +156,11 @@ class ProjectManager:
         return self.create_or_save(data, method="post")
 
     def _delete(self, id):
-        uri = "/".join([self.base_url, self.name, id])
+        uri = f"{self.base_url}/{self.name}/{id}"
         return uri, {}, "delete", None, None, False, None
 
     def _all(self):
-        uri = "/".join([self.base_url, self.name])
+        uri = f"{self.base_url}/{self.name}"
         return uri, {}, "get", None, None, False, None
 
     def filename(self, path):
