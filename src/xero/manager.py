@@ -20,7 +20,7 @@ class Manager(BaseManager):
             method = getattr(self, f"_{method_name}")
             setattr(self, method_name, self._get_data(method))
 
-        if self.name in self.OBJECT_DECORATED_METHODS.keys():
+        if self.name in self.OBJECT_DECORATED_METHODS:
             object_decorated_methods = self.OBJECT_DECORATED_METHODS[self.name]
             for method_name in object_decorated_methods:
                 method = getattr(self, f"_{method_name}")

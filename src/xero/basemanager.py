@@ -183,7 +183,7 @@ class BaseManager:
         pass
 
     def dict_to_xml(self, root_elm, data):
-        for key in data.keys():
+        for key in data:
             # Xero will complain if we send back these fields.
             if key in self.NO_SEND_FIELDS:
                 continue
@@ -234,7 +234,7 @@ class BaseManager:
         self,
         data: dict | list[dict] | tuple[dict],
     ) -> bytes:
-        if isinstance(data, list) or isinstance(data, tuple):
+        if isinstance(data, (list, tuple)):
             root_elm = Element(self.name)
             for d in data:
                 sub_elm = SubElement(root_elm, self.singular)
@@ -270,7 +270,7 @@ class BaseManager:
         def wrapper(*args, **kwargs):
             timeout = kwargs.pop("timeout", None)
 
-            uri, params, method, body, headers, singleobject = func(*args, **kwargs)
+            uri, params, method, body, headers, _singleobject = func(*args, **kwargs)
 
             if headers is None:
                 headers = {}
@@ -379,23 +379,23 @@ class BaseManager:
         return wrapper
 
     def _get(self, id, headers=None, params=None):
-        uri = "/".join([self.base_url, self.name, id])
+        uri = f"{self.base_url}/{self.name}/{id}"
         uri_params = self.extra_params.copy()
         uri_params.update(params if params else {})
         return uri, uri_params, "get", None, headers, True
 
     def _get_history(self, id):
-        uri = "/".join([self.base_url, self.name, id, "history"]) + "/"
+        uri = f"{self.base_url}/{self.name}/{id}/history" + "/"
         return uri, {}, "get", None, None, False
 
     def _get_attachments(self, id):
         """Retrieve a list of attachments associated with this Xero object."""
-        uri = "/".join([self.base_url, self.name, id, "Attachments"]) + "/"
+        uri = f"{self.base_url}/{self.name}/{id}/Attachments" + "/"
         return uri, {}, "get", None, None, False
 
     def _get_attachment_data(self, id, filename):
         """Retrieve the contents of a specific attachment (identified by filename)."""
-        uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
+        uri = f"{self.base_url}/{self.name}/{id}/Attachments/{filename}"
         return uri, {}, "get", None, None, False
 
     def get_attachment(self, id, filename, file):
@@ -408,19 +408,19 @@ class BaseManager:
         return len(data)
 
     def _email(self, id):
-        uri = "/".join([self.base_url, self.name, id, "Email"])
+        uri = f"{self.base_url}/{self.name}/{id}/Email"
         return uri, {}, "post", None, None, True
 
     def _online_invoice(self, id):
-        uri = "/".join([self.base_url, self.name, id, "OnlineInvoice"])
+        uri = f"{self.base_url}/{self.name}/{id}/OnlineInvoice"
         return uri, {}, "get", None, None, True
 
     def _actions(self):
-        uri = "/".join([self.base_url, self.name, "Actions"])
+        uri = f"{self.base_url}/{self.name}/Actions"
         return uri, {}, "get", None, None, False
 
     def _put_allocation(self, id, data):
-        uri = "/".join([self.base_url, self.name, id, "Allocations"])
+        uri = f"{self.base_url}/{self.name}/{id}/Allocations"
         root_elm = Element("Allocation")
         if "Amount" in data:
             data["AppliedAmount"] = data["Amount"]
@@ -430,7 +430,7 @@ class BaseManager:
         return uri, {}, "put", body, None, False
 
     def _delete_allocation(self, cn_id, allocation_id):
-        uri = "/".join([self.base_url, self.name, cn_id, "Allocations", allocation_id])
+        uri = f"{self.base_url}/{self.name}/{cn_id}/Allocations/{allocation_id}"
         return uri, {}, "delete", None, None, True
 
     def save_or_put(
@@ -442,7 +442,7 @@ class BaseManager:
         *,
         idempotency_key: str | None = None,
     ):
-        uri = "/".join([self.base_url, self.name])
+        uri = f"{self.base_url}/{self.name}"
         body = self._prepare_data_for_save(data)
         params = self.extra_params.copy()
         headers = headers or {}
@@ -499,7 +499,7 @@ class BaseManager:
         )
 
     def _delete(self, id):
-        uri = "/".join([self.base_url, self.name, id])
+        uri = f"{self.base_url}/{self.name}/{id}"
         return uri, {}, "delete", None, None, False
 
     def _put_history_data(
@@ -518,7 +518,7 @@ class BaseManager:
                 "See https://developer.xero.com/documentation/api/accounting/historyandnotes#put-history"
             )
 
-        uri = "/".join([self.base_url, self.name, id, "history"])
+        uri = f"{self.base_url}/{self.name}/{id}/history"
         headers = {}
         if idempotency_key:
             headers["Idempotency-Key"] = idempotency_key
@@ -573,7 +573,7 @@ class BaseManager:
             https://developer.xero.com/documentation/guides/idempotent-
             requests/idempotency/ for more information.
         """
-        uri = "/".join([self.base_url, self.name, id, "Attachments", filename])
+        uri = f"{self.base_url}/{self.name}/{id}/Attachments/{filename}"
         params = {"IncludeOnline": "true"} if include_online else {}
         headers = {"Content-Type": content_type, "Content-Length": str(len(data))}
         if idempotency_key:
@@ -623,7 +623,7 @@ class BaseManager:
     def _filter(self, **kwargs):
         params = self.extra_params.copy()
         headers = None
-        uri = "/".join([self.base_url, self.name])
+        uri = f"{self.base_url}/{self.name}"
 
         if kwargs:
             if "since" in kwargs:
@@ -648,7 +648,7 @@ class BaseManager:
             def get_filter_params(key, value):
                 last_key = key.split("_")[-1]
                 if last_key.endswith("ID"):
-                    return f'Guid("{str(value)}")'
+                    return f'Guid("{value!s}")'
                 if key in self.BOOLEAN_FIELDS:
                     return "true" if value else "false"
                 elif key in self.DATE_FIELDS:
@@ -656,7 +656,7 @@ class BaseManager:
                 elif key in self.DATETIME_FIELDS:
                     return value.isoformat()
                 else:
-                    return f'"{str(value)}"'
+                    return f'"{value!s}"'
 
             def generate_param(key, value):
                 parts = key.split("__")
@@ -726,5 +726,5 @@ class BaseManager:
         return uri, params, "get", None, headers, False
 
     def _all(self):
-        uri = "/".join([self.base_url, self.name])
+        uri = f"{self.base_url}/{self.name}"
         return uri, {}, "get", None, None, False

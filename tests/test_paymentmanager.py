@@ -11,7 +11,7 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock(base_url="")
         manager = PaymentManager("payments", credentials)
 
-        uri, params, method, body, headers, singleobject = manager._delete(
+        uri, params, method, body, headers, _singleobject = manager._delete(
             "768e44ef-c1e3-4d7f-8e06-f6e8bc4eefa4"
         )
 

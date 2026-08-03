@@ -217,8 +217,8 @@ class ManagerTest(unittest.TestCase):
             {"where": f'Contact.ContactID==Guid("{guid}")'},
         )
 
-        (uri, params, method, body, headers, singleobject) = manager._filter(
-            **{"AmountPaid": 0.0}
+        (_uri, params, method, _body, headers, singleobject) = manager._filter(
+            AmountPaid=0.0
         )
 
         self.assertEqual(params, {"where": 'AmountPaid=="0.0"'})
@@ -228,7 +228,7 @@ class ManagerTest(unittest.TestCase):
         credentials = Mock(base_url="")
         manager = Manager("Contacts", credentials)
 
-        uri, params, method, body, headers, singleobject = manager._filter(
+        _uri, params, method, _body, _headers, singleobject = manager._filter(
             IDs=[
                 "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f",
                 "12345678901234567890123456789012",
@@ -247,7 +247,7 @@ class ManagerTest(unittest.TestCase):
         """The filter function should correctly handle various arguments."""
         credentials = Mock(base_url="")
         manager = Manager("Invoices", credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(
+        _uri, params, _method, _body, _headers, _singleobject = manager._filter(
             Status="VOIDED", raw='Name.ToLower()=="test contact"'
         )
         self.assertEqual(
@@ -258,7 +258,7 @@ class ManagerTest(unittest.TestCase):
         """The filter function should correctly handle various arguments."""
         credentials = Mock(base_url="")
         manager = Manager("Invoices", credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(
+        _uri, params, _method, _body, _headers, _singleobject = manager._filter(
             CanApplyToRevenue=True
         )
         self.assertEqual(params, {"where": "CanApplyToRevenue==true"})
@@ -270,14 +270,14 @@ class ManagerTest(unittest.TestCase):
 
         manager = Manager("Invoices", credentials)
         uri, params, method, body, headers, singleobject = manager._filter(
-            **{"Date__gt": datetime.datetime(2007, 12, 6)}
+            Date__gt=datetime.datetime(2007, 12, 6)
         )
 
         self.assertEqual(params, {"where": "Date>DateTime(2007,12,6)"})
 
         manager = Manager("Invoices", credentials)
-        uri, params, method, body, headers, singleobject = manager._filter(
-            **{"Date__lte": datetime.datetime(2007, 12, 6)}
+        _uri, params, _method, _body, _headers, _singleobject = manager._filter(
+            Date__lte=datetime.datetime(2007, 12, 6)
         )
 
         self.assertEqual(params, {"where": "Date<=DateTime(2007,12,6)"})
@@ -298,7 +298,7 @@ class ManagerTest(unittest.TestCase):
 
         # test 4dps can be disable explicitly
         manager = Manager("Contacts", credentials, unit_price_4dps=False)
-        uri, params, method, body, headers, singleobject = manager._filter()
+        _uri, params, _method, _body, _headers, _singleobject = manager._filter()
         self.assertEqual(params, {}, "test 4dps can be disabled explicitly")
 
     def test_get_params(self):
@@ -322,7 +322,7 @@ class ManagerTest(unittest.TestCase):
 
         # test params respect, but can override, existing configuration
         manager = Manager("Reports", credentials, unit_price_4dps=True)
-        uri, params, method, body, headers, singleobject = manager._get(
+        _uri, params, _method, _body, _headers, _singleobject = manager._get(
             "ProfitAndLoss", params=passed_params
         )
         self.assertEqual(

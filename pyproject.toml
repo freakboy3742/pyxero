@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    "setuptools==82.0.1",
-    "setuptools_scm==10.2.0",
+    "setuptools==83.0.0",
+    "setuptools_scm==10.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -48,14 +48,14 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.6.0",
+    "pre-commit == 4.6.1",
 ]
 test = [
     "pytest == 9.1.1",
 ]
 ci = [
-    "setuptools_scm == 10.1.2",
-    "tox-uv == 1.35.2",
+    "setuptools_scm == 10.2.1",
+    "tox-uv == 1.36.0",
 ]
 dev = [
     {include-group = "pre-commit"},
@@ -93,6 +93,19 @@ extend-select = [
     # use improvement.
     # "SIM",    # flake8-simplify
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignores needed to pass the Ruff 0.16 update.
+"examples/receipts_importer/receipts.py" = ["EXE001", "SIM115"]
+"src/xero/auth.py" = ["BLE001", "DTZ003", "DTZ004", "DTZ005"]
+"src/xero/basemanager.py" = ["RUF012"]
+"src/xero/exceptions.py" = ["PLE0101"]
+"src/xero/filesmanager.py" = ["SIM115"]
+"src/xero/utils.py" = ["DTZ001", "DTZ004"]
+"tests/test_auth.py" = ["DTZ001", "DTZ005", "PLR1704", "S110"]
+"tests/test_exceptions.py" = ["BLE001"]
+"tests/test_manager.py" = ["DTZ001", "RUF059"]
+"tests/test_utils.py" = ["DTZ001"]
 
 # [tool.ruff.lint.isort]
 # known-first-party = []
