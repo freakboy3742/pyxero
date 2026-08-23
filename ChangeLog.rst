@@ -6,6 +6,9 @@ ChangeLog
 master (unreleased)
 -------------------
 
+    #338/#315 - Add OAuth2ClientCredentials for the OAuth2 client credentials
+           grant (Xero "custom connections", machine-to-machine), with README
+           documentation; refresh stale developer.xero.com documentation links.
 .. _v0.9.3:
 
 0.9.3 (2021-06-29)

@@ -9,6 +9,7 @@ import requests
 
 from xero.api import Xero
 from xero.auth import (
+    OAuth2ClientCredentials,
     OAuth2Credentials,
     OAuth2PKCECredentials,
     PartnerCredentials,
@@ -19,6 +20,7 @@ from xero.auth import (
 from xero.constants import XERO_OAUTH2_AUTHORIZE_URL
 from xero.exceptions import (
     XeroAccessDenied,
+    XeroBadRequest,
     XeroException,
     XeroNotVerified,
     XeroTenantIdNotSet,
@@ -805,3 +807,91 @@ class PKCECallbackHandlerTests(unittest.TestCase):
             },
             self.handler,
         )
+
+
+class OAuth2ClientCredentialsTest(unittest.TestCase):
+    def _token_response(self, status_code=200, expires_in=1800):
+        body = {
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": expires_in,
+        }
+        return Mock(
+            status_code=status_code,
+            text=json.dumps(body),
+            json=Mock(return_value=body),
+            headers={
+                "content-type": "application/json",
+            },
+        )
+
+    def test_fetch_token_performs_client_credentials_grant(self):
+        credentials = OAuth2ClientCredentials(
+            client_id="client_id", client_secret="client_secret"
+        )
+
+        with patch("xero.auth.requests.post") as r_post:
+            r_post.return_value = self._token_response()
+            credentials.fetch_token()
+
+        # The grant request went to Xero's token URL with HTTP Basic auth
+        self.assertTrue(r_post.called)
+        _args, kwargs = r_post.call_args
+        self.assertEqual(kwargs["url"], "https://identity.xero.com/connect/token")
+        self.assertEqual(kwargs["data"], {"grant_type": "client_credentials"})
+        self.assertEqual(kwargs["auth"], ("client_id", "client_secret"))
+
+        # The token is usable by the xero client
+        self.assertIsNotNone(credentials.oauth)
+        self.assertEqual(credentials.token["access_token"], "new-access-token")
+
+    def test_fetch_token_derives_expiry_from_expires_in(self):
+        credentials = OAuth2ClientCredentials(
+            client_id="client_id", client_secret="client_secret"
+        )
+        before = time.time()
+
+        with patch("xero.auth.requests.post") as r_post:
+            r_post.return_value = self._token_response(expires_in=1800)
+            credentials.fetch_token()
+
+        # expires_at should be derived from expires_in, within a small
+        # tolerance for clock resolution between the two time calls.
+        self.assertAlmostEqual(credentials.token["expires_at"], before + 1800, delta=5)
+
+        # The token is not yet expired
+        self.assertFalse(credentials.expired())
+
+    def test_state_round_trip_restores_working_oauth(self):
+        credentials = OAuth2ClientCredentials(
+            client_id="client_id", client_secret="client_secret"
+        )
+
+        with patch("xero.auth.requests.post") as r_post:
+            r_post.return_value = self._token_response()
+            credentials.fetch_token()
+
+        state = credentials.state
+        restored = OAuth2ClientCredentials(**state)
+        self.assertIsNotNone(restored.oauth)
+        self.assertEqual(restored.token["access_token"], "new-access-token")
+
+    def test_error_response_raises_xero_exception(self):
+        credentials = OAuth2ClientCredentials(
+            client_id="client_id", client_secret="client_secret"
+        )
+        error_body = {
+            "Type": "SimpleOAuth2Error",
+            "Message": "invalid_client",
+            "Elements": [],
+        }
+        response = Mock(
+            status_code=400,
+            text=json.dumps(error_body),
+            headers={"content-type": "application/json"},
+        )
+
+        with patch("xero.auth.requests.post") as r_post:
+            r_post.return_value = response
+            with self.assertRaises(XeroBadRequest):
+                credentials.fetch_token()

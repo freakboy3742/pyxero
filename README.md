@@ -279,6 +279,67 @@ for contacts in xero.contacts.all()
     print contact["Name"]
 ```
 
+### Machine-to-machine (client credentials) authentication
+
+For server-to-server integrations with a single organisation, Xero supports
+[custom connections](https://developer.xero.com/documentation/guides/oauth2/custom-connections),
+which use the OAuth2
+[client credentials grant](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4).
+There is no user consent step: the application authenticates as itself, and
+each custom connection can access only one organisation.
+
+1) Construct an `OAuth2ClientCredentials` instance and fetch a token:
+
+    ```python
+    >>> from xero.auth import OAuth2ClientCredentials
+    >>>
+    >>> credentials = OAuth2ClientCredentials(client_id, client_secret)
+    >>> credentials.fetch_token()
+    ```
+
+2) Use the credentials. As with other OAuth2 flows, set the tenant id
+   (Xero organisation id) before making API calls:
+
+    ```python
+    >>> from xero import Xero
+    >>>
+    >>> credentials.set_default_tenant()
+    >>> xero = Xero(credentials)
+    >>> xero.contacts.all()
+    ```
+
+3) The client credentials grant issues no refresh token. When the token
+   expires, simply perform the grant again:
+
+    ```python
+    >>> if credentials.expired():
+    >>>     credentials.fetch_token()
+    ```
+
+As with other credential types, `credentials.state` can be persisted and used
+to reconstruct the object later.
+
+A complete example with scopes:
+
+```python
+from xero import Xero
+from xero.auth import OAuth2ClientCredentials
+from xero.constants import XeroScopes
+
+# Get client_id and client_secret from a config file or settings
+credentials = OAuth2ClientCredentials(
+    client_id,
+    client_secret,
+    scope=[XeroScopes.ACCOUNTING_CONTACTS, XeroScopes.ACCOUNTING_TRANSACTIONS],
+)
+credentials.fetch_token()
+credentials.set_default_tenant()
+
+xero = Xero(credentials)
+for contact in xero.contacts.all():
+    print(contact["Name"])
+```
+
 ### Older authentication methods
 
 In the past, Xero had the concept of "Public", "Private", and "Partner" applications, which each had their own authentication procedures. However, they removed access for Public applications on 31 March 2021; Private applications were removed on 30 September 2021. Partner applications still exist, but the only supported authentication method is OAuth2; these are now referred to as "OAuth2 apps". As Xero no longer supports these older authentication methods, neither does PyXero.
