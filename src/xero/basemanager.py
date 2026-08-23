@@ -23,6 +23,7 @@ from .exceptions import (
     XeroRateLimitExceeded,
     XeroTenantIdNotSet,
     XeroUnauthorized,
+    XeroUnexpectedResponse,
 )
 from .utils import isplural, json_load_object_hook, singular
 
@@ -319,9 +320,24 @@ class BaseManager:
             )
 
             if response.status_code == 200:
+                content_type = response.headers["content-type"]
                 # If we haven't got XML or JSON, assume we're being returned a
-                # binary file
-                if not response.headers["content-type"].startswith("application/json"):
+                # binary file. That assumption is only safe when the caller
+                # actually asked for a non-JSON representation (e.g.
+                # Accept: application/pdf for invoice PDFs, or the attachment
+                # download methods). When the caller expected JSON, an HTML
+                # error page served with a 200 status (issue #225) must raise
+                # instead of coming back as a bytestring.
+                if not content_type.startswith("application/json"):
+                    if headers.get("Accept", "").startswith("application/json"):
+                        raise XeroUnexpectedResponse(
+                            response,
+                            msg=(
+                                "Expected an 'application/json' response but the "
+                                f"server returned '{content_type}' with status 200. "
+                                "The body may be an HTML error page."
+                            ),
+                        )
                     return response.content
 
                 return self._parse_api_response(response, self.name)
@@ -396,7 +412,9 @@ class BaseManager:
     def _get_attachment_data(self, id, filename):
         """Retrieve the contents of a specific attachment (identified by filename)."""
         uri = f"{self.base_url}/{self.name}/{id}/Attachments/{filename}"
-        return uri, {}, "get", None, None, False
+        # Declare the binary representation so _get_data does not mistake an
+        # attachment download for an HTML error page (issue #225).
+        return uri, {}, "get", None, {"Accept": "application/octet-stream"}, False
 
     def get_attachment(self, id, filename, file):
         """Retrieve the contents of a specific attachment (identified by filename).
@@ -409,7 +427,8 @@ class BaseManager:
 
     def _email(self, id):
         uri = f"{self.base_url}/{self.name}/{id}/Email"
-        return uri, {}, "post", None, None, True
+        # The email endpoint returns the invoice as a PDF (issue #225).
+        return uri, {}, "post", None, {"Accept": "application/pdf"}, True
 
     def _online_invoice(self, id):
         uri = f"{self.base_url}/{self.name}/{id}/OnlineInvoice"

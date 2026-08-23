@@ -6,6 +6,10 @@ ChangeLog
 master (unreleased)
 -------------------
 
+    #225 - Raise XeroUnexpectedResponse when a JSON-expecting call receives a
+           non-JSON 200 response (e.g. an HTML error page served with status 200),
+           instead of returning the raw body as if it were data.
+
 .. _v0.9.3:
 
 0.9.3 (2021-06-29)

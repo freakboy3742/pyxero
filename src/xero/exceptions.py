@@ -138,6 +138,13 @@ class XeroNotAvailable(XeroException):
         super().__init__(response, response.text)
 
 
+class XeroUnexpectedResponse(XeroException):
+    # A 200 response arrived with a content type the endpoint never produces,
+    # typically an HTML error page served with a 200 status.
+    def __init__(self, response, msg=None):
+        super().__init__(response, msg)
+
+
 class XeroExceptionUnknown(XeroException):
     # Any other exception.
     pass

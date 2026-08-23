@@ -5,7 +5,7 @@ from io import BytesIO
 from unittest.mock import Mock, patch
 
 from xero.basemanager import XeroObjectList
-from xero.exceptions import XeroExceptionUnknown
+from xero.exceptions import XeroException, XeroExceptionUnknown, XeroUnexpectedResponse
 from xero.manager import Manager
 from xero.utils import generate_idempotency_key
 
@@ -670,6 +670,67 @@ class ManagerTest(unittest.TestCase):
             result.response.headers["Xero-Correlation-Id"],
             "5fe9659e-e5cc-4747-ad01-47adb038bf34",
         )
+
+    @patch("xero.basemanager.requests.get")
+    def test_html_error_page_on_json_endpoint_raises(self, mock_get):
+        """A 200 response carrying an HTML error page should raise, not return
+        a bytestring (issue #225)."""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text="﻿<!DOCTYPE html>\n<html lang=en>\n<title>Xero | Error</title>",
+            headers={
+                "content-type": "text/html; charset=utf-8",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        with self.assertRaises(XeroUnexpectedResponse) as ctx:
+            manager.filter(raw="AmountDue > 0")
+
+        self.assertIsInstance(ctx.exception, XeroException)
+        self.assertIn("text/html", str(ctx.exception))
+        self.assertIn("application/json", str(ctx.exception))
+
+    @patch("xero.basemanager.requests.get")
+    def test_attachment_data_still_returns_bytes(self, mock_get):
+        """Binary downloads through get_attachment_data must keep working."""
+        payload = b"\x25\x50\x44\x46-fake-pdf-bytes"
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            content=payload,
+            headers={
+                "content-type": "application/pdf",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        result = manager.get_attachment_data(id="abc123", filename="invoice.pdf")
+
+        self.assertEqual(result, payload)
+
+    @patch("xero.basemanager.requests.post")
+    def test_email_still_returns_bytes(self, mock_post):
+        """The Invoices.email() convenience returns the PDF bytestring and must
+        not be affected."""
+        payload = b"fake-email-pdf-bytes"
+        mock_post.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            content=payload,
+            headers={
+                "content-type": "application/pdf",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        result = manager.email(id="abc123")
+
+        self.assertEqual(result, payload)
 
     @patch("xero.basemanager.requests.get")
     def test_empty_list_response_carries_response_object(self, mock_get):
