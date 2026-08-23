@@ -808,8 +808,8 @@ class OAuth2ClientCredentials(OAuth2Credentials):
     def refresh(self):
         """Obtain a fresh token.
 
-        The client credentials grant provides no refresh token, so this
-        simply performs the grant again.
+        The client credentials grant provides no refresh token, so this simply performs
+        the grant again.
         """
         return self.fetch_token()
 
