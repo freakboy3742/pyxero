@@ -673,8 +673,8 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.get")
     def test_html_error_page_on_json_endpoint_raises(self, mock_get):
-        """A 200 response carrying an HTML error page should raise, not return
-        a bytestring (issue #225)."""
+        """A 200 response carrying an HTML error page should raise, not return a
+        bytestring (issue #225)."""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -714,8 +714,8 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.post")
     def test_email_still_returns_bytes(self, mock_post):
-        """The Invoices.email() convenience returns the PDF bytestring and must
-        not be affected."""
+        """The Invoices.email() convenience returns the PDF bytestring and must not be
+        affected."""
         payload = b"fake-email-pdf-bytes"
         mock_post.return_value = Mock(
             status_code=200,
