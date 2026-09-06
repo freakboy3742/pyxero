@@ -145,13 +145,13 @@ example at the end)*:
     persist the new state.
 
     ```
- #### Django OAuth2 App Example
- This example shows authorisation, automatic token refreshing and API use in
- a Django app which has read/write access to contacts and transactions. If the
- cache used is cleared on server restart, the token will be lost and
- verification will have to take place again.
+#### Django OAuth2 App Example
+This example shows authorisation, automatic token refreshing and API use in
+a Django app which has read/write access to contacts and transactions. If the
+cache used is cleared on server restart, the token will be lost and
+verification will have to take place again.
 
- ```python
+```python
 from django.http import HttpResponseRedirect
 from django.core.cache import caches
 
@@ -159,36 +159,44 @@ from xero import Xero
 from xero.auth import OAuth2Credentials
 from xero.constants import XeroScopes
 
+
 def start_xero_auth_view(request):
     # Get client_id, client_secret from config file or settings then
     credentials = OAuth2Credentials(
-        client_id, client_secret, callback_uri=callback_uri,
-        scope=[XeroScopes.OFFLINE_ACCESS, XeroScopes.ACCOUNTING_CONTACTS,
-               XeroScopes.ACCOUNTING_TRANSACTIONS]
+        client_id,
+        client_secret,
+        callback_uri=callback_uri,
+        scope=[
+            XeroScopes.OFFLINE_ACCESS,
+            XeroScopes.ACCOUNTING_CONTACTS,
+            XeroScopes.ACCOUNTING_TRANSACTIONS,
+        ],
     )
     authorization_url = credentials.generate_url()
-    caches['mycache'].set('xero_creds', credentials.state)
+    caches["mycache"].set("xero_creds", credentials.state)
     return HttpResponseRedirect(authorization_url)
 
+
 def process_callback_view(request):
-    cred_state = caches['mycache'].get('xero_creds')
+    cred_state = caches["mycache"].get("xero_creds")
     credentials = OAuth2Credentials(**cred_state)
     auth_secret = request.build_absolute_uri()
     credentials.verify(auth_secret)
     credentials.set_default_tenant()
-    caches['mycache'].set('xero_creds', credentials.state)
+    caches["mycache"].set("xero_creds", credentials.state)
+
 
 def some_view_which_calls_xero(request):
-    cred_state = caches['mycache'].get('xero_creds')
+    cred_state = caches["mycache"].get("xero_creds")
     credentials = OAuth2Credentials(**cred_state)
     if credentials.expired():
         credentials.refresh()
-        caches['mycache'].set('xero_creds', credentials.state)
+        caches["mycache"].set("xero_creds", credentials.state)
     xero = Xero(credentials)
 
     contacts = xero.contacts.all()
     ...
- ```
+```
 
 ### Using PKCE Credentials
 
@@ -437,11 +445,13 @@ via setting the Accept header:
 
 ```python
 # Fetch a PDF
-invoice = xero.invoices.get('af722e93-b64f-482d-9955-1b027bfec896', \
-    headers={'Accept': 'application/pdf'})
+invoice = xero.invoices.get(
+    "af722e93-b64f-482d-9955-1b027bfec896",
+    headers={"Accept": "application/pdf"},
+)
 # Stream the PDF to the user (Django specific example)
-response = HttpResponse(invoice, content_type='application/pdf')
-response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
+response = HttpResponse(invoice, content_type="application/pdf")
+response["Content-Disposition"] = 'attachment; filename="invoice.pdf"'
 return response
 ```
 
@@ -530,9 +540,10 @@ xero.invoices.put(invoice)
 key = generate_idempotency_key()
 xero.invoices.put(invoice, idempotency_key=key)
 
-# Any reuse of the same key on a different request (such as the same request but using POST [save] instead of PUT)
-# will raise a 400 Bad Request
-xero.invoices.save(invoice, idempotency_key=key)   # Raises XeroBadRequest: None: No Message Provided
+# Any reuse of the same key on a different request (such as the same request
+# but using POST [save] instead of PUT) will raise a 400 Bad Request.
+The following will raise XeroBadRequest: None: No Message Provided
+xero.invoices.save(invoice, idempotency_key=key)
 ```
 
 
