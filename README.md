@@ -1,53 +1,35 @@
-PyXero
-======
+# PyXero
 
-[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
-[![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
-[![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero)
-[![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE)
-[![Build Status](https://github.com/freakboy3742/pyxero/workflows/CI/badge.svg?branch=main)](https://github.com/freakboy3742/pyxero/actions)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![PyPI Version](https://img.shields.io/pypi/v/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![Maturity](https://img.shields.io/pypi/status/pyxero.svg)](https://pypi.python.org/pypi/pyxero) [![BSD License](https://img.shields.io/pypi/l/pyxero.svg)](https://github.com/freakboy3742/pyxero/blob/master/LICENSE) [![Build Status](https://github.com/freakboy3742/pyxero/workflows/CI/badge.svg?branch=main)](https://github.com/freakboy3742/pyxero/actions)
 
-PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com)
-accounting tool. It allows access to both Public, Private and Partner applications.
+PyXero is a Python API for accessing the REST API provided by the [Xero](https://developer.xero.com) accounting tool. It allows access to both Public, Private and Partner applications.
 
-## Quickstart:
+## Quickstart
 
 Install this library using the python package manager:
 
-```
+```console
 pip install pyxero
 ```
 
 ### Using OAuth2 Credentials
 
-OAuth2 is an open standard authorization protocol that allows users to
-provide specific permissions to apps that want to use their account. OAuth2
-authentication is performed using *tokens* that are obtained using an API;
-these tokens are then provided with each subsequent request.
+OAuth2 is an open standard authorization protocol that allows users to provide specific permissions to apps that want to use their account. OAuth2 authentication is performed using *tokens* that are obtained using an API; these tokens are then provided with each subsequent request.
 
-OAuth2 tokens have a 30 minute expiry, but can be swapped for a new token at any
-time. Xero documentation on the OAuth2 process can be found
-[here](https://developer.xero.com/documentation/oauth2/overview/). The procedure
-for creating and authenticating credentials is as follows *(with a Django
-example at the end)*:
+OAuth2 tokens have a 30 minute expiry, but can be swapped for a new token at any time. Xero documentation on the OAuth2 process can be found [in the Xero docs](https://developer.xero.com/documentation/oauth2/overview/). The procedure for creating and authenticating credentials is as follows *(with a Django example at the end)*:
 
- 1) [Register your app](https://developer.xero.com/myapps) with Xero, using a
-    redirect URI which will be served by your app in order to complete the
-    authorisation e.g. `https://mysite.com/oauth/xero/callback/`. See step 3 for
-    an example of what your app should do. Generate a Client Secret, then store
-    it and the Client Id somewhere that your app can access them, such as a
-    config file.
+1) [Register your app](https://developer.xero.com/myapps) with Xero, using a redirect URI which will be served by your app in order to complete the authorisation e.g. `https://mysite.com/oauth/xero/callback/`. See step 3 for an example of what your app should do. Generate a Client Secret, then store it and the Client Id somewhere that your app can access them, such as a config file.
 
- 2) Construct an `OAuth2Credentials` instance using the details from the first
-    step.
+2) Construct an `OAuth2Credentials` instance using the details from the first step.
+
     ```python
     >>> from xero.auth import OAuth2Credentials
     >>>
     >>> credentials = OAuth2Credentials(client_id, client_secret,
     >>>                                 callback_uri=callback_uri)
     ```
-    If necessary pass in a list of scopes to define the scopes required by your
-    app. E.g. if write access is required to transactions and payroll employees:
+
+    If necessary pass in a list of scopes to define the scopes required by your app. E.g. if write access is required to transactions and payroll employees:
 
     ```python
     >>> from xero.constants import XeroScopes
@@ -57,14 +39,12 @@ example at the end)*:
     >>> credentials = OAuth2Credentials(client_id, client_secret, scope=my_scope
     >>>                                 callback_uri=callback_uri)
     ```
-    The default scopes are `['offline_access', 'accounting.transactions.read',
-    'accounting.contacts.read']`. `offline_access` is required in order for
-    tokens to be refreshable. For more details on scopes see Xero's
-    [documentation]( https://developer.xero.com/documentation/oauth2/scopes).
 
- 3) Generate a Xero authorisation url which the user can visit to complete
-    authorisation. Then store the state of the credentials object and redirect
-    the user to the url in their browser.
+    The default scopes are `['offline_access', 'accounting.transactions.read', 'accounting.contacts.read']`. `offline_access` is required in order for tokens to be refreshable. For more details on scopes see Xero's
+    [documentation](https://developer.xero.com/documentation/oauth2/scopes).
+
+3) Generate a Xero authorisation url which the user can visit to complete authorisation. Then store the state of the credentials object and redirect the user to the url in their browser.
+
     ```python
     >>> authorisation_url = credentials.generate_url()
     >>>
@@ -74,12 +54,11 @@ example at the end)*:
     >>> # then redirect the user to authorisation_url
     ...
     ```
+
     The callback URI should be the redirect URI you used in step 1.
 
- 4) After authorization the user will be redirected from Xero to the
-    callback URI provided in step 1, along with a querystring containing the
-    authentication secret. When your app processes this request, it should pass
-    the full URI including querystring to `verify()`:
+4) After authorization the user will be redirected from Xero to the callback URI provided in step 1, along with a querystring containing the authentication secret. When your app processes this request, it should pass the full URI including querystring to `verify()`:
+
     ```python
     >>> # Recreate the credentials object
     >>> credentials = OAuth2Credentials(**mycache['xero_creds'])
@@ -89,25 +68,25 @@ example at the end)*:
     >>>
     >>> credentials.verify(request_uri)
     ```
-    A token will be fetched from Xero and saved as `credentials.token`. If the
-    credentials object needs to be created again either dump the whole object
-    using:
+
+    A token will be fetched from Xero and saved as `credentials.token`. If the credentials object needs to be created again either dump the whole object using:
+
     ```python
     >>> cred_state = credentials.state
     >>> ...
     >>> new_creds = OAuth2Credentials(**cred_state)
     ```
-    or just use the client_id, client_secret and token (and optionally scopes
-    and tenant_id):
+
+    or just use the client_id, client_secret and token (and optionally scopes and tenant_id):
+
     ```python
     >>> token = credentials.token
     >>> ...
     >>> new_creds = OAuth2Credentials(client_id, client_secret, token=token)
     ```
 
- 5) Now the credentials may be used to authorize a Xero session. As OAuth2
-    allows authentication for multiple Xero Organisations, it is necessary to
-    set the tenant_id against which the xero client's queries will run.
+5) Now the credentials may be used to authorize a Xero session. As OAuth2 allows authentication for multiple Xero Organisations, it is necessary to set the tenant_id against which the xero client's queries will run.
+
     ```python
     >>> from xero import Xero
     >>> # Use the first xero organisation (tenant) permitted
@@ -116,23 +95,21 @@ example at the end)*:
     >>> xero.contacts.all()
     >>> ...
     ```
-    If the scopes supplied in Step 2 did not require access to organisations
-    (e.g. when only requesting scopes for single sign) it will not be
-    possible to make requests with the Xero API and `set_default_tenant()` will
-    raise an exception.
 
-    To pick from multiple possible Xero organisations the `tenant_id` may be set
-    explicitly:
+    If the scopes supplied in Step 2 did not require access to organisations (e.g. when only requesting scopes for single sign) it will not be possible to make requests with the Xero API and `set_default_tenant()` will raise an exception.
+
+    To pick from multiple possible Xero organisations the `tenant_id` may be set explicitly:
+
     ```python
     >>> tenants = credentials.get_tenants()
     >>> credentials.tenant_id = tenants[1]['tenantId']
     >>> xero = Xero(credentials)
     ```
+
     `OAuth2Credentials.__init__()` accepts `tenant_id` as a keyword argument.
 
- 6) When using the API over an extended period, you will need to exchange tokens
-    when they expire. If a refresh token is available, it can be used to
-    generate a new token:
+6) When using the API over an extended period, you will need to exchange tokens when they expire. If a refresh token is available, it can be used to generate a new token:
+
     ```python
     >>> if credentials.expired():
     >>>     credentials.refresh()
@@ -145,11 +122,10 @@ example at the end)*:
     persist the new state.
 
     ```
+
 #### Django OAuth2 App Example
-This example shows authorisation, automatic token refreshing and API use in
-a Django app which has read/write access to contacts and transactions. If the
-cache used is cleared on server restart, the token will be lost and
-verification will have to take place again.
+
+This example shows authorisation, automatic token refreshing and API use in a Django app which has read/write access to contacts and transactions. If the cache used is cleared on server restart, the token will be lost and verification will have to take place again.
 
 ```python
 from django.http import HttpResponseRedirect
@@ -200,38 +176,23 @@ def some_view_which_calls_xero(request):
 
 ### Using PKCE Credentials
 
-PKCE is an alternative flow for providing authentication via OAuth2. It works
-largely the same as the standard OAuth2 mechanism, but unlike the normal flow is
-designed to work with applications which cannot keep private keys secure, such
-as desktop, mobile or single page apps where such secrets could be extracted. A
-client ID is still required.
+PKCE is an alternative flow for providing authentication via OAuth2. It works largely the same as the standard OAuth2 mechanism, but unlike the normal flow is designed to work with applications which cannot keep private keys secure, such as desktop, mobile or single page apps where such secrets could be extracted. A client ID is still required.
 
-As elsewhere, OAuth2 tokens have a 30 minute expiry, but can be only swapped for
-a new token if the `offline_access` scope is requested.
+As elsewhere, OAuth2 tokens have a 30 minute expiry, but can be only swapped for a new token if the `offline_access` scope is requested.
 
-Xero documentation on the PKCE flow can be found
-[here](https://developer.xero.com/documentation/guides/oauth2/pkce-flow). The
-procedure for creating and authenticating credentials is as follows *(with a CLI
-example at the end)*:
+Xero documentation on the PKCE flow can be found [in the Xero docs](https://developer.xero.com/documentation/guides/oauth2/pkce-flow). The procedure for creating and authenticating credentials is as follows *(with a CLI example at the end)*:
 
- 1) [Register your app](https://developer.xero.com/myapps) with Xero, using a
-    redirect URI which will be served by your app in order to complete the
-    authorisation e.g. `http://localhost:<port>/callback/`. You can chose any
-    port, and can pass it to the credentials object on construction, allow with
-    the the Client Id you are provided with.
+1) [Register your app](https://developer.xero.com/myapps) with Xero, using a redirect URI which will be served by your app in order to complete the authorisation e.g. `http://localhost:<port>/callback/`. You can chose any port, and can pass it to the credentials object on construction, allow with the the Client Id you are provided with.
 
- 2) Construct an `OAuth2Credentials` instance using the details from the first
-    step.
+2) Construct an `OAuth2Credentials` instance using the details from the first step.
 
     ```python
     >>> from xero.auth import OAuth2Credentials
     >>>
-    >>> credentials = OAuth2PKCECredentials(client_id,   port=my_port)
+    >>> credentials = OAuth2PKCECredentials(client_id, port=my_port)
     ```
 
-    If necessary, pass in a list of scopes to define the scopes required by
-    your app. E.g. if write access is required to transactions and payroll
-    employees:
+    If necessary, pass in a list of scopes to define the scopes required by your app. E.g. if write access is required to transactions and payroll employees:
 
     ```python
     >>> from xero.constants import XeroScopes
@@ -242,35 +203,21 @@ example at the end)*:
     >>>                                 port=my_port)
     ```
 
-    The default scopes are `['offline_access', 'accounting.transactions.read',
-    'accounting.contacts.read']`. `offline_access` is required in order for
-    tokens to be refreshable. For more details on scopes see [Xero's
-    documentation on oAuth2
-    scopes](https://developer.xero.com/documentation/oauth2/scopes).
+    The default scopes are `['offline_access', 'accounting.transactions.read', 'accounting.contacts.read']`. `offline_access` is required in order for tokens to be refreshable. For more details on scopes see [Xero's documentation on oAuth2 scopes](https://developer.xero.com/documentation/oauth2/scopes).
 
- 3) Call `credentials.logon()` . This will open a browser window, an visit
-    a Xero authentication page.
+3) Call `credentials.logon()` . This will open a browser window, an visit a Xero authentication page.
 
     ```python
     >>> credentials.logon()
     ```
 
-    The Authenticator will also start a local webserver on the provided port.
-    This webserver will be used to collect the tokens that Xero returns.
+    The Authenticator will also start a local webserver on the provided port. This webserver will be used to collect the tokens that Xero returns.
 
-    The default `PCKEAuthReceiver` class has no response pages defined so the
-    browser will show an error, on empty page for all transactions. But the
-    application is now authorised and will continue. If you wish you can
-    override the `send_access_ok()` method, and the `send_error_page()` method
-    to create a more userfriendly experience.
+    The default `PCKEAuthReceiver` class has no response pages defined so the browser will show an error, on empty page for all transactions. But the application is now authorised and will continue. If you wish you can override the `send_access_ok()` method, and the `send_error_page()` method to create a more userfriendly experience.
 
-    In either case once the callback url has been visited the local server will
-    shutdown.
+    In either case once the callback url has been visited the local server will shutdown.
 
- 4) You can now continue as per the normal OAuth2 flow. Now the credentials may
-    be used to authorize a Xero session. As OAuth2 allows authentication for
-    multiple Xero Organisations, it is necessary to set the tenant_id against
-    which the xero client's queries will run.
+4) You can now continue as per the normal OAuth2 flow. Now the credentials may be used to authorize a Xero session. As OAuth2 allows authentication for multiple Xero Organisations, it is necessary to set the tenant_id against which the xero client's queries will run.
 
     ```python
     >>> from xero import Xero
@@ -280,24 +227,20 @@ example at the end)*:
     >>> xero.contacts.all()
     >>> ...
     ```
-    If the scopes supplied in Step 2 did not require access to organisations
-    (e.g. when only requesting scopes for single sign) it will not be possible
-    to make requests with the Xero API and `set_default_tenant()` will raise an
-    exception.
 
-    To pick from multiple possible Xero organisations the `tenant_id` may be set
-    explicitly:
+    If the scopes supplied in Step 2 did not require access to organisations (e.g. when only requesting scopes for single sign) it will not be possible to make requests with the Xero API and `set_default_tenant()` will raise an exception.
+
+    To pick from multiple possible Xero organisations the `tenant_id` may be set explicitly:
 
     ```python
     >>> tenants = credentials.get_tenants()
     >>> credentials.tenant_id = tenants[1]['tenantId']
     >>> xero = Xero(credentials)
     ```
+
     `OAuth2Credentials.__init__()` accepts `tenant_id` as a keyword argument.
 
- 5) When using the API over an extended period, you will need to exchange tokens
-    when they expire. If a refresh token is available, it can be used to
-    generate a new token:
+5) When using the API over an extended period, you will need to exchange tokens when they expire. If a refresh token is available, it can be used to generate a new token:
 
     ```python
     >>> if credentials.expired():
@@ -314,11 +257,9 @@ example at the end)*:
 
 #### CLI OAuth2 App Example
 
-This example shows authorisation, automatic token refreshing and API use in
-a Django app which has read/write access to contacts and transactions.
+This example shows authorisation, automatic token refreshing and API use in a Django app which has read/write access to contacts and transactions.
 
-Each time this app starts it asks for authentication, but you
-could consider using the user `keyring` to store tokens.
+Each time this app starts it asks for authentication, but you could consider using the user `keyring` to store tokens.
 
 ```python
 from xero import Xero
@@ -338,25 +279,15 @@ for contacts in xero.contacts.all()
     print contact["Name"]
 ```
 
-### Older authentication methods ###
+### Older authentication methods
 
-In the past, Xero had the concept of "Public", "Private", and "Partner"
-applications, which each had their own authentication procedures. However,
-they removed access for Public applications on 31 March 2021; Private
-applications were removed on 30 September 2021. Partner applications
-still exist, but the only supported authentication method is OAuth2; these
-are now referred to as "OAuth2 apps". As Xero no longer supports these older
-authentication methods, neither does PyXero.
+In the past, Xero had the concept of "Public", "Private", and "Partner" applications, which each had their own authentication procedures. However, they removed access for Public applications on 31 March 2021; Private applications were removed on 30 September 2021. Partner applications still exist, but the only supported authentication method is OAuth2; these are now referred to as "OAuth2 apps". As Xero no longer supports these older authentication methods, neither does PyXero.
 
 ## Using the Xero API
 
-*This API is a work in progress. At present, there is no wrapper layer
-to help create real objects, it just returns dictionaries in the exact
-format provided by the Xero API. This will change into a more useful API
-before 1.0*
+This API is a work in progress. At present, there is no wrapper layer to help create real objects, it just returns dictionaries in the exact format provided by the Xero API. This will change into a more useful API before 1.0.
 
-The Xero API object exposes a simple API for retrieving and updating objects.
-For example, to deal with contacts::
+The Xero API object exposes a simple API for retrieving and updating objects. For example, to deal with contacts::
 
 ```python
 # Retrieve all contact objects
@@ -419,13 +350,12 @@ Complex filters can be constructed in the Django-way, for example retrieving inv
 ```
 
 Filters which aren't supported by this API can also be constructed using 'raw' mode like this:
+
 ```python
 >>> xero.invoices.filter(raw='AmountDue > 0')
 ```
 
-Be careful when dealing with large amounts of data, the Xero API will take an
-increasingly long time to respond, or an error will be returned. If a query might
-return more than 100 results, you should make use of the ``page`` parameter::
+Be careful when dealing with large amounts of data, the Xero API will take an increasingly long time to respond, or an error will be returned. If a query might return more than 100 results, you should make use of the `page` parameter::
 
 ```python
 # Grab 100 invoices created after 01-01-2013
@@ -440,8 +370,7 @@ You can also order the results to be returned::
 >>> xero.contacts.filter(order='EmailAddress DESC')
 ```
 
-For invoices (and other objects that can be retrieved as PDFs), accessing the PDF is done
-via setting the Accept header:
+For invoices (and other objects that can be retrieved as PDFs), accessing the PDF is done via setting the Accept header:
 
 ```python
 # Fetch a PDF
@@ -506,11 +435,10 @@ This same API pattern exists for the following API objects:
 * TrackingCategories
 * Users
 
-
 ## Idempotent Requests
-Xero [supports idempotent requests](https://developer.xero.com/documentation/guides/idempotent-requests/idempotency)
-to its API to prevent accidentally repeating actions when modifying data. PyXero accepts an `idempotency_key` keyword
-argument on the following manager methods:
+
+Xero [supports idempotent requests](https://developer.xero.com/documentation/guides/idempotent-requests/idempotency) to its API to prevent accidentally repeating actions when modifying data. PyXero accepts an `idempotency_key` keyword argument on the following manager methods:
+
 * put
 * save
 * put_history_data
@@ -518,8 +446,7 @@ argument on the following manager methods:
 * put_attachment_data
 * put_attachment
 
-You can use any string up to 128 characters in length as an idempotency key, A helper function is provided to
-generate strings according to Xero's recommended method of concatenating four UUIDs together (without hyphens).
+You can use any string up to 128 characters in length as an idempotency key, A helper function is provided to generate strings according to Xero's recommended method of concatenating four UUIDs together (without hyphens).
 
 ```python3
 from xero.utils import generate_idempotency_key
@@ -546,12 +473,11 @@ The following will raise XeroBadRequest: None: No Message Provided
 xero.invoices.save(invoice, idempotency_key=key)
 ```
 
-
 ## Payroll
 
 In order to access the payroll methods from Xero, you can do it like this:
 
-```
+```text
 xero.payrollAPI.payruns.all()
 ```
 
@@ -566,12 +492,11 @@ Within the payrollAPI you have access to:
 * superfunds
 * timesheets
 
-
 ## Projects
 
 In order to access the projects methods from Xero, you can do it like this:
 
-```
+```text
 xero.projectsAPI.projects.all()
 ```
 
@@ -582,11 +507,9 @@ Within the projectsAPI you have access to:
 * tasks
 * time
 
-
 ## Under the hood
 
-Using a wrapper around Xero API is a really nice feature, but it's also interesting to understand what is exactly
-happening under the hood.
+Using a wrapper around Xero API is a really nice feature, but it's also interesting to understand what is exactly happening under the hood.
 
 ### Filter operator
 
@@ -614,6 +537,7 @@ Non encoded:  <XERO_API_URL>/Contacts?where=lastname=="Doe"&&firstname=="John"
 ```
 
 Underscores are automatically converted as "dots":
+
 ```python
 # Retrieves all contacts whose name is "John"
 >>> xero.contacts.filter(first_name="John")
@@ -625,25 +549,20 @@ Non encoded:  <XERO_API_URL>/Contacts?where=first.name=="John"
 
 ## Contributing
 
-If you're going to run the PyXero test suite, in addition to the dependencies
-for PyXero, you need to add the following dependency to your environment:
+If you're going to run the PyXero test suite, in addition to the dependencies for PyXero, you need to add the following dependency to your environment:
 
-    mock >= 1.0
+```text
+mock >= 1.0
+```
 
-Mock isn't included in the formal dependencies because they aren't required
-for normal operation of PyXero. It's only required for testing purposes.
+Mock isn't included in the formal dependencies because they aren't required for normal operation of PyXero. It's only required for testing purposes.
 
-Once you've installed these dependencies, you can run the test suite by
-running the following from the root directory of the project:
+Once you've installed these dependencies, you can run the test suite by running the following from the root directory of the project:
 
-    $ tox -e py
+```text
+$ tox -e py
+```
 
-If you find any problems with PyXero, you can log them on [Github Issues](https://github.com/freakboy3742/pyxero/issues).
-When reporting problems, it's extremely helpful if you can provide
-reproduction instructions -- the sequence of calls and/or test data that
-can be used to reproduce the issue.
+If you find any problems with PyXero, you can log them on [Github Issues](https://github.com/freakboy3742/pyxero/issues). When reporting problems, it's extremely helpful if you can provide reproduction instructions -- the sequence of calls and/or test data that can be used to reproduce the issue.
 
-New features or bug fixes can be submitted via a pull request. If you want
-your pull request to be merged quickly, make sure you either include
-regression test(s) for the behavior you are adding/fixing, or provide a
-good explanation of why a regression test isn't possible.
+New features or bug fixes can be submitted via a pull request. If you want your pull request to be merged quickly, make sure you either include regression test(s) for the behavior you are adding/fixing, or provide a good explanation of why a regression test isn't possible.
