@@ -475,24 +475,19 @@ xero.invoices.save(invoice, idempotency_key=key)
 
 ### Unexpected responses
 
-Xero sometimes serves an HTML error page with a `200 OK` status. When that happens on
-a call that expects JSON data, pyxero raises `XeroUnexpectedResponse` instead of
-returning the HTML body as if it were your data:
+Xero sometimes serves an HTML error page with a `200 OK` status. When that happens on a call that expects JSON data, pyxero raises `XeroUnexpectedResponse` instead of returning the HTML body as if it were your data:
 
 ```python
 from xero.exceptions import XeroUnexpectedResponse
 
 try:
-    invoices = xero.invoices.filter(raw='AmountDue > 0')
+    invoices = xero.invoices.filter(raw="AmountDue > 0")
 except XeroUnexpectedResponse:
     # The server returned something other than JSON, usually an error page.
     ...
 ```
 
-Calls that legitimately fetch binary content are unaffected: PDFs requested via
-`headers={'Accept': 'application/pdf'}`, attachment downloads via `get_attachment_data()`,
-and `email()` all still return the raw bytes.
-
+Calls that legitimately fetch binary content are unaffected: PDFs requested via `headers={'Accept': 'application/pdf'}`, attachment downloads via `get_attachment_data()`, and `email()` all still return the raw bytes.
 
 ## Payroll
 
