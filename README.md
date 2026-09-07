@@ -285,8 +285,7 @@ For server-to-server integrations with a single organisation, Xero supports
 [custom connections](https://developer.xero.com/documentation/guides/oauth2/custom-connections),
 which use the OAuth2
 [client credentials grant](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4).
-There is no user consent step: the application authenticates as itself, and
-each custom connection can access only one organisation.
+There is no user consent step: the application authenticates as itself, and each custom connection can access only one organisation.
 
 1) Construct an `OAuth2ClientCredentials` instance and fetch a token:
 
@@ -297,8 +296,7 @@ each custom connection can access only one organisation.
     >>> credentials.fetch_token()
     ```
 
-2) Use the credentials. As with other OAuth2 flows, set the tenant id
-   (Xero organisation id) before making API calls:
+2) Use the credentials. As with other OAuth2 flows, set the tenant id    (Xero organisation id) before making API calls:
 
     ```python
     >>> from xero import Xero
@@ -308,16 +306,14 @@ each custom connection can access only one organisation.
     >>> xero.contacts.all()
     ```
 
-3) The client credentials grant issues no refresh token. When the token
-   expires, simply perform the grant again:
+3) The client credentials grant issues no refresh token. When the token    expires, simply perform the grant again:
 
     ```python
     >>> if credentials.expired():
     >>>     credentials.fetch_token()
     ```
 
-As with other credential types, `credentials.state` can be persisted and used
-to reconstruct the object later.
+As with other credential types, `credentials.state` can be persisted and used to reconstruct the object later.
 
 A complete example with scopes:
 
