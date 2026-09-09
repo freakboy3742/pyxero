@@ -796,7 +796,14 @@ class OAuth2ClientCredentials(OAuth2Credentials):
         with self._token_fetch_lock:
             response = requests.post(
                 url=XERO_OAUTH2_TOKEN_URL,
-                data={"grant_type": "client_credentials"},
+                data={
+                    "grant_type": "client_credentials",
+                    "scope": (
+                        self.scope
+                        if isinstance(self.scope, str)
+                        else " ".join(self.scope)
+                    ),
+                },
                 auth=(self.client_id, self.client_secret),
                 headers=self.headers,
             )

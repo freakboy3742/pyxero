@@ -827,7 +827,9 @@ class OAuth2ClientCredentialsTest(unittest.TestCase):
 
     def test_fetch_token_performs_client_credentials_grant(self):
         credentials = OAuth2ClientCredentials(
-            client_id="client_id", client_secret="client_secret"
+            client_id="client_id",
+            client_secret="client_secret",
+            scope=["accounting.transactions", "accounting.settings"],
         )
 
         with patch("xero.auth.requests.post") as r_post:
@@ -838,7 +840,13 @@ class OAuth2ClientCredentialsTest(unittest.TestCase):
         self.assertTrue(r_post.called)
         _args, kwargs = r_post.call_args
         self.assertEqual(kwargs["url"], "https://identity.xero.com/connect/token")
-        self.assertEqual(kwargs["data"], {"grant_type": "client_credentials"})
+        self.assertEqual(
+            kwargs["data"],
+            {
+                "grant_type": "client_credentials",
+                "scope": "accounting.transactions accounting.settings",
+            },
+        )
         self.assertEqual(kwargs["auth"], ("client_id", "client_secret"))
 
         # The token is usable by the xero client
