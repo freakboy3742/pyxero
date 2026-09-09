@@ -296,7 +296,7 @@ There is no user consent step: the application authenticates as itself, and each
     >>> credentials.fetch_token()
     ```
 
-2) Use the credentials. As with other OAuth2 flows, set the tenant id    (Xero organisation id) before making API calls:
+2) Use the credentials. As with other OAuth2 flows, set the tenant id (Xero organisation id) before making API calls:
 
     ```python
     >>> from xero import Xero
@@ -306,7 +306,7 @@ There is no user consent step: the application authenticates as itself, and each
     >>> xero.contacts.all()
     ```
 
-3) The client credentials grant issues no refresh token. When the token    expires, simply perform the grant again:
+3) The client credentials grant issues no refresh token. When the token expires, simply perform the grant again:
 
     ```python
     >>> if credentials.expired():
