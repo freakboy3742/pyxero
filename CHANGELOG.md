@@ -1,4 +1,4 @@
-# ChangeLog
+# Changelog
 
 ## Unreleased
 
@@ -10,6 +10,7 @@
 - #384 - `Manager.save()` now accepts a `summarize_errors` boolean, matching `.put()`
 - #381 - Fixed a timesheet XML serialization bug with `NumberOfUnits`
 - #392 - Clarified `datetime` import and added a relative-date example in the README
+- Dropped support for Python 3.9 and 3.10; add support for Python 3.15
 
 ## 0.9.5 (2025-06-05)
 
