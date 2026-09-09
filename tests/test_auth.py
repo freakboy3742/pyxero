@@ -870,6 +870,17 @@ class OAuth2ClientCredentialsTest(unittest.TestCase):
         # The token is not yet expired
         self.assertFalse(credentials.expired())
 
+    def test_fetch_token_preserves_a_space_separated_scope(self):
+        scope = "accounting.transactions accounting.settings"
+        credentials = OAuth2ClientCredentials(
+            client_id="client_id", client_secret="client_secret", scope=scope
+        )
+        with patch("xero.auth.requests.post") as r_post:
+            r_post.return_value = self._token_response()
+            credentials.fetch_token()
+
+        self.assertEqual(r_post.call_args.kwargs["data"]["scope"], scope)
+
     def test_state_round_trip_restores_working_oauth(self):
         credentials = OAuth2ClientCredentials(
             client_id="client_id", client_secret="client_secret"
