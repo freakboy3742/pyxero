@@ -1,6 +1,5 @@
 import datetime
 import re
-import sys
 import uuid
 
 import requests
@@ -95,20 +94,11 @@ def parse_date(string, force_datetime=False):
     }
 
     if "timestamp" in values:
-        if sys.version_info < (3, 11):
-            value = datetime.datetime.utcfromtimestamp(0) + datetime.timedelta(
-                hours=int(values.get("offset_h", 0)),
-                minutes=int(values.get("offset_m", 0)),
-                seconds=int(values["timestamp"]) / 1000.0,
-            )
-        else:
-            value = datetime.datetime.fromtimestamp(
-                0, datetime.UTC
-            ) + datetime.timedelta(
-                hours=int(values.get("offset_h", 0)),
-                minutes=int(values.get("offset_m", 0)),
-                seconds=int(values["timestamp"]) / 1000.0,
-            )
+        value = datetime.datetime.fromtimestamp(0, datetime.UTC) + datetime.timedelta(
+            hours=int(values.get("offset_h", 0)),
+            minutes=int(values.get("offset_m", 0)),
+            seconds=int(values["timestamp"]) / 1000.0,
+        )
         return value
 
     # I've made an assumption here, that a DateTime value will not
