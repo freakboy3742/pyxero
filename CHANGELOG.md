@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- #440 - Add OAuth2ClientCredentials for Custom Connections, including configured scopes in token requests.
 - #225 - Raise XeroUnexpectedResponse when a JSON-expecting call receives a non-JSON 200 response (e.g. an HTML error page served with status 200)
 - #431 - Expose the underlying response object (headers, rate-limit info) alongside parsed list data
 - #393 - Support idempotent requests via an idempotency key header

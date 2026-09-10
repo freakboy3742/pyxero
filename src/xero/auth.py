@@ -4,6 +4,7 @@ import hashlib
 import http.server
 import secrets
 import threading
+import time
 import webbrowser
 from functools import partial
 from urllib.parse import parse_qs, urlencode, urlparse
@@ -711,6 +712,104 @@ class OAuth2Credentials:
                 raise XeroNotAvailable(response)
         else:
             raise XeroExceptionUnknown(response)
+
+
+class OAuth2ClientCredentials(OAuth2Credentials):
+    """An object wrapping the OAuth2 client credentials flow for Xero API access.
+
+    This flow suits "Custom Connections": an app authenticating as itself
+    (machine-to-machine) rather than on behalf of a user. A custom connection
+    is bound to a single organisation and requires a paid plan; see Xero's
+    documentation for the current limits.
+
+    Usage:
+
+     1) Construct an `OAuth2ClientCredentials` instance and fetch a token:
+
+        >>> from xero.auth import OAuth2ClientCredentials
+        >>> from xero.constants import XeroScopes
+        >>>
+        >>> credentials = OAuth2ClientCredentials(
+        >>>     client_id, client_secret, scope=[XeroScopes.ACCOUNTING_CONTACTS]
+        >>> )
+        >>> credentials.fetch_token()
+
+     2) Use the credentials. Set the tenant id (Xero organisation id) before
+        making API calls:
+
+        >>> from xero import Xero
+        >>> credentials.set_default_tenant()
+        >>> xero = Xero(credentials)
+        >>> xero.contacts.all()
+        ...
+
+     3) The client credentials grant issues no refresh token. When the token
+        expires, perform the grant again:
+
+        >>> if credentials.expired():
+        >>>     credentials.fetch_token()
+
+    As with other credential types, ``credentials.state`` can be persisted and
+    used to reconstruct the object later.
+    """
+
+    def __init__(
+        self,
+        client_id,
+        client_secret,
+        token=None,
+        scope=None,
+        tenant_id=None,
+        user_agent=None,
+        relax_token_scope=False,
+    ):
+        self._token_fetch_lock = threading.Lock()
+        super().__init__(
+            client_id=client_id,
+            client_secret=client_secret,
+            token=token,
+            scope=scope,
+            tenant_id=tenant_id,
+            user_agent=user_agent,
+            relax_token_scope=relax_token_scope,
+        )
+
+    def _init_oauth(self, token):
+        """Set self._oauth, deriving expires_at from expires_in if needed."""
+        if token and "expires_at" not in token:
+            token["expires_at"] = time.time() + int(
+                token.get("expires_in", OAUTH_EXPIRY_SECONDS)
+            )
+        super()._init_oauth(token)
+
+    def fetch_token(self):
+        """Obtain an access token using the client credentials grant."""
+        with self._token_fetch_lock:
+            response = requests.post(
+                url=XERO_OAUTH2_TOKEN_URL,
+                data={
+                    "grant_type": "client_credentials",
+                    "scope": (
+                        self.scope
+                        if isinstance(self.scope, str)
+                        else " ".join(self.scope)
+                    ),
+                },
+                auth=(self.client_id, self.client_secret),
+                headers=self.headers,
+            )
+            if response.status_code != 200:
+                self._handle_error_response(response)
+            self._init_oauth(response.json())
+            return self.token
+
+    def refresh(self):
+        """Obtain a fresh token.
+
+        The client credentials grant provides no refresh token, so this simply performs
+        the grant again.
+        """
+        return self.fetch_token()
 
 
 class PKCEAuthReceiver(http.server.BaseHTTPRequestHandler):
