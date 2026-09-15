@@ -4,7 +4,7 @@ import io
 import json
 from datetime import date, datetime
 from typing import BinaryIO
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, quote
 from uuid import UUID
 from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.parsers.expat import ExpatError
@@ -411,7 +411,7 @@ class BaseManager:
 
     def _get_attachment_data(self, id, filename):
         """Retrieve the contents of a specific attachment (identified by filename)."""
-        uri = f"{self.base_url}/{self.name}/{id}/Attachments/{filename}"
+        uri = f"{self.base_url}/{self.name}/{id}/Attachments/{quote(filename, safe='')}"
         # Declare the binary representation so _get_data does not mistake an
         # attachment download for an HTML error page (issue #225).
         return uri, {}, "get", None, {"Accept": "application/octet-stream"}, False
@@ -592,7 +592,7 @@ class BaseManager:
             https://developer.xero.com/documentation/guides/idempotent-
             requests/idempotency/ for more information.
         """
-        uri = f"{self.base_url}/{self.name}/{id}/Attachments/{filename}"
+        uri = f"{self.base_url}/{self.name}/{id}/Attachments/{quote(filename, safe='')}"
         params = {"IncludeOnline": "true"} if include_online else {}
         headers = {"Content-Type": content_type, "Content-Length": str(len(data))}
         if idempotency_key:
