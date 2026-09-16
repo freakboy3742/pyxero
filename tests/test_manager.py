@@ -714,7 +714,7 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.get")
     def test_get_attachment_filename_is_url_encoded(self, mock_get):
-        """Attachment filenames are percent-encoded in the request URL (#443)."""
+        """Attachment filenames are percent-encoded in the request URL."""
         mock_get.return_value = Mock(
             status_code=200,
             encoding="utf-8",
@@ -735,23 +735,24 @@ class ManagerTest(unittest.TestCase):
 
     @patch("xero.basemanager.requests.put")
     def test_put_attachment_filename_is_url_encoded(self, mock_put):
-        """Uploaded attachment filenames are percent-encoded in the request URL
-        (#443)."""
+        """Uploaded attachment filenames are percent-encoded in the request URL."""
+        mock_put.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Attachments": []}',
+            headers={
+                "content-type": "application/json",
+            },
+        )
         credentials = Mock(base_url="", user_agent=None)
         manager = Manager("Invoices", credentials)
 
-        try:
-            # Try/Except here because we're not actually talking to Xero
-            # and PyXero will raise an error about not knowing what to do with
-            # the response (we don't care, just checking the URL!)
-            manager.put_attachment(
-                id="abc123",
-                filename="Test #1.pdf",
-                content_type="application/pdf",
-                file=BytesIO(b"foobar"),
-            )
-        except XeroExceptionUnknown:
-            pass
+        manager.put_attachment(
+            id="abc123",
+            filename="Test #1.pdf",
+            content_type="application/pdf",
+            file=BytesIO(b"foobar"),
+        )
 
         uri = mock_put.mock_calls[0][1][0]
         self.assertEqual(
