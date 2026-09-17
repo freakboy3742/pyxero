@@ -712,6 +712,53 @@ class ManagerTest(unittest.TestCase):
 
         self.assertEqual(result, payload)
 
+    @patch("xero.basemanager.requests.get")
+    def test_get_attachment_filename_is_url_encoded(self, mock_get):
+        """Attachment filenames are percent-encoded in the request URL."""
+        mock_get.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            content=b"pdf-bytes",
+            headers={
+                "content-type": "application/pdf",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        manager.get_attachment_data(id="abc123", filename="Test #1.pdf")
+
+        uri = mock_get.mock_calls[0][1][0]
+        self.assertEqual(
+            uri, "/api.xro/2.0/Invoices/abc123/Attachments/Test%20%231.pdf"
+        )
+
+    @patch("xero.basemanager.requests.put")
+    def test_put_attachment_filename_is_url_encoded(self, mock_put):
+        """Uploaded attachment filenames are percent-encoded in the request URL."""
+        mock_put.return_value = Mock(
+            status_code=200,
+            encoding="utf-8",
+            text='{"Status": "OK", "Attachments": []}',
+            headers={
+                "content-type": "application/json",
+            },
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        manager = Manager("Invoices", credentials)
+
+        manager.put_attachment(
+            id="abc123",
+            filename="Test #1.pdf",
+            content_type="application/pdf",
+            file=BytesIO(b"foobar"),
+        )
+
+        uri = mock_put.mock_calls[0][1][0]
+        self.assertEqual(
+            uri, "/api.xro/2.0/Invoices/abc123/Attachments/Test%20%231.pdf"
+        )
+
     @patch("xero.basemanager.requests.post")
     def test_email_still_returns_bytes(self, mock_post):
         """The Invoices.email() convenience returns the PDF bytestring and must not be
