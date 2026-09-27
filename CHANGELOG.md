@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- #160 - Raise `XeroBadRequest` and `XeroUnauthorized` carrying the response text, instead of `KeyError` or `IndexError`, when an error body lacks the expected OAuth or ApiException fields
 - #383 - Add the Budgets and LinkedTransactions endpoints; their documented query parameters (such as `DateFrom`, `SourceTransactionID` and `Status`) are sent as query parameters rather than `where` filters; `Organisations` and `PaymentServices` gain singular names
 - #443 - Percent-encode attachment filenames in request URLs, so names containing `#` and other special characters can be downloaded and uploaded
 - #440 - Add OAuth2ClientCredentials for Custom Connections, including configured scopes in token requests.

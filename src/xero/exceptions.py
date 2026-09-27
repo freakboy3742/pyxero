@@ -24,12 +24,26 @@ class XeroTenantIdNotSet(Exception):
     pass
 
 
+def _oauth_problem(text):
+    """Return (problem, advice) from a form-encoded OAuth error body, or None."""
+    payload = parse_qs(text)
+    if "oauth_problem" not in payload:
+        return None
+    problem = payload["oauth_problem"][0]
+    return problem, payload.get("oauth_problem_advice", [problem])[0]
+
+
 class XeroBadRequest(XeroException):
     # HTTP 400: Bad Request
     def __init__(self, response):
-        if response.headers["content-type"].startswith("application/json"):
+        content_type = response.headers.get("content-type", "")
+        if content_type.startswith("application/json"):
             data = json.loads(response.text)
-            msg = f"{data['Type']}: {(data.get('Message') or 'No Message Provided')}"
+            # ApiException bodies carry Type and Message; problem details bodies
+            # (such as the OAuth2 layer's) carry Title and Detail instead.
+            error_type = data.get("Type") or data.get("Title") or "Error"
+            message = data.get("Message") or data.get("Detail") or "No Message Provided"
+            msg = f"{error_type}: {message}"
             self.errors = [
                 err["Message"]
                 for elem in data.get("Elements", [])
@@ -45,12 +59,12 @@ class XeroBadRequest(XeroException):
                 self.problem = None
             super().__init__(response, msg=msg)
 
-        elif response.headers["content-type"].startswith("text/html"):
-            payload = parse_qs(response.text)
-            if payload:
-                self.errors = [payload["oauth_problem"][0]]
-                self.problem = self.errors[0]
-                super().__init__(response, payload["oauth_problem_advice"][0])
+        elif content_type.startswith("text/html"):
+            oauth_problem = _oauth_problem(response.text)
+            if oauth_problem:
+                self.problem, advice = oauth_problem
+                self.errors = [self.problem]
+                super().__init__(response, advice)
             else:
                 # Sometimes xero returns the error message as pure text
                 # Not sure how to validate this is always the case
@@ -65,24 +79,29 @@ class XeroBadRequest(XeroException):
 
             msg = messages[0].childNodes[0].data
             self.errors = [m.childNodes[0].data for m in messages[1:]]
-            self.problem = self.errors[0]
+            self.problem = self.errors[0] if self.errors else None
             super().__init__(response, msg)
 
 
 class XeroUnauthorized(XeroException):
     # HTTP 401: Unauthorized
     def __init__(self, response):
-        if response.headers["content-type"].startswith("application/json"):
+        if response.headers.get("content-type", "").startswith("application/json"):
             data = json.loads(response.text)
-            msg = data.get("Detail", "")
+            msg = data.get("Detail") or ""
             self.errors = [msg.split(":")[0]]
             self.problem = self.errors[0]
             super().__init__(response, msg)
         else:
-            payload = parse_qs(response.text)
-            self.errors = [payload["oauth_problem"][0]]
-            self.problem = self.errors[0]
-            super().__init__(response, payload["oauth_problem_advice"][0])
+            oauth_problem = _oauth_problem(response.text)
+            if oauth_problem:
+                self.problem, advice = oauth_problem
+                self.errors = [self.problem]
+                super().__init__(response, advice)
+            else:
+                self.errors = [response.text]
+                self.problem = response.text
+                super().__init__(response, response.text)
 
 
 class XeroForbidden(XeroException):
