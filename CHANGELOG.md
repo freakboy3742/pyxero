@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- #383 - Add the Budgets and LinkedTransactions endpoints; their documented query parameters (such as `DateFrom`, `SourceTransactionID` and `Status`) are sent as query parameters rather than `where` filters
 - #443 - Percent-encode attachment filenames in request URLs, so names containing `#` and other special characters can be downloaded and uploaded
 - #440 - Add OAuth2ClientCredentials for Custom Connections, including configured scopes in token requests.
 - #225 - Raise XeroUnexpectedResponse when a JSON-expecting call receives a non-JSON 200 response (e.g. an HTML error page served with status 200)

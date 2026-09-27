@@ -4,6 +4,7 @@ import unittest
 from io import BytesIO
 from unittest.mock import Mock, patch
 
+from xero.api import Xero
 from xero.basemanager import XeroObjectList
 from xero.exceptions import XeroException, XeroExceptionUnknown, XeroUnexpectedResponse
 from xero.manager import Manager
@@ -242,6 +243,81 @@ class ManagerTest(unittest.TestCase):
             "IDs": "3e776c4bea9e4bb196be6b0c7a71a37f,12345678901234567890123456789012"
         }
         self.assertEqual(params, expected_params)
+
+    def test_budgets_and_linked_transactions_are_exposed(self):
+        """The Xero client should expose Budgets and LinkedTransactions."""
+        xero = Xero(Mock(base_url=""))
+
+        self.assertEqual(xero.budgets.name, "Budgets")
+        self.assertEqual(xero.budgets.singular, "Budget")
+        self.assertEqual(xero.linkedtransactions.name, "LinkedTransactions")
+        self.assertEqual(xero.linkedtransactions.singular, "LinkedTransaction")
+
+    def test_budgets_filter_uses_query_parameters(self):
+        """Budget filters should be sent as query parameters, not a where clause."""
+        credentials = Mock(base_url="")
+        manager = Manager("Budgets", credentials)
+
+        _uri, params, method, _body, _headers, singleobject = manager._filter(
+            DateFrom=datetime.date(2026, 7, 1),
+            DateTo=datetime.date(2027, 6, 30),
+            IDs=["3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f"],
+        )
+
+        self.assertEqual(method, "get")
+        self.assertFalse(singleobject)
+        self.assertEqual(
+            params,
+            {
+                "DateFrom": "2026-7-1",
+                "DateTo": "2027-6-30",
+                "IDs": "3e776c4bea9e4bb196be6b0c7a71a37f",
+            },
+        )
+
+    def test_linked_transactions_filter_uses_query_parameters(self):
+        """Linked transaction filters should be sent as query parameters."""
+        credentials = Mock(base_url="")
+        manager = Manager("LinkedTransactions", credentials)
+        guid = "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f"
+
+        _uri, params, _method, _body, _headers, _singleobject = manager._filter(
+            SourceTransactionID=guid,
+            ContactID=guid,
+            Status="APPROVED",
+            page=2,
+        )
+
+        self.assertEqual(
+            params,
+            {
+                "SourceTransactionID": "3e776c4bea9e4bb196be6b0c7a71a37f",
+                "ContactID": "3e776c4bea9e4bb196be6b0c7a71a37f",
+                "Status": "APPROVED",
+                "page": 2,
+            },
+        )
+
+    def test_linked_transaction_save_uses_singular_root(self):
+        """A single linked transaction should be sent as a LinkedTransaction element."""
+        credentials = Mock(base_url="")
+        manager = Manager("LinkedTransactions", credentials)
+
+        body = manager._prepare_data_for_save(
+            {
+                "SourceTransactionID": "3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f",
+                "SourceLineItemID": "12345678-1234-1234-1234-123456789012",
+            }
+        )
+
+        assertXMLEqual(
+            self,
+            body.decode("utf-8"),
+            "<LinkedTransaction>"
+            "<SourceTransactionID>3e776c4b-ea9e-4bb1-96be-6b0c7a71a37f</SourceTransactionID>"
+            "<SourceLineItemID>12345678-1234-1234-1234-123456789012</SourceLineItemID>"
+            "</LinkedTransaction>",
+        )
 
     def test_rawfilter(self):
         """The filter function should correctly handle various arguments."""
