@@ -253,9 +253,10 @@ class ManagerTest(unittest.TestCase):
                 manager = getattr(xero, name.lower())
                 self.assertEqual(manager.name, name)
                 self.assertIsNotNone(manager.singular, f"{name} has no singular name")
-                self.assertIn(
-                    name, {manager.singular + "s", manager.singular[:-1] + "ies"}
-                )
+                plurals = {manager.singular + "s"}
+                if manager.singular.endswith("y"):
+                    plurals.add(manager.singular[:-1] + "ies")
+                self.assertIn(name, plurals)
 
     def test_budgets_filter_uses_query_parameters(self):
         """Budget filters should be sent as query parameters, not a where clause."""
