@@ -244,14 +244,18 @@ class ManagerTest(unittest.TestCase):
         }
         self.assertEqual(params, expected_params)
 
-    def test_budgets_and_linked_transactions_are_exposed(self):
-        """The Xero client should expose Budgets and LinkedTransactions."""
+    def test_every_object_has_a_singular_that_forms_its_plural_name(self):
+        """Each object the client exposes carries its name and a singular form."""
         xero = Xero(Mock(base_url=""))
 
-        self.assertEqual(xero.budgets.name, "Budgets")
-        self.assertEqual(xero.budgets.singular, "Budget")
-        self.assertEqual(xero.linkedtransactions.name, "LinkedTransactions")
-        self.assertEqual(xero.linkedtransactions.singular, "LinkedTransaction")
+        for name in Xero.OBJECT_LIST:
+            with self.subTest(name=name):
+                manager = getattr(xero, name.lower())
+                self.assertEqual(manager.name, name)
+                self.assertIsNotNone(manager.singular, f"{name} has no singular name")
+                self.assertIn(
+                    name, {manager.singular + "s", manager.singular[:-1] + "ies"}
+                )
 
     def test_budgets_filter_uses_query_parameters(self):
         """Budget filters should be sent as query parameters, not a where clause."""
