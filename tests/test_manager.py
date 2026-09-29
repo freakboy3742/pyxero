@@ -244,19 +244,49 @@ class ManagerTest(unittest.TestCase):
         }
         self.assertEqual(params, expected_params)
 
-    def test_every_object_has_a_singular_that_forms_its_plural_name(self):
-        """Each object the client exposes carries its name and a singular form."""
+    def test_every_object_has_its_singular_name(self):
+        """Each object the client exposes carries its name and its singular form."""
+        expected = {
+            "Attachments": "Attachment",
+            "Accounts": "Account",
+            "BankTransactions": "BankTransaction",
+            "BankTransfers": "BankTransfer",
+            "BrandingThemes": "BrandingTheme",
+            "BatchPayments": "BatchPayment",
+            "Budgets": "Budget",
+            "ContactGroups": "ContactGroup",
+            "Contacts": "Contact",
+            "CreditNotes": "CreditNote",
+            "Currencies": "Currency",
+            "Employees": "Employee",
+            "ExpenseClaims": "ExpenseClaim",
+            "Invoices": "Invoice",
+            "Items": "Item",
+            "Journals": "Journal",
+            "LinkedTransactions": "LinkedTransaction",
+            "ManualJournals": "ManualJournal",
+            "Organisations": "Organisation",
+            "Overpayments": "Overpayment",
+            "PaymentServices": "PaymentService",
+            "Payments": "Payment",
+            "Prepayments": "Prepayment",
+            "PurchaseOrders": "PurchaseOrder",
+            "Receipts": "Receipt",
+            "RepeatingInvoices": "RepeatingInvoice",
+            "Reports": "Report",
+            "TaxRates": "TaxRate",
+            "TrackingCategories": "TrackingCategory",
+            "Users": "User",
+            "Quotes": "Quote",
+        }
+        self.assertEqual(set(expected), set(Xero.OBJECT_LIST))
         xero = Xero(Mock(base_url=""))
 
-        for name in Xero.OBJECT_LIST:
+        for name, singular in expected.items():
             with self.subTest(name=name):
                 manager = getattr(xero, name.lower())
                 self.assertEqual(manager.name, name)
-                self.assertIsNotNone(manager.singular, f"{name} has no singular name")
-                plurals = {manager.singular + "s"}
-                if manager.singular.endswith("y"):
-                    plurals.add(manager.singular[:-1] + "ies")
-                self.assertIn(name, plurals)
+                self.assertEqual(manager.singular, singular)
 
     def test_budgets_filter_uses_query_parameters(self):
         """Budget filters should be sent as query parameters, not a where clause."""
