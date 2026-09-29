@@ -85,8 +85,16 @@ class BaseManager:
             "paymentsOnly": bool,
         },
         "Budgets": {
+            "IDs": list,
             "DateFrom": date,
             "DateTo": date,
+        },
+        "LinkedTransactions": {
+            "LinkedTransactionID": UUID,
+            "SourceTransactionID": UUID,
+            "TargetTransactionID": UUID,
+            "ContactID": UUID,
+            "Status": str,
         },
         "Contacts": {
             "IDs": list,

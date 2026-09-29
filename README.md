@@ -470,6 +470,7 @@ This same API pattern exists for the following API objects:
 * BankTransactions
 * BankTransfers
 * BrandingThemes
+* Budgets
 * ContactGroups
 * Contacts
 * CreditNotes
@@ -479,6 +480,7 @@ This same API pattern exists for the following API objects:
 * Invoices
 * Items
 * Journals
+* LinkedTransactions
 * ManualJournals
 * Organisation
 * Overpayments
