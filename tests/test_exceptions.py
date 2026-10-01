@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from xero import Xero
 from xero.exceptions import (
     XeroBadRequest,
-    XeroExceptionUnknown,
     XeroForbidden,
     XeroInternalError,
     XeroNotAvailable,
@@ -71,8 +70,7 @@ class ExceptionsTest(unittest.TestCase):
 
     @patch("requests.put")
     def test_bad_request_invalid_response(self, r_put):
-        """If the error response from the backend is malformed (or truncated), raise a
-        XeroExceptionUnknown."""
+        """A truncated error body retains the HTTP error and original response."""
         # Same error as before, but the response got cut off prematurely
         bad_response = mock_data.bad_request_text[:1000]
 
@@ -86,9 +84,7 @@ class ExceptionsTest(unittest.TestCase):
         credentials = Mock(base_url="")
         xero = Xero(credentials)
 
-        with self.assertRaises(
-            XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
-        ):
+        with self.assertRaises(XeroBadRequest) as caught:
             xero.invoices.put(
                 {
                     "Type": "ACCREC",
@@ -104,6 +100,10 @@ class ExceptionsTest(unittest.TestCase):
                     "SubTotal": "18.00",
                 }
             )
+        self.assertEqual(str(caught.exception), bad_response)
+        self.assertEqual(caught.exception.errors, [bad_response])
+        self.assertEqual(caught.exception.problem, bad_response)
+        self.assertIs(caught.exception.response, r_put.return_value)
 
     @patch("requests.get")
     def test_unregistered_app(self, r_get):
