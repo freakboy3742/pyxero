@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- #160 - Preserve `XeroBadRequest` and `XeroUnauthorized` for malformed error bodies or missing Content-Type, support lowercase JSON fields and Projects `modelState` details, and retain valid XML and OAuth errors. Truncated XML now raises `XeroBadRequest` with the original body rather than `XeroExceptionUnknown`.
 - #383 - Add the Budgets and LinkedTransactions endpoints; their documented query parameters (such as `DateFrom`, `SourceTransactionID` and `Status`) are sent as query parameters rather than `where` filters; `Organisations` and `PaymentServices` gain singular names
 - #443 - Percent-encode attachment filenames in request URLs, so names containing `#` and other special characters can be downloaded and uploaded
 - #440 - Add OAuth2ClientCredentials for Custom Connections, including configured scopes in token requests.

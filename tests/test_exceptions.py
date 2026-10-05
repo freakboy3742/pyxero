@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from xero import Xero
 from xero.exceptions import (
     XeroBadRequest,
-    XeroExceptionUnknown,
     XeroForbidden,
     XeroInternalError,
     XeroNotAvailable,
@@ -71,8 +70,7 @@ class ExceptionsTest(unittest.TestCase):
 
     @patch("requests.put")
     def test_bad_request_invalid_response(self, r_put):
-        """If the error response from the backend is malformed (or truncated), raise a
-        XeroExceptionUnknown."""
+        """A truncated error body retains the HTTP error and original response."""
         # Same error as before, but the response got cut off prematurely
         bad_response = mock_data.bad_request_text[:1000]
 
@@ -86,9 +84,7 @@ class ExceptionsTest(unittest.TestCase):
         credentials = Mock(base_url="")
         xero = Xero(credentials)
 
-        with self.assertRaises(
-            XeroExceptionUnknown, msg="Should raise a XeroExceptionUnknown"
-        ):
+        with self.assertRaises(XeroBadRequest) as caught:
             xero.invoices.put(
                 {
                     "Type": "ACCREC",
@@ -104,6 +100,10 @@ class ExceptionsTest(unittest.TestCase):
                     "SubTotal": "18.00",
                 }
             )
+        self.assertEqual(str(caught.exception), bad_response)
+        self.assertEqual(caught.exception.errors, [bad_response])
+        self.assertEqual(caught.exception.problem, bad_response)
+        self.assertIs(caught.exception.response, r_put.return_value)
 
     @patch("requests.get")
     def test_unregistered_app(self, r_get):
@@ -248,6 +248,116 @@ class ExceptionsTest(unittest.TestCase):
             )
         except Exception as e:
             self.fail(f"Should raise a XeroUnauthorized, not {e}")
+
+    @patch("requests.get")
+    def test_unauthorized_plain_text(self, r_get):
+        """A 401 without an OAuth problem payload raises XeroUnauthorized."""
+        r_get.return_value = Mock(
+            status_code=401,
+            text="Unauthorized",
+            headers={"content-type": "text/plain; charset=utf-8"},
+        )
+
+        xero = Xero(Mock(base_url=""))
+
+        with self.assertRaises(XeroUnauthorized) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(str(cm.exception), "Unauthorized")
+        self.assertEqual(cm.exception.errors, ["Unauthorized"])
+
+    @patch("requests.get")
+    def test_unauthorized_without_content_type(self, r_get):
+        """A 401 with no body or content type raises XeroUnauthorized."""
+        r_get.return_value = Mock(status_code=401, text="", headers={})
+
+        xero = Xero(Mock(base_url=""))
+
+        with self.assertRaises(XeroUnauthorized) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(cm.exception.response.status_code, 401)
+
+    @patch("requests.get")
+    def test_bad_request_problem_details_json(self, r_get):
+        """A 400 problem details body reports its title and detail."""
+        r_get.return_value = Mock(
+            status_code=400,
+            text=(
+                '{"Type":null,"Title":"Bad Request","Status":400,'
+                '"Detail":"The request is invalid"}'
+            ),
+            headers={"content-type": "application/json; charset=utf-8"},
+        )
+
+        xero = Xero(Mock(base_url=""))
+
+        with self.assertRaises(XeroBadRequest) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(str(cm.exception), "Bad Request: The request is invalid")
+        self.assertEqual(cm.exception.errors, [])
+        self.assertIsNone(cm.exception.problem)
+
+    @patch("requests.get")
+    def test_bad_request_json_without_type(self, r_get):
+        """A 400 JSON body without a Type field raises XeroBadRequest, not KeyError."""
+        r_get.return_value = Mock(
+            status_code=400,
+            text='{"Message":"A validation exception occurred"}',
+            headers={"content-type": "application/json; charset=utf-8"},
+        )
+
+        xero = Xero(Mock(base_url=""))
+
+        with self.assertRaises(XeroBadRequest) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(str(cm.exception), "Error: A validation exception occurred")
+
+    @patch("requests.get")
+    def test_bad_request_html_without_oauth_problem(self, r_get):
+        """An HTML 400 page containing '=' raises XeroBadRequest with the page text."""
+        page = (
+            '<html><head><meta charset="utf-8"></head><body>Bad Request</body></html>'
+        )
+        r_get.return_value = Mock(
+            status_code=400,
+            text=page,
+            headers={"content-type": "text/html; charset=utf-8"},
+        )
+
+        xero = Xero(Mock(base_url=""))
+
+        with self.assertRaises(XeroBadRequest) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(str(cm.exception), page)
+        self.assertEqual(cm.exception.errors, [page])
+
+    @patch("requests.get")
+    def test_bad_request_single_message_xml(self, r_get):
+        """An ApiException with a single message raises XeroBadRequest."""
+        r_get.return_value = Mock(
+            status_code=400,
+            encoding="utf-8",
+            text=(
+                "<ApiException><ErrorNumber>16</ErrorNumber>"
+                "<Type>QueryParseException</Type>"
+                "<Message>No property or field 'Foo' exists</Message>"
+                "</ApiException>"
+            ),
+            headers={"content-type": "text/xml; charset=utf-8"},
+        )
+
+        xero = Xero(Mock(base_url=""))
+
+        with self.assertRaises(XeroBadRequest) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(str(cm.exception), "No property or field 'Foo' exists")
+        self.assertEqual(cm.exception.errors, [])
+        self.assertIsNone(cm.exception.problem)
 
     @patch("requests.get")
     def test_forbidden(self, r_get):
