@@ -3,6 +3,7 @@ import json
 import unittest
 from io import BytesIO
 from unittest.mock import Mock, patch
+from uuid import UUID
 
 from xero.api import Xero
 from xero.basemanager import XeroObjectList
@@ -918,4 +919,88 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(
             result.response.headers["Xero-Correlation-Id"],
             "5fe9659e-e5cc-4747-ad01-47adb038bf34",
+        )
+
+    @patch("xero.basemanager.requests.put")
+    def test_subresource_put_contacts_to_contact_group(self, mock_put):
+        """A subresource manager can add contacts to a contact group without changing
+        the parent manager (issue #107)."""
+        group_id = UUID("3d3c8f3e-1f6a-4cb1-9f1c-1a2b3c4d5e6f")
+        contacts = [
+            {"ContactID": "0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b"},
+            {"ContactID": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d"},
+        ]
+        mock_put.return_value = Mock(
+            status_code=200,
+            text=json.dumps({"Status": "OK", "Contacts": contacts}),
+            headers={"content-type": "application/json"},
+        )
+        credentials = Mock(base_url="https://xero.example", user_agent=None)
+        groups = Manager(
+            "ContactGroups",
+            credentials,
+            unit_price_4dps=True,
+            user_agent="DemoCompany-1234567890",
+        )
+
+        members = groups.subresource(group_id, "Contacts")
+        result = members.put(contacts, idempotency_key="add-members", timeout=5)
+
+        self.assertIsInstance(result, XeroObjectList)
+        self.assertEqual(result, contacts)
+        args, kwargs = mock_put.call_args
+        self.assertEqual(
+            args[0],
+            "https://xero.example/api.xro/2.0/ContactGroups/"
+            "3d3c8f3e-1f6a-4cb1-9f1c-1a2b3c4d5e6f/Contacts",
+        )
+        assertXMLEqual(
+            self,
+            kwargs["data"].decode(),
+            "<Contacts>"
+            "<Contact><ContactID>0f1e2d3c-4b5a-6978-8a9b-0c1d2e3f4a5b</ContactID>"
+            "</Contact>"
+            "<Contact><ContactID>1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d</ContactID>"
+            "</Contact>"
+            "</Contacts>",
+        )
+        self.assertEqual(kwargs["params"], {"unitdp": 4})
+        self.assertEqual(kwargs["timeout"], 5)
+        self.assertEqual(kwargs["headers"]["User-Agent"], "DemoCompany-1234567890")
+        self.assertEqual(kwargs["headers"]["Idempotency-Key"], "add-members")
+        self.assertIs(members.credentials, credentials)
+
+        # The parent manager is unchanged and shares no mutable state.
+        self.assertEqual(groups.name, "ContactGroups")
+        self.assertEqual(groups.base_url, "https://xero.example/api.xro/2.0")
+        self.assertIsNot(members.extra_params, groups.extra_params)
+
+    def test_subresource_validates_name_and_encodes_parent_id(self):
+        """Subresource names must be known Xero collections, and the parent ID is a
+        single path segment."""
+        credentials = Mock(base_url="", user_agent=None)
+        groups = Manager("ContactGroups", credentials)
+
+        self.assertEqual(
+            groups.subresource("a/b?c", "Contacts").base_url,
+            "/api.xro/2.0/ContactGroups/a%2Fb%3Fc",
+        )
+        for parent_id in ("", ".", ".."):
+            with self.assertRaises(ValueError):
+                groups.subresource(parent_id, "Contacts")
+        with self.assertRaises(ValueError):
+            groups.subresource("a", "../Contacts")
+
+    @patch("xero.basemanager.requests.delete")
+    def test_subresource_delete_contact_from_contact_group(self, mock_delete):
+        """A subresource manager can remove a contact from a contact group."""
+        mock_delete.return_value = Mock(status_code=204, content=b"")
+        credentials = Mock(base_url="", user_agent=None)
+        groups = Manager("ContactGroups", credentials)
+
+        groups.subresource("group-id", "Contacts").delete("contact-id")
+
+        self.assertEqual(
+            mock_delete.call_args[0][0],
+            "/api.xro/2.0/ContactGroups/group-id/Contacts/contact-id",
         )

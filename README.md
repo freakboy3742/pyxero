@@ -494,6 +494,19 @@ This same API pattern exists for the following API objects:
 * TrackingCategories
 * Users
 
+Some endpoints act on a collection nested under an object, such as the contacts in a contact group. `subresource()` returns a manager for that collection:
+
+```python
+>>> members = xero.contactgroups.subresource(g['ContactGroupID'], 'Contacts')
+
+# Add contacts to the group (pass a list, even for a single contact)
+>>> members.put([{'ContactID': c1['ContactID']}, {'ContactID': c2['ContactID']}])
+[{...contact info...}, {...contact info...}]
+
+# Remove a contact from the group
+>>> members.delete(c1['ContactID'])
+```
+
 ## Idempotent Requests
 
 Xero [supports idempotent requests](https://developer.xero.com/documentation/guides/idempotent-requests/idempotency) to its API to prevent accidentally repeating actions when modifying data. PyXero accepts an `idempotency_key` keyword argument on the following manager methods:

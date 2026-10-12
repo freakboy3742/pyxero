@@ -1,6 +1,8 @@
+from urllib.parse import quote
+
 from .basemanager import BaseManager
 from .constants import XERO_API_URL
-from .utils import resolve_user_agent, singular
+from .utils import isplural, resolve_user_agent, singular
 
 
 class Manager(BaseManager):
@@ -25,3 +27,21 @@ class Manager(BaseManager):
             for method_name in object_decorated_methods:
                 method = getattr(self, f"_{method_name}")
                 setattr(self, method_name, self._get_data(method))
+
+    def subresource(self, parent_id, name):
+        """Return a manager for a collection nested under one of this manager's objects.
+
+        For example, ``xero.contactgroups.subresource(group_id, "Contacts")`` returns a
+        manager whose ``put()`` adds contacts to the contact group. This manager is not
+        modified.
+        """
+        if not isplural(name):
+            raise ValueError(f"Unknown Xero object name: {name!r}")
+        parent_id = quote(str(parent_id), safe="")
+        if parent_id in ("", ".", ".."):
+            raise ValueError(f"Invalid parent ID: {parent_id!r}")
+
+        manager = Manager(name, self.credentials, user_agent=self.user_agent)
+        manager.base_url = f"{self.base_url}/{self.name}/{parent_id}"
+        manager.extra_params = self.extra_params.copy()
+        return manager
