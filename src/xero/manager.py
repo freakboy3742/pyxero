@@ -33,7 +33,8 @@ class Manager(BaseManager):
 
         For example, ``xero.contactgroups.subresource(group_id, "Contacts")`` returns a
         manager whose ``put()`` adds contacts to the contact group. This manager is not
-        modified.
+        modified. ``name`` must be a known PyXero object name; the caller chooses a
+        nested endpoint that Xero supports.
         """
         if not isplural(name):
             raise ValueError(f"Unknown Xero object name: {name!r}")

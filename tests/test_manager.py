@@ -7,7 +7,12 @@ from uuid import UUID
 
 from xero.api import Xero
 from xero.basemanager import XeroObjectList
-from xero.exceptions import XeroException, XeroExceptionUnknown, XeroUnexpectedResponse
+from xero.exceptions import (
+    XeroException,
+    XeroExceptionUnknown,
+    XeroNotFound,
+    XeroUnexpectedResponse,
+)
 from xero.manager import Manager
 from xero.utils import generate_idempotency_key
 
@@ -970,7 +975,7 @@ class ManagerTest(unittest.TestCase):
         self.assertEqual(kwargs["headers"]["Idempotency-Key"], "add-members")
         self.assertIs(members.credentials, credentials)
 
-        # The parent manager is unchanged and shares no mutable state.
+        # The parent manager is unchanged; the two share credentials, not extra_params.
         self.assertEqual(groups.name, "ContactGroups")
         self.assertEqual(groups.base_url, "https://xero.example/api.xro/2.0")
         self.assertIsNot(members.extra_params, groups.extra_params)
@@ -1004,3 +1009,17 @@ class ManagerTest(unittest.TestCase):
             mock_delete.call_args[0][0],
             "/api.xro/2.0/ContactGroups/group-id/Contacts/contact-id",
         )
+
+    @patch("xero.basemanager.requests.delete")
+    def test_subresource_errors_use_existing_exceptions(self, mock_delete):
+        """A failed subresource request raises the usual exception for its status."""
+        mock_delete.return_value = Mock(
+            status_code=404,
+            text="The resource you're looking for cannot be found",
+            headers={"content-type": "text/html; charset=utf-8"},
+        )
+        credentials = Mock(base_url="", user_agent=None)
+        members = Manager("ContactGroups", credentials).subresource("g", "Contacts")
+
+        with self.assertRaises(XeroNotFound):
+            members.delete("contact-id")
