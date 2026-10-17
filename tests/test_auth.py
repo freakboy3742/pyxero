@@ -572,12 +572,12 @@ class OAuth2CredentialsTest(unittest.TestCase):
             "client_id", "client_secret", token=self.expired_token, tenant_id="12345"
         )
         xero = Xero(credentials)
-        # Just return any old response
-        r_get.return_value = None
-        try:
-            xero.contacts.all()
-        except:  # NOQA: E722
-            pass
+        r_get.return_value = Mock(
+            status_code=200,
+            text='{"Status": "OK", "Contacts": []}',
+            headers={"content-type": "application/json"},
+        )
+        self.assertEqual(xero.contacts.all(), [])
         self.assertEqual(r_get.call_args[1]["headers"]["Xero-tenant-id"], "12345")
 
     def test_tenant_id_not_set_raises_error(self):
