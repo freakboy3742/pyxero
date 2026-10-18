@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- #451 - `FilesManager.upload_file(path=...)` now closes the file it opens once the upload finishes, including when the request raises. Streams passed with `file=` are left open for the caller to close.
 - #107 - Add `Manager.subresource()` for collections nested under an object, such as adding contacts to a contact group and removing one contact from it
 - #160 - Preserve `XeroBadRequest` and `XeroUnauthorized` for malformed error bodies or missing Content-Type, support lowercase JSON fields and Projects `modelState` details, and retain valid XML and OAuth errors. Truncated XML now raises `XeroBadRequest` with the original body rather than `XeroExceptionUnknown`.
 - #383 - Add the Budgets and LinkedTransactions endpoints; their documented query parameters (such as `DateFrom`, `SourceTransactionID` and `Status`) are sent as query parameters rather than `where` filters; `Organisations` and `PaymentServices` gain singular names
