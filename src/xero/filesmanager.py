@@ -1,4 +1,5 @@
 import os
+from contextlib import nullcontext
 from urllib.parse import parse_qs
 
 import requests
@@ -29,7 +30,6 @@ class FilesManager:
         "save",
         "delete",
         "get_files",
-        "upload_file",
         "get_association",
         "get_associations",
         "make_association",
@@ -182,18 +182,24 @@ class FilesManager:
         uri = f"{self.base_url}/{self.name}/{id}"
         return uri, {}, "delete", None, None, False, None
 
-    def _upload_file(self, path=None, folderId=None, filename=None, file=None):
+    def upload_file(self, path=None, folderId=None, filename=None, file=None):
+        """Upload a file, closing only the stream opened for a path."""
+        if path:
+            filename = os.path.basename(path)
+
+        with open(path, mode="rb") if path else nullcontext(file) as stream:
+            return self._get_data(self._upload_file)(
+                folderId=folderId, filename=filename, file=stream
+            )
+
+    def _upload_file(self, folderId=None, filename=None, file=None):
         if folderId is not None:
             uri = f"{self.base_url}/{self.name}/{folderId}"
         else:
             uri = f"{self.base_url}/{self.name}"
 
         files = {}
-        if path:
-            filename = os.path.basename(path)
-            files[filename] = open(path, mode="rb")
-
-        elif filename and file:
+        if filename and file:
             files[filename] = file
 
         return uri, {}, "post", None, None, False, files
