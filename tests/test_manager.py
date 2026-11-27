@@ -339,6 +339,26 @@ class ManagerTest(unittest.TestCase):
             },
         )
 
+    def test_read_only_date_strings_not_sent(self):
+        """Read-only *String date fields returned by Xero are not sent back."""
+        credentials = Mock(base_url="")
+        manager = Manager("Invoices", credentials)
+
+        body = manager._prepare_data_for_save(
+            {
+                "Reference": "ABAS 123",
+                "DateString": "2015-06-06T00:00:00",
+                "DueDateString": "2015-07-06T00:00:00",
+                "PlannedPaymentDateString": "2015-07-01T00:00:00",
+            }
+        )
+
+        assertXMLEqual(
+            self,
+            body.decode("utf-8"),
+            "<Invoice><Reference>ABAS 123</Reference></Invoice>",
+        )
+
     def test_linked_transaction_save_uses_singular_root(self):
         """A single linked transaction should be sent as a LinkedTransaction element."""
         credentials = Mock(base_url="")

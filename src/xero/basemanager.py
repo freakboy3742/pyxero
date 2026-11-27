@@ -177,6 +177,7 @@ class BaseManager:
         "DateString",
         "HasErrors",
         "DueDateString",
+        "PlannedPaymentDateString",
         "HasAccount",
         "ID",
     )
