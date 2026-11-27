@@ -233,6 +233,9 @@ class BaseManager:
                     val = "true" if sub_data else "false"
                 elif key in self.DATE_FIELDS:
                     val = sub_data.strftime("%Y-%m-%dT%H:%M:%S")
+                elif key in self.DATETIME_FIELDS and isinstance(sub_data, datetime):
+                    # isoformat keeps any UTC offset and fractional seconds.
+                    val = sub_data.isoformat()
                 else:
                     val = str(sub_data)
                 elm.text = val
