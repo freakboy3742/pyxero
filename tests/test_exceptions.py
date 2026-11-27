@@ -556,6 +556,32 @@ class ExceptionsTest(unittest.TestCase):
             self.fail(f"Should raise a XeroRateLimitExceeded, not {e}")
 
     @patch("requests.get")
+    def test_not_available_html_page(self, r_get):
+        "A 503 HTML error page is not mistaken for a rate limit error"
+        r_get.return_value = Mock(
+            status_code=503,
+            text=(
+                '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"'
+                '"http://www.w3.org/TR/html4/strict.dtd">\n'
+                "<HTML><HEAD><TITLE>Service Unavailable</TITLE>\n"
+                '<META HTTP-EQUIV="Content-Type" Content="text/html; '
+                'charset=us-ascii"></HEAD>\n'
+                "<BODY><h2>Service Unavailable</h2>\n"
+                "<hr><p>HTTP Error 503. The service is unavailable.</p>\n"
+                "</BODY></HTML>\n"
+            ),
+            headers={"content-type": "text/html; charset=us-ascii"},
+        )
+
+        credentials = Mock(base_url="")
+        xero = Xero(credentials)
+
+        with self.assertRaises(XeroNotAvailable) as cm:
+            xero.contacts.all()
+
+        self.assertEqual(cm.exception.response.status_code, 503)
+
+    @patch("requests.get")
     def test_not_available(self, r_get):
         "If Xero goes down for maintenance, an exception is raised"
         # Response based off Xero documentation; not confirmed by reality.

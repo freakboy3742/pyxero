@@ -393,7 +393,7 @@ class BaseManager:
                 # If you parse the response text and there's nothing
                 # encoded, it must be a not-available error.
                 payload = parse_qs(response.text)
-                if payload:
+                if "oauth_problem" in payload:
                     raise XeroRateLimitExceeded(response, payload)
                 else:
                     raise XeroNotAvailable(response)
